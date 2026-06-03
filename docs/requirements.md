@@ -192,18 +192,21 @@
 
 ## 6. User Interface & Wireframes
 ### 6.1 Design tools
-- **UI Design Tool:** [e.g Drawio.io, Google Stitch]
-- **Styling System:** [e.g. Material Design, Prime UI]
+- **UI Design Tool:** draw.io
+- **Styling System:** Tailwind CSS and filament theme for custom admin panel styles.
 
-### 6.2 Figma Designs
-- _**Figma Link:**_ [_[Link to design file or interactive prototype]_]
-- _**Mockups/Wireframes:**_ [Optional: Drag and drop screenshots of the main views below]
-  - ![Mockup Placeholder](https://via.placeholder.com/468x300?text=Wireframe+Mockup)
+### 6.2 Designs & Wireframes
+- _**Wireframes:**_ _To be created in draw.io and saved to the [`designs`](../designs) 
+- _**Mockups:**_ _To be added once designs are complete_
 
 ### 6.3 Interactive States & Feedback
-- **Hover & Active States:** [e.g. Darken buttons on hover, scale down slightly on click]
-- **Transitions & Animations:** [e.g. Smooth 150ms transitions, toast notification slide-ins]
-- **Feedback Alerts:** [e.g. Loading spinners on submit, toast notifications for success/error]
+- **Design Aesthetic:** Sleek and minimal but not bare-bones; should feel polished and intentional without heavy decoration or animations.
+- **Hover & Active States:** Subtle transitions on interactive elements (buttons, links, cards) — e.g. slight brightness shift or underline on hover, gentle scale-down on click.
+- **Transitions & Animations:** Smooth, short transitions (100–150ms) where used; nothing flashy — motion should feel purposeful and quick with a focus on a "snappy" feel.
+- **Feedback Alerts:**
+  - Toast notifications for all async actions (publish success, import complete, email sent, errors)
+  - Inline validation errors on forms (shown on submit and on blur where appropriate)
+  - Filament's default feedback behaviours retained as the baseline for the admin panel
 
 ## 7. Technical Architecture & Tech Stack
 ### 7.1 Technical Overview

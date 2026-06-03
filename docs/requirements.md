@@ -170,21 +170,25 @@
 
 ## 5. Non-Functional Requirements
 ### 5.1 Performance & Scalability
-- **Performance Targets:** [e.g. Page load under 2 seconds, API response under 200ms]
-- _**Scalability:**_ [_[How will the system handle growth? e.g. caching, CDN, DB indexing]_]
+- **Performance Targets:** No hard targets defined for v1 — performance is largely dependent on the user's hosting environment. The application must not block on slow operations (emails, imports); all such tasks must be offloaded to queues.
+- **Queue System:** All async operations (email sending, subscription confirmations, post notifications, WordPress import jobs) must run through a queue worker (e.g. Laravel Queue with database or Redis driver) to ensure no hanging requests and no lost messages.
+- _**Scalability:**_ _Out of scope for v1 (self-hosted). Caching, CDN, and horizontal scaling will be addressed in Blogravel Cloud (v2)._
 
 ### 5.2 Security & Privacy
-- **Authentication & Authorization:** [e.g. Cookie-based auth, JWT, or none]
-- **Data Protection:** [e.g. HTTPS only, password hashing, encryption of sensitive data]
-- _**Compliance Requirements:**_ [_[e.g. GDPR, local privacy laws]_]
+- **Authentication & Authorization:**
+  - Admin panel: session-based authentication via Filament's built-in login (email + password)
+  - Public API: authenticated via Laravel Sanctum tokens (Bearer token on protected endpoints); open read mode available with admin warning
+  - Role-based access (Super Admin, Editor, Author) enforced on all admin routes and write API endpoints
+- **Data Protection:** Passwords hashed (bcrypt via Laravel default); AI provider API keys encrypted at rest; HTTPS enforced (responsibility of the hosting environment); subscriber emails stored only after double opt-in confirmation
+- _**Compliance Requirements:**_ _GDPR applies due to collection of subscriber email addresses. Requirements: double opt-in before storing email, unsubscribe link in every notification email, ability for subscribers to request deletion._
 
 ### 5.3 Reliability & Availability
-- **Uptime:** [e.g. 99% uptime, auto-restart on crash]
-- **Backups:** [e.g. Daily automated database backups to external storage]
+- **Uptime:** Out of scope for v1 — uptime and crash recovery are the responsibility of the user's hosting environment. _(Blogravel Cloud in v2 will define SLA targets.)_
+- **Backups:** Optional — admin can toggle automated database backups on/off in settings. When enabled, backups run on a configurable schedule and are stored locally (or to a path the admin specifies).
 
 ### 5.4 Compatibility & Accessibility
-- **Supported Browsers/OS:** [e.g. Chrome, Firefox, Safari, Edge, Mobile viewports]
-- _**Accessibility Standards:**_ [_[e.g. WCAG 2.1 AA compliance, keyboard navigation support]_]
+- **Supported Browsers/OS:** Starter theme must support all major modern browsers — Chrome, Firefox, Safari, Edge — across mobile, tablet, and desktop viewports. Admin panel (Filament) inherits Filament's own browser support.
+- _**Accessibility Standards:**_ _Starter theme must follow WCAG 2.1 AA guidelines — semantic HTML, sufficient colour contrast, keyboard navigability, and screen reader compatibility._
 
 ## 6. User Interface & Wireframes
 ### 6.1 Design tools

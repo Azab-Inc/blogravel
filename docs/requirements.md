@@ -210,24 +210,28 @@
 
 ## 7. Technical Architecture & Tech Stack
 ### 7.1 Technical Overview
-- **Application Type:** [e.g. REST api, Web app]
-- **Hosting solution:** [e.g VPS, Cloud provider (AWS, Azure)]
-- **Third-Party Services:** [e.g. SendGrid for emails, Hostinger VPS for server hosting]
-- _**API Docs Link:**_ [_[Link to Swagger UI or Postman Collection]_]
+- **Application Type:** REST API + Web app (API-first; Blade starter theme consumes the same API as external frontends)
+- **Hosting Solution:** Self-hosted via Docker Compose. A `docker-compose.yml` and `example.env` will be provided in the repository for users to get up and running with minimal setup.
+- **Third-Party Services:** Mail is user-configurable — supports any SMTP server or major providers (e.g. Mailgun, Resend, SendGrid) via environment variables. No provider is bundled or required.
+- _**API Docs Link:**_ _To be published on the public Blogravel landing/docs site ([blogravel.azaber.com](https://blogravel.azaber.com))_
+
 ### 7.2 Tech Stack
-- **Frontend:** [e.g. Blazor, Angular]
-  - Libraries: [e.g. Tailwind CSS]
-- **Backend:** [e.g. .NET Core, PHP with Symfony]
-  - Libraries: [e.g. Entity Framework]
-- **Database:** [e.g. SQLite, MySQL, PostgreSQL]
-- _**External APIs/SDKs:**_ 
-  |API/SDK|Purpose|Relation|
-  |-------|-------|--------|
-  |e.g Stripe|e.g Payments|e.g CashoutService|
+- **Backend:** PHP with Laravel
+  - **Packages:** Filament PHP (admin panel), Livewire (reactive UI components within Filament), Laravel Sanctum (API token auth), Laravel Queue (async jobs via Redis driver)
+- **Frontend (Starter Theme):** Laravel Blade
+  - **Libraries:** Tailwind CSS
+- **Database:** PostgreSQL
+- **Queue Driver:** Redis
+- _**External APIs/SDKs:**_
+
+  | API/SDK | Purpose | Notes |
+  |---------|---------|-------|
+  | User-supplied AI provider (OpenAI, Anthropic, Ollama, etc.) | AI post generation | Admin configures endpoint + key; no vendor bundled |
+  | User-configured SMTP / Mailgun / Resend / SendGrid | Transactional email (subscription confirmations, post notifications) | Configured via `.env` and can be tested in admin panel with "send test email" option |
 
 ### 7.3 System Architecture Diagram
-- _**Diagram Link:**_ [_[Link to architecture flow chart or Miro board]_]
-- **Architecture Overview:** [Brief description of how frontend, backend, database, and third-party systems interact]
+- _**Diagram Link:**_ _To be added to the `/designs` folder_
+- **Architecture Overview:** Users deploy via Docker Compose (Laravel app + PostgreSQL + Redis containers). The Laravel backend exposes a REST API consumed by all frontends. The Blade starter theme is an optional built-in frontend that hits the same API. The Filament admin panel runs on the same Laravel instance. Queue workers (Redis-backed) handle all async jobs — emails, import processing, notifications. Mail is routed through the user's chosen SMTP/provider configured in `.env`.
 
 ## 8. Deployment & Infrastructure
 ### 8.1 Hosting & Environment Strategy

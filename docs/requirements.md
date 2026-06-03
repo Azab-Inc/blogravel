@@ -36,17 +36,20 @@
 
 ## 3. Scope 
 ### 3.1 Scope for first phase
-- [Feature 1: Must-have core feature for the initial release]
-- [Feature 2: Must-have core feature for the initial release]
-- [Feature 3: Must-have core feature for the initial release]
+- One-click WordPress import (posts, pages, media, categories)
+- Bring-your-own-API integration for AI/automated post generation
+- Advanced mailing lists with per-category subscriptions
+- Admin panel via Filament PHP
+- API-first architecture — all frontends connect via API
+- Basic starter theme in Blade templates (toggleable on/off)
 
 ### 3.2 Scope for Future Phases
-- _[Future Feature 1: Nice-to-have feature or enhancement planned for later]_
-- _[Future Feature 2: Nice-to-have feature or enhancement planned for later]_
+- Frontend template ecosystem — additional pre-built themes beyond the starter
+- Blogravel Cloud — managed hosting offering (AWS-based), monthly subscription, no self-hosting required
 
 ### 3.3 Assumptions & Constraints
-- **Assumptions:** [What are we assuming is true about the users?]
-- **Constraints:** [What limitations exist? tech stack? ai limits?]
+- **Assumptions:** Users are comfortable with self-hosting and have access to a server to deploy on.
+- **Constraints:** Admin panel is locked to Filament PHP; starter theme is Blade-based; the platform is API-first so all frontends (including the starter theme) consume the same API; Blogravel Cloud is explicitly out of scope for v1; AI post generation requires users to supply their own API key/endpoint — no vendor is bundled.
 
 ## 4. Functional Requirements
 ### 4.1 Core Features Breakdown & User Flow

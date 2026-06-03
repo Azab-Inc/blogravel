@@ -53,21 +53,120 @@
 
 ## 4. Functional Requirements
 ### 4.1 Core Features Breakdown & User Flow
-- **Feature Name:** [e.g. Invoice Creation]
-  - **Description:** [Brief description of what the feature does]
-  - **Dependencies:** [Packages or services required for this to work]
+
+- **Feature Name:** WordPress Import
+  - **Description:** Allows the admin to import all WordPress content into Blogravel via two methods: uploading a WXR export file, or connecting directly to the WordPress MySQL database via a connection string.
+  - **Dependencies:** WXR/XML parser (PHP), local media storage, MySQL PDO driver
   - **Acceptance Criteria:**
-    - [Specific condition that must be met, e.g. User cannot submit form with empty fields]
-    - [Specific condition, e.g. Subtotals must recalculate instantly on item edit]
+    - **Method 1 — WXR File:** Admin can upload a `.xml` WXR export file via the Filament admin panel
+      > **How to generate the file:** Run the following command from the WordPress root directory:
+      > ```bash
+      > wp export --dir=./
+      > ```
+      > This exports everything (all post types, statuses, authors, categories, tags, comments) into a `.xml` file in the current directory. The file will be named e.g. `yoursite.wordpress.2026-06-03.000.xml`. Upload that file to the import screen.
+    - **Method 2 — DB Connection:** Admin can enter a WordPress MySQL connection string; Blogravel connects and reads directly from the WordPress database tables
+    - Both methods import all posts (published & draft), pages, categories, tags, authors, custom fields, and comments
+    - Media attachments are downloaded and stored locally regardless of import method
+    - Import process shows progress and surfaces any errors without silent failures
+    - Duplicate imports do not create duplicate entries (idempotent by slug)
+
+- **Feature Name:** AI Post Generation
+  - **Description:** Admin users can configure an AI provider and generate post drafts from a text prompt directly within the admin.
+  - **Dependencies:** HTTP client for external APIs; Ollama for local model support
+  - **Acceptance Criteria:**
+    - Admin can add an AI provider via settings: external provider (API endpoint + key) or Ollama (local endpoint + selected model)
+    - Multiple providers can be saved; one is set as active
+    - User writes a prompt in the post editor and triggers generation
+    - Generated content is inserted as a draft — not auto-published
+    - Invalid credentials or unreachable endpoints surface a clear error message
+    - Ollama integration works without an API key
+
+- **Feature Name:** Mailing Lists with Per-Category Subscriptions
+  - **Description:** Readers subscribe via a public API endpoint, specifying which categories they want to follow. Subscription is confirmed via double opt-in email.
+  - **Dependencies:** Mail service (SMTP-configurable), queue system for async email sending
+  - **Acceptance Criteria:**
+    - `POST /subscribe` accepts `{ email, categories: [] }` — empty array subscribes to all
+    - Confirmation email is sent immediately on subscription request
+    - Subscription is only activated after the reader clicks the confirmation link in their email
+    - On post publish, notification emails are sent to all subscribers whose category selection matches
+    - Unsubscribe link is included in every notification email
+
+- **Feature Name:** Admin Panel (Filament PHP)
+  - **Description:** Full-featured admin dashboard for managing all blog content, settings, users, and integrations.
+  - **Dependencies:** Filament PHP, Laravel
+  - **Acceptance Criteria:**
+    - Three roles are enforced: Super Admin, Editor, Author
+    - **Super Admin:** full access — settings, API keys, user management, AI providers, import
+    - **Editor:** can create, edit, and publish any post or page
+    - **Author:** can create and manage only their own posts; cannot publish without editor approval
+    - Role permissions are enforced on all admin routes and API write endpoints
+
+- **Feature Name:** API-First Architecture
+  - **Description:** All blog data (posts, pages, categories, subscribers) is exposed via a REST API consumed by all frontends.
+  - **Dependencies:** Laravel Sanctum and other middleware, rate limiter
+  - **Acceptance Criteria:**
+    - Public read endpoints exist for posts, pages, categories, tags, and individual resources
+    - API key generation is available in admin settings (name + optional rate limit per minute)
+    - Rate limiting is configurable per key (requests/minute); defaults to unlimited
+    - API can be run without any key (open mode) but admin is shown a warning recommending key setup
+    - All write/sensitive endpoints require authentication regardless of open mode
+
+- **Feature Name:** Starter Theme (Blade)
+  - **Description:** A minimal, toggleable Blade-based starter theme for users who want a working frontend out of the box. Consumes the internal API.
+  - **Dependencies:** Laravel Blade, Tailwind CSS
+  - **Acceptance Criteria:**
+    - Includes pages: post list (home), single post, category page, subscribe form, contact page
+    - Theme can be toggled off in admin settings, leaving only the API active
+    - All pages are responsive across mobile, tablet, and desktop
+    - Contact page submits to a configurable email address
 
 ### 4.2 User Flow & Navigation Map
-- **Core User Flow:** [Step-by-step path the user takes through the screens, e.g. Dashboard -> Click New Invoice -> Fill Form -> Preview -> Download]
-- _**Flowchart / Wireframe Link:**_ [_[Link to diagram or wireframe document]_]
+- **Admin — Publish a Post:**
+  Login → Dashboard → Posts → New Post → Write / Generate via AI → Assign Categories and Tags → Publish → Subscribers notified by email
+
+- **Admin — WordPress Import:**
+  Settings → Import → Upload WXR file or SQL connection string → Review summary → Confirm → Import runs → Success/error report
+
+- **Admin — Configure AI Provider:**
+  Settings → AI Providers → Add Provider → Select type (External / Ollama) → Enter endpoint + key → Save → Set as active
+
+- **Reader — Subscribe:**
+  Reader calls `POST /subscribe` with email + categories → Confirmation email sent → Reader clicks confirm link → Subscription activated
+
+- **Reader — Browse (Starter Theme):**
+  Home (post list) → Click post → Read post → Subscribe form / Contact page
+
+- _**Flowchart / Wireframe Link:**_ [_To be added_]
 
 ### 4.3 Data Requirements & Schema
-- **Key Entities:** [List core tables/data structures]
-- **Data Relations:** [e.g x HasMany y]
-- **UML:**
+- **Key Entities:**
+
+  | Table | Key Fields |
+  |---|---|
+  | `users` | id, name, email, password, role (`super_admin` \| `editor` \| `author`) |
+  | `posts` | id, title, slug, content, excerpt, status (`draft` \| `published`), author_id, published_at |
+  | `pages` | id, title, slug, content, status |
+  | `categories` | id, name, slug, description |
+  | `tags` | id, name, slug |
+  | `post_category` | post_id, category_id |
+  | `post_tag` | post_id, tag_id |
+  | `comments` | id, post_id, author_name, author_email, body, status (`pending` \| `approved` \| `spam`) |
+  | `media` | id, filename, path, mime_type, size, post_id (nullable) |
+  | `subscribers` | id, first_name, last_name. email, confirmed, confirmation_token, created_at |
+  | `subscriber_category` | subscriber_id, category_id — empty = subscribed to all |
+  | `ai_providers` | id, name, type (`openai` \| `ollama` \| `custom`), endpoint, api_key (encrypted), is_active |
+  | `api_keys` | id, name, key_hash, rate_limit_per_minute (nullable), last_used_at |
+  | `settings` | key, value — global config (site name, theme toggle, contact email, etc.) |
+
+- **Data Relations:**
+  - `Post` BelongsTo `User` (author)
+  - `Post` HasMany `Comments`
+  - `Post` BelongsToMany `Categories`
+  - `Post` BelongsToMany `Tags`
+  - `Post` HasMany `Media`
+  - `Subscriber` BelongsToMany `Categories` (empty pivot = all categories)
+
+- **UML:** _[To be added]_
 
 ## 5. Non-Functional Requirements
 ### 5.1 Performance & Scalability

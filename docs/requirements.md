@@ -235,24 +235,26 @@
 
 ## 8. Deployment & Infrastructure
 ### 8.1 Hosting & Environment Strategy
-- **Hosting Provider:** [e.g. Hostinger VPS, Cloudflare Pages, AWS]
-- **Operating System / Containerization:** [e.g. Debian Linux, Docker container setup]
-- **Environments:** [e.g. Development (local), Test/Staging, Production]
-
+- **Hosting Model (v1):** Self-hosted — users deploy on their own server using the provided `docker-compose.yml` and `example.env` (see §7.1). No managed hosting is bundled in v1.
+- **Container Stack:** Laravel app, PostgreSQL, Redis, and a queue worker run as separate Docker Compose services, matching the architecture in §7.3.
+- **Environments:** Local development via Docker Compose; production is the user's self-hosted instance, configured through `.env` (mail, database, API keys, theme toggle, etc.).
+- _**Blogravel Cloud:**_ _Out of scope for v1 (see §3.2). Managed hosting and environment strategy for Cloud will be defined in a later phase._
 
 ### 8.2 CI/CD Pipeline & DevOps
-- **CI/CD Platform:** [e.g. GitHub Actions, Jenkins, none (manual deploy)]
-- _**Pipelines:**_
-  |Pipeline|Platform|Purpose|Order|
-  |--------|--------|-------|-----|
-  |[e.g Deploy to prod]|[e.g jenkins]|[e.g Upload main to prod]|[e.g Last]|
+- **CI/CD Platform:** GitHub Actions — automated checks on pull requests and merges to the main branches.
+- **Pipelines (v1):**
 
-- **Deployment Process:** [e.g. Automatic on merge to main, or manual run script]
+  | Pipeline | Platform | Purpose |
+  | -------- | -------- | ------- |
+  | Quality checks | GitHub Actions | Run tests, static analysis, and other checks before changes are merged |
+
+- **Deployment Process (v1):** Users pull or build from a release tag and run `docker compose up` (or equivalent) on their server. Repository docs will cover env setup, migrations, and queue workers.
+- _**Blogravel Cloud deploy pipeline:**_ _To be added when Blogravel Cloud enters scope (v2)._
 
 ### 8.3 Domain & DNS Configuration
-- **Domain Name:** [e.g. azaber.com, profitwithcode.com]
-- **Registrar / DNS Manager:** [e.g. Cloudflare, Namecheap]
-- **SSL / Security:** [e.g. Let's Encrypt SSL certificates, Cloudflare Proxy]
+- **Public URLs (reference deployment):** Landing/docs at [blogravel.azaber.com](https://blogravel.azaber.com); app at [app.blogravel.azaber.com](https://app.blogravel.azaber.com/) (see §1.1).
+- **Self-hosted users:** Bring their own domain; point DNS at the server running Docker Compose. HTTPS is the user's responsibility (reverse proxy or TLS termination at the host — see §5.2).
+- _**Blogravel Cloud domains:**_ _To be defined in v2._
 
 ## 9. Testing & Quality Assurance Plan
 ### 9.1 Unit Testing Strategy

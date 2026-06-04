@@ -314,26 +314,72 @@
 
 ## 10. Project Milestones & Timeline
 ### 10.1 Key Milestones
-- **Project Kickoff:** [Date]
-- **Core MVP Development:** [Date]
-- **Testing & QA:** [Date]
-- **Launch Date (v1.0):** [Date]
+- **Project Kickoff:** 30/05/2026
+- **Core MVP Development:** TBD
+- **Testing & QA:** TBD
+- **Launch Date (v1.0):** TBD
 
 ### 10.2 Release & Rollout Plan
-- **Beta Testing:** [To be defined]
-- **Production Rollout Strategy:** Users pull or build from a release tag and run `docker compose up` on their server. Repository documentation covers environment setup, database migrations, and queue worker configuration.
-- **Post-Launch Monitoring:** [To be defined]
+- **Beta Testing:** Feedback collected via GitHub issues on the public repository.
+- **Production Rollout Strategy:** Tagged GitHub releases. Users pull or build from a release tag and run `docker compose up` on their own server — see [point 8.2](#point-8-2). Migration and upgrade notes published with each release.
+- **Post-Launch Monitoring:** No centralized monitoring for v1 (self-hosted, see [point 5.3](#point-5-3)). Feedback and issue reports collected via GitHub. Release announcements posted on the landing page at [blogravel.azaber.com](https://blogravel.azaber.com).
 
 ### 10.3 Future Phases
-- **Phase 2 Features:** Frontend template ecosystem (additional pre-built themes beyond the starter) and Blogravel Cloud (managed AWS-based hosting, monthly subscription, no self-hosting required) — see [point 3.2](#point-3-2).
-- **Long-term Roadmap:** Blogravel Cloud SLA targets, environment strategy, and managed domain/DNS configuration — see [point 3.2](#point-3-2).
+- **Phase 2 Features:** Frontend template ecosystem (additional pre-built themes beyond the starter) and Blogravel Cloud (managed AWS-based hosting with monthly subscription, no self-hosting required) — see [point 3.2](#point-3-2).
+- **Long-term Roadmap:** Blogravel Cloud SLA targets, environment strategy, and Cloud domain/DNS configuration — see [point 3.2](#point-3-2), [point 5.1](#point-5-1), [point 5.3](#point-5-3), and [point 8.3](#point-8-3).
 
 ## 11. Appendix
 ### 11.1 Glossary of Terms
-- **Term 1:** [Definition of abbreviations or technical terms, e.g. MVP - Minimum Viable Product]
-- _**Term 2:**_ [_[Definition of optional/secondary terms]_]
+- **API-first:** Architecture approach where the API is the primary consumer-facing interface; all frontends (including the starter theme) consume the same API.
+- **Blade:** Laravel's templating engine used to build the starter theme.
+- **Docker Compose:** Tool for defining and running multi-container Docker applications; used for Blogravel's deployment stack (Laravel app, PostgreSQL, Redis, queue worker).
+- **Double opt-in:** Email verification process requiring the subscriber to click a confirmation link before their subscription is activated.
+- **Filament PHP:** Admin panel framework for Laravel used as Blogravel's admin interface.
+- **GitHub Actions:** CI/CD platform for running automated tests and quality checks on pull requests and merges.
+- **Idempotent:** Property where repeated operations produce the same result; WordPress imports are idempotent by slug.
+- **Laravel:** PHP web application framework powering Blogravel's backend, admin panel, and API.
+- **Laravel Pint:** PHP code style fixer for Laravel, enforced in CI alongside tests.
+- **Laravel Sanctum:** Laravel's lightweight API token authentication system used for API key management.
+- **Laravel Queue:** Laravel's unified API for queueing async jobs (emails, imports, notifications) backed by Redis.
+- **Livewire:** Full-stack framework for building reactive UI components within Filament and Laravel.
+- **MVP:** Minimum Viable Product — the initial feature set defined in v1 scope.
+- **Ollama:** Local AI model runner for on-device LLM inference without requiring a third-party API key.
+- **Pest PHP:** PHP testing framework (v4) with Laravel plugin used for unit, feature, and browser tests.
+- **PDO:** PHP Data Objects — database access abstraction layer used for WordPress MySQL connection imports.
+- **PostgreSQL:** Open-source relational database used as Blogravel's primary data store.
+- **Queue worker:** Background process that dequeues and processes async jobs (email sending, import processing, notifications).
+- **Rate limiting:** Restricting the number of API requests a client can make within a per-minute window, configurable per API key.
+- **Redis:** In-memory data store used as the queue driver and cache backend.
+- **REST API:** Representational State Transfer API — Blogravel exposes RESTful endpoints consumed by all frontends.
+- **RBAC / Role-based access:** Permission system with three tiers — Super Admin (full access), Editor (publish any post), Author (own posts only).
+- **SMTP:** Simple Mail Transfer Protocol — configurable mail driver for sending transactional emails (confirmations, notifications).
+- **Tailwind CSS:** Utility-first CSS framework used to style the starter theme.
+- **WCAG 2.1 AA:** Web Content Accessibility Guidelines 2.1, Level AA — the accessibility standard the starter theme must meet.
+- **WXR:** WordPress eXtended RSS — XML export format containing posts, pages, media, categories, and comments for import into Blogravel.
 
 ### 11.2 References & External Links
-- **Git Standards:** [Git standards guide](file:///home/swagoverlord/repos/wiki/guidelines/git-standards.md)
-- _**Third-Party Documentation:**_ [_[Link to external service docs, e.g. Stripe API developer portal]_]
-- _**Competitor/Inspiration Links:**_ [_[Link to similar apps or products being used as inspiration]_]
+**Frameworks & Languages:**
+  - [PHP](https://www.php.net/)
+  - [Laravel](https://laravel.com/) ([Blade docs](https://laravel.com/docs/blade), [Sanctum docs](https://laravel.com/docs/sanctum), [Queue docs](https://laravel.com/docs/queues), [Pint docs](https://laravel.com/docs/pint))
+  - [Filament PHP](https://filamentphp.com/)
+  - [Livewire](https://livewire.laravel.com/)
+  - [Tailwind CSS](https://tailwindcss.com/)
+
+**Infrastructure & Tools:**
+  - [Docker Compose](https://docs.docker.com/compose/)
+  - [PostgreSQL](https://www.postgresql.org/)
+  - [Redis](https://redis.io/)
+  - [GitHub Actions](https://github.com/features/actions)
+  - [Ollama](https://ollama.ai/)
+
+- **Testing:**
+  - [Pest PHP](https://pestphp.com/)
+
+- **Mail Providers (user-configurable):**
+  - [Mailgun](https://www.mailgun.com/)
+  - [Resend](https://resend.com/)
+  - [SendGrid](https://sendgrid.com/)
+
+- **AI Providers (user-supplied):**
+  - [OpenAI](https://openai.com/)
+  - [Anthropic](https://www.anthropic.com/)

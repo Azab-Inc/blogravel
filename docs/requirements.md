@@ -221,8 +221,6 @@
   - Filament's default feedback behaviours retained as the baseline for the admin panel
 
 ## 7. Technical Architecture & Tech Stack
-<a id="point-7-1"></a>
-
 ### 7.1 Technical Overview
 - **Application Type:** REST API + Web app (API-first; Blade starter theme consumes the same API as external frontends)
 - **Hosting Solution:** Self-hosted via Docker Compose. A `docker-compose.yml` and `example.env` will be provided in the repository for users to get up and running with minimal setup.
@@ -243,20 +241,17 @@
   | User-supplied AI provider (OpenAI, Anthropic, Ollama, etc.) | AI post generation | Admin configures endpoint + key; no vendor bundled |
   | User-configured SMTP / Mailgun / Resend / SendGrid | Transactional email (subscription confirmations, post notifications) | Configured via `.env` and can be tested in admin panel with "send test email" option |
 
-<a id="point-7-3"></a>
-
 ### 7.3 System Architecture Diagram
 - _**Diagram Link:**_ _To be added to the `/designs` folder_
 - **Architecture Overview:** Users deploy via Docker Compose (Laravel app + PostgreSQL + Redis containers). The Laravel backend exposes a REST API consumed by all frontends. The Blade starter theme is an optional built-in frontend that hits the same API. The Filament admin panel runs on the same Laravel instance. Queue workers (Redis-backed) handle all async jobs — emails, import processing, notifications. Mail is routed through the user's chosen SMTP/provider configured in `.env`.
 
 ## 8. Deployment & Infrastructure
+
 ### 8.1 Hosting & Environment Strategy
 - **Hosting Model (v1):** Self-hosted — users deploy on their own server using the provided `docker-compose.yml` and `example.env` (see [point 7.1](#point-7-1)). No managed hosting is bundled in v1.
 - **Container Stack:** Laravel app, PostgreSQL, Redis, and a queue worker run as separate Docker Compose services, matching the architecture in [point 7.3](#point-7-3).
 - **Environments:** Local development via Docker Compose; production is the user's self-hosted instance, configured through `.env` (mail, database, API keys, theme toggle, etc.).
 - _**Blogravel Cloud:**_ _Out of scope for v1 (see [point 3.2](#point-3-2)). Managed hosting and environment strategy for Cloud will be defined in a later phase._
-
-<a id="point-8-2"></a>
 
 ### 8.2 CI/CD Pipeline & DevOps
 - **CI/CD Platform:** GitHub Actions — automated checks on pull requests and merges to the main branches.
@@ -325,13 +320,13 @@
 - **Launch Date (v1.0):** [Date]
 
 ### 10.2 Release & Rollout Plan
-- **Beta Testing:** [e.g. Invite-only beta testing with select users]
-- **Production Rollout Strategy:** [e.g. Direct overwrite, zero-downtime blue-green deployment]
-- **Post-Launch Monitoring:** [e.g. Verify logs and error reports daily for the first week]
+- **Beta Testing:** [To be defined]
+- **Production Rollout Strategy:** Users pull or build from a release tag and run `docker compose up` on their server. Repository documentation covers environment setup, database migrations, and queue worker configuration.
+- **Post-Launch Monitoring:** [To be defined]
 
-### _10.3 Future Phases_
-- _**Phase 2 Features:**_ [_[e.g. Add user accounts, cloud database sync, invoice template customization]_]
-- _**Long-term Roadmap:**_ [_[e.g. Native desktop and mobile application versions]_]
+### 10.3 Future Phases
+- **Phase 2 Features:** Frontend template ecosystem (additional pre-built themes beyond the starter) and Blogravel Cloud (managed AWS-based hosting, monthly subscription, no self-hosting required) — see [point 3.2](#point-3-2).
+- **Long-term Roadmap:** Blogravel Cloud SLA targets, environment strategy, and managed domain/DNS configuration — see [point 3.2](#point-3-2).
 
 ## 11. Appendix
 ### 11.1 Glossary of Terms

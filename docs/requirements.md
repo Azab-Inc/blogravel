@@ -172,7 +172,7 @@
   - `Post` HasMany `Media`
   - `Subscriber` BelongsToMany `Categories` (empty pivot = all categories)
 
-- **UML:** _[To be added]_
+- **UML:** [Database UML diagram](../designs/database-uml.drawio)
 
 ## 5. Non-Functional Requirements
 <a id="point-5-1"></a>

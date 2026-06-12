@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "azab-inc/blogravel",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "Blogravel - a straight forward blogging platform alternative to Wordpress.",
     "keywords": [
         "laravel",
         "framework"
@@ -11,12 +11,9 @@
     "require": {
         "php": "^8.3",
         "laravel/chisel": "^0.1.0",
-        "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.7",
         "laravel/octane": "^2.17",
-        "laravel/tinker": "^3.0",
-        "livewire/flux": "^2.13.1",
-        "livewire/livewire": "^4.1"
+        "laravel/tinker": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",

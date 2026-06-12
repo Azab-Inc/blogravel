@@ -9,11 +9,10 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.4
-- laravel/fortify (FORTIFY) - v1
+- php - 8.5
 - laravel/framework (LARAVEL) - v13
+- laravel/octane (OCTANE) - v2
 - laravel/prompts (PROMPTS) - v0
-- livewire/flux (FLUXUI_FREE) - v2
 - livewire/livewire (LIVEWIRE) - v4
 - laravel/boost (BOOST) - v2
 - laravel/mcp (MCP) - v0
@@ -147,13 +146,23 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
-=== livewire/core rules ===
+=== octane/core rules ===
 
-# Livewire
+# Octane
 
-- Livewire allow to build dynamic, reactive interfaces in PHP without writing JavaScript.
-- You can use Alpine.js for client-side interactions instead of JavaScript frameworks.
-- Keep state server-side so the UI reflects it. Validate and authorize in actions as you would in HTTP requests.
+- Octane boots the application once and reuses it across requests, so singletons persist between requests.
+- The Laravel container's `scoped` method may be used as a safe alternative to `singleton`.
+- Never inject the container, request, or config repository into a singleton's constructor; use a resolver closure or `bind()` instead:
+
+```php
+// Bad
+$this->app->singleton(Service::class, fn (Application $app) => new Service($app['request']));
+
+// Good
+$this->app->singleton(Service::class, fn () => new Service(fn () => request()));
+```
+
+- Never append to static properties, as they accumulate in memory across requests.
 
 === pint/core rules ===
 

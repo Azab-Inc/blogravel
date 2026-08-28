@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eeaf62"/>
+      <stop offset="100%" stop-color="#e5a24d"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded background -->
+  <rect width="32" height="32" rx="6" ry="6" fill="#102542"/>
+  
+  <!-- Share/connection icon -->
+  <circle cx="16" cy="8" r="3.5" fill="url(#gold)"/>
+  <circle cx="8" cy="24" r="3.5" fill="url(#gold)"/>
+  <circle cx="24" cy="24" r="3.5" fill="url(#gold)"/>
+  <line x1="16" y1="11.5" x2="10.5" y2="20.5" stroke="url(#gold)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="16" y1="11.5" x2="21.5" y2="20.5" stroke="url(#gold)" stroke-width="2" stroke-linecap="round"/>
+</svg>

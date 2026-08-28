@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" width="320" height="60">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eeaf62"/>
+      <stop offset="100%" stop-color="#f0c078"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Blog -->
+  <text x="0" y="44" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" letter-spacing="-1.5" fill="#ffffff">Blog</text>
+  
+  <!-- ravel -->
+  <text x="107" y="44" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="42" font-weight="400" letter-spacing="-1.5" fill="url(#goldGradient)">ravel</text>
+  
+  <!-- Subtle accent line -->
+  <line x1="0" y1="52" x2="60" y2="52" stroke="url(#goldGradient)" stroke-width="2" stroke-linecap="round"/>
+</svg>

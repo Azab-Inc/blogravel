@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 200" width="900" height="200">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eeaf62"/>
+      <stop offset="100%" stop-color="#d4944d"/>
+    </linearGradient>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fafaf8"/>
+      <stop offset="100%" stop-color="#f5f0e8"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="900" height="200" fill="url(#bgGradient)" rx="8"/>
+  
+  <!-- Decorative dots pattern (tech feel) -->
+  <g opacity="0.15">
+    <circle cx="50" cy="30" r="2" fill="#102542"/>
+    <circle cx="70" cy="30" r="2" fill="#102542"/>
+    <circle cx="90" cy="30" r="2" fill="#102542"/>
+    <circle cx="50" cy="50" r="2" fill="#102542"/>
+    <circle cx="70" cy="50" r="2" fill="#102542"/>
+    <circle cx="90" cy="50" r="2" fill="#102542"/>
+    <circle cx="50" cy="70" r="2" fill="#102542"/>
+    <circle cx="70" cy="70" r="2" fill="#102542"/>
+    <circle cx="90" cy="70" r="2" fill="#102542"/>
+  </g>
+  
+  <!-- Logo mark -->
+  <g transform="translate(60, 55)">
+    <!-- B shape -->
+    <path d="M0 0 L0 90 L40 90 C60 90 70 80 70 65 C70 55 64 48 52 45 C60 40 66 32 66 22 C66 10 56 0 42 0 Z M14 14 L42 14 C50 14 54 18 54 26 C54 34 50 38 42 38 L14 38 Z M14 52 L44 52 C52 52 56 56 56 64 C56 72 52 76 44 76 L14 76 Z" 
+          fill="url(#goldGradient)"/>
+    <!-- Tech nodes -->
+    <circle cx="72" cy="22" r="4" fill="#102542" opacity="0.5"/>
+    <circle cx="72" cy="45" r="4" fill="#102542" opacity="0.5"/>
+    <circle cx="72" cy="68" r="4" fill="#102542" opacity="0.5"/>
+  </g>
+  
+  <!-- Blogravel text -->
+  <text x="145" y="95" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="56" font-weight="700" letter-spacing="-2" fill="#102542">Blog</text>
+  <text x="270" y="95" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="56" font-weight="400" letter-spacing="-2" fill="url(#goldGradient)">ravel</text>
+  
+  <!-- Tagline -->
+  <text x="148" y="130" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="16" font-weight="400" fill="#666666" letter-spacing="0.5">Self-hosted blogging, reimagined</text>
+  
+  <!-- Accent line -->
+  <line x1="148" y1="145" x2="220" y2="145" stroke="url(#goldGradient)" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Feature badges -->
+  <g transform="translate(148, 158)">
+    <rect x="0" y="0" width="90" height="24" rx="12" fill="url(#goldGradient)" opacity="0.15"/>
+    <text x="45" y="16" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#102542" text-anchor="middle">Open Source</text>
+    
+    <rect x="100" y="0" width="80" height="24" rx="12" fill="url(#goldGradient)" opacity="0.15"/>
+    <text x="140" y="16" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#102542" text-anchor="middle">Self-Hosted</text>
+    
+    <rect x="190" y="0" width="100" height="24" rx="12" fill="url(#goldGradient)" opacity="0.15"/>
+    <text x="240" y="16" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#102542" text-anchor="middle">AI-Powered</text>
+    
+    <rect x="300" y="0" width="110" height="24" rx="12" fill="url(#goldGradient)" opacity="0.15"/>
+    <text x="355" y="16" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#102542" text-anchor="middle">WP Migration</text>
+  </g>
+</svg>

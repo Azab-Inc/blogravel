@@ -61,7 +61,7 @@ services:
         ports:
             - '${FORWARD_PGADMIN_PORT:-5050}:80'
         environment:
-            PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL:-admin@blogravel.local}'
+            PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL:-admin@blogravel.dev}'
             PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD:-secret}'
         volumes:
             - 'sail-pgadmin:/var/lib/pgadmin'

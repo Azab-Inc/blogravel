@@ -1,0 +1,158 @@
+<mxfile host="65bd71144e">
+    <diagram name="Blogravel Database UML" id="blogravel-db-uml">
+        <mxGraphModel dx="1007" dy="2184" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1500" background="#ffffff" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+
+                <!-- ===== Entities (UML class shapes) ===== -->
+
+                <mxCell id="2" value="users" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="45" width="280" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="2b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;name: varchar(255)&lt;br&gt;first_name: varchar(255)&lt;br&gt;last_name: varchar(255)&lt;br&gt;email: varchar(255) UNIQUE&lt;br&gt;password: varchar(255)&lt;br&gt;&lt;font color=&quot;#666&quot;&gt;FK&lt;/font&gt; role_id: bigint → roles.id&lt;br&gt;email_verified_at: timestamp NULL&lt;br&gt;remember_token: varchar(100) NULL&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="2" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="160" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="16" value="roles" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="370" width="280" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="16b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;name: varchar(100) UNIQUE&lt;br&gt;slug: varchar(100) UNIQUE&lt;br&gt;description: text NULL&lt;br&gt;is_system: boolean DEFAULT false&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="16" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="100" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="3" value="posts" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="40" width="280" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="3b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;title: varchar(255)&lt;br&gt;slug: varchar(255) UNIQUE&lt;br&gt;content: text&lt;br&gt;excerpt: text NULL&lt;br&gt;status: enum(draft, published)&lt;br&gt;&lt;font color=&quot;#666&quot;&gt;FK&lt;/font&gt; author_id: bigint → users.id&lt;br&gt;published_at: timestamp NULL&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="3" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="170" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="4" value="pages" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="-20" width="280" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="4b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;title: varchar(255)&lt;br&gt;slug: varchar(255) UNIQUE&lt;br&gt;content: text&lt;br&gt;status: enum(draft, published)&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="4" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="110" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="5" value="categories" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="680" width="280" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="5b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;name: varchar(255)&lt;br&gt;slug: varchar(255) UNIQUE&lt;br&gt;description: text NULL&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="5" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="100" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="6" value="tags" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="680" width="280" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="6b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;name: varchar(255)&lt;br&gt;slug: varchar(255) UNIQUE&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="6" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="80" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="7" value="comments" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="680" width="280" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="7b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;&lt;font color=&quot;#666&quot;&gt;FK&lt;/font&gt; post_id: bigint → posts.id&lt;br&gt;author_name: varchar(255)&lt;br&gt;author_email: varchar(255)&lt;br&gt;body: text&lt;br&gt;status: enum(pending, approved, spam)&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="7" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="120" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="8" value="media" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="-270" width="280" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="8b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;filename: varchar(255)&lt;br&gt;path: varchar(255)&lt;br&gt;mime_type: varchar(127)&lt;br&gt;size: bigint&lt;br&gt;&lt;font color=&quot;#666&quot;&gt;FK&lt;/font&gt; post_id: bigint NULL → posts.id&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="8" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="120" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="9" value="subscribers" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="1000" width="280" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="9b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;first_name: varchar(255) NULL&lt;br&gt;last_name: varchar(255) NULL&lt;br&gt;email: varchar(255) UNIQUE&lt;br&gt;confirmed: boolean DEFAULT false&lt;br&gt;confirmation_token: varchar(255) NULL&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="9" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="120" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="10" value="ai_providers" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="1000" width="280" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="10b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;name: varchar(255)&lt;br&gt;type: enum(openai, ollama, custom)&lt;br&gt;endpoint: varchar(255)&lt;br&gt;api_key: text NULL (encrypted)&lt;br&gt;is_active: boolean DEFAULT false&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="10" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="120" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="11" value="api_keys" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1020" width="280" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="11b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; id: serial&lt;br&gt;name: varchar(255)&lt;br&gt;key_hash: varchar(255)&lt;br&gt;rate_limit_per_minute: int NULL&lt;br&gt;last_used_at: timestamp NULL&lt;br&gt;created_at: timestamp&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="11" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="110" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="12" value="settings" style="swimlane;html=1;startSize=30;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="1220" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="12b" value="&lt;font color=&quot;#666&quot;&gt;PK&lt;/font&gt; key: varchar(255)&lt;br&gt;value: text&lt;br&gt;updated_at: timestamp" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="12" vertex="1">
+                    <mxGeometry x="0" y="30" width="280" height="50" as="geometry"/>
+                </mxCell>
+
+                <!-- ===== Associative (pivot) tables — dashed ===== -->
+
+                <mxCell id="13" value="post_category" style="swimlane;html=1;startSize=30;dashed=1;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="560" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="13b" value="&lt;font color=&quot;#666&quot;&gt;PK,FK&lt;/font&gt; post_id: bigint → posts.id&lt;br&gt;&lt;font color=&quot;#666&quot;&gt;PK,FK&lt;/font&gt; category_id: bigint → categories.id" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="13" vertex="1">
+                    <mxGeometry x="0" y="30" width="240" height="50" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="14" value="post_tag" style="swimlane;html=1;startSize=30;dashed=1;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="560" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="14b" value="&lt;font color=&quot;#666&quot;&gt;PK,FK&lt;/font&gt; post_id: bigint → posts.id&lt;br&gt;&lt;font color=&quot;#666&quot;&gt;PK,FK&lt;/font&gt; tag_id: bigint → tags.id" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="14" vertex="1">
+                    <mxGeometry x="0" y="30" width="240" height="30" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="15" value="subscriber_category" style="swimlane;html=1;startSize=30;dashed=1;fillColor=#ffffff;strokeColor=#000000;fontFamily=Helvetica;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="870" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="15b" value="&lt;font color=&quot;#666&quot;&gt;PK,FK&lt;/font&gt; subscriber_id: bigint → subscribers.id&lt;br&gt;&lt;font color=&quot;#666&quot;&gt;PK,FK&lt;/font&gt; category_id: bigint → categories.id&lt;br&gt;&lt;i&gt;(empty pivot = subscribed to all)&lt;/i&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=11;whiteSpace=wrap;padding=4;" parent="15" vertex="1">
+                    <mxGeometry x="0" y="30" width="260" height="40" as="geometry"/>
+                </mxCell>
+
+                <!-- ===== Legend (UML note) ===== -->
+
+                <mxCell id="200" value="&lt;b&gt;Legend&lt;/b&gt;&lt;hr&gt;Dashed border = pivot / associative table (many-to-many)&lt;br&gt;│──  ──╪  ER-one (one side)&lt;br&gt;│──  ──Ψ  ER-many (many side)&lt;br&gt;│──  Linear edge = non-pivot relationship" style="shape=note;whiteSpace=wrap;html=1;bgColor=#fffef0;strokeColor=#000000;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;size=12;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="1220" width="280" height="150" as="geometry"/>
+                </mxCell>
+
+                <!-- ===== Relationships (ER arrows) ===== -->
+
+                <mxCell id="101" value="" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontSize=10;startArrow=ERone;startFill=1;endArrow=ERmany;endFill=1;" parent="1" source="2" target="3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="110" value="" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontSize=10;startArrow=ERone;startFill=1;endArrow=ERmany;endFill=1;" parent="1" source="16" target="2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="102" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;fontSize=10;startArrow=ERmany;startFill=1;endArrow=ERmany;endFill=1;dashed=1;" parent="1" source="3" target="13" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="103" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;fontSize=10;startArrow=ERmany;startFill=1;endArrow=ERmany;endFill=1;dashed=1;" parent="1" source="5" target="13" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="104" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;fontSize=10;startArrow=ERmany;startFill=1;endArrow=ERmany;endFill=1;dashed=1;" parent="1" source="3" target="14" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="105" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;fontSize=10;startArrow=ERmany;startFill=1;endArrow=ERmany;endFill=1;dashed=1;" parent="1" source="6" target="14" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="106" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontSize=10;startArrow=ERone;startFill=1;endArrow=ERmany;endFill=1;" parent="1" source="3" target="7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="107" value="" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;fontSize=10;startArrow=ERone;startFill=1;endArrow=ERmany;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="3" target="8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="108" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;fontSize=10;startArrow=ERmany;startFill=1;endArrow=ERmany;endFill=1;dashed=1;" parent="1" source="9" target="15" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="109" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;fontSize=10;startArrow=ERmany;startFill=1;endArrow=ERmany;endFill=1;dashed=1;" parent="1" source="5" target="15" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

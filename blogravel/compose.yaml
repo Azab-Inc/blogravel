@@ -63,8 +63,10 @@ services:
         environment:
             PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL:-admin@blogravel.dev}'
             PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD:-secret}'
+            PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
         volumes:
             - 'sail-pgadmin:/var/lib/pgadmin'
+            - './docker/pgadmin/servers.json:/pgadmin4/servers.json'
         networks:
             - sail
         depends_on:

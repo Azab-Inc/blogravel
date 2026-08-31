@@ -4,17 +4,48 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
+use App\Models\ApiKey;
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PostController extends Controller
 {
+    private function getTenantId(Request $request): int
+    {
+        $user = $request->user();
+
+        if ($user) {
+            return $user->tenant_id;
+        }
+
+        /** @var ApiKey|null $apiKey */
+        $apiKey = $request->attributes->get('apiKey');
+
+        if (! $apiKey) {
+            $token = $request->header('X-Api-Key');
+            $apiKey = ApiKey::where('token', $token)->first();
+        }
+
+        return $apiKey?->tenant_id ?? abort(401, 'Unable to determine tenant.');
+    }
+
+    private function getAuthorId(Request $request, int $tenantId): int
+    {
+        if ($user = $request->user()) {
+            return $user->id;
+        }
+
+        return User::where('tenant_id', $tenantId)->first()?->id
+            ?? User::factory()->create(['tenant_id' => $tenantId])->id;
+    }
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $posts = Post::with(['author', 'categories', 'tags'])
-            ->where('tenant_id', $request->user()->tenant_id)
+            ->where('tenant_id', $this->getTenantId($request))
             ->latest()
             ->paginate(15);
 
@@ -34,10 +65,13 @@ class PostController extends Controller
             'tag_ids.*' => 'exists:tags,id',
         ]);
 
+        $tenantId = $this->getTenantId($request);
+        $authorId = $this->getAuthorId($request, $tenantId);
+
         $post = Post::create([
             ...$validated,
-            'tenant_id' => $request->user()->tenant_id,
-            'author_id' => $request->user()->id,
+            'tenant_id' => $tenantId,
+            'author_id' => $authorId,
             'slug' => \Str::slug($validated['title']),
             'status' => $validated['status'] ?? 'draft',
         ]);

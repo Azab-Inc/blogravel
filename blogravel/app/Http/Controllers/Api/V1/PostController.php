@@ -13,7 +13,7 @@ class PostController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $posts = Post::with([author, categories, tags])
+        $posts = Post::with(['author', 'categories', 'tags'])
             ->where('tenant_id', $request->user()->tenant_id)
             ->latest()
             ->paginate(15);
@@ -51,13 +51,13 @@ class PostController extends Controller
         }
 
         return response()->json([
-            'data' => new PostResource($post->load([author, categories, tags])),
+            'data' => new PostResource($post->load(['author', 'categories', 'tags'])),
         ], 201);
     }
 
     public function show(Post $post): PostResource
     {
-        return new PostResource($post->load([author, categories, tags]));
+        return new PostResource($post->load(['author', 'categories', 'tags']));
     }
 
     public function update(Request $request, Post $post): JsonResponse
@@ -90,7 +90,7 @@ class PostController extends Controller
         }
 
         return response()->json([
-            'data' => new PostResource($post->load([author, categories, tags])),
+            'data' => new PostResource($post->load(['author', 'categories', 'tags'])),
         ]);
     }
 

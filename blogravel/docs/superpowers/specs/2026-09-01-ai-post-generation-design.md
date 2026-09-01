@@ -253,19 +253,38 @@ Livewire action attached to PostResource form.
    - Radio: length_type (default `paragraphs`) — options: "Paragraphs" / "Characters"
    - TextInput: length_value (default `4` — when paragraphs selected; or `2000` when characters)
    - CheckboxList: output types (title, content, excerpt, categories, tags — all checked by default)
-3. Submit → calls `AiService::generate()` with selected provider + prompt + output types + length options
-4. Returns generated data to fill form fields:
-   - `title` → fills `title` field
-   - `content` → fills `content` field
-   - `excerpt` → fills `excerpt` field
-   - `categories` → adds to `categories` relationship (if they exist)
-   - `tags` → adds to `tags` relationship (if they exist)
-5. Saves last used provider + model to settings for next session
-6. Shows success notification with fields filled count
-7. On error → shows error notification with message
+3. Submit → creates a draft Post immediately, dispatches `GenerateAiPostJob` to queue
+4. Shows loading modal: "Generating content... A notification will be sent when your post is ready. The post will be saved as a draft."
+5. Job completes → sends in-app notification (top-right bell) + email notification to user
+6. On error → sends error notification with message
 
 **PostResource form change:**
 - Add `GenerateAiPostAction::make()` to form components (after content textarea)
+
+### `GenerateAiPostJob` — `app/Jobs/GenerateAiPostJob.php`
+
+Queued job implementing `ShouldQueue`.
+
+**Constructor:**
+- `string $postId` — the draft post to update
+- `string $providerId` — AI provider to use
+- `string $model` — model name override
+- `string $prompt` — user's prompt
+- `array $outputTypes` — what to generate
+- `array $options` — length_type, length_value
+
+**`handle()` method:**
+1. Load Post and AiProvider from DB
+2. Call `AiService::generate()`
+3. Update Post with generated fields (title, content, excerpt)
+4. Sync categories/tags if generated
+5. Send in-app notification via `Notification::make()->database()`
+6. Send email notification via `Mail::to($user->email)`
+
+**Error handling:**
+- Catches `AiGenerationException`
+- Sends error notification to user with failure reason
+- Post remains as draft with original state
 
 ---
 
@@ -319,6 +338,7 @@ Livewire action attached to PostResource form.
 | `app/Exceptions/AiGenerationException.php` | Create |
 | `app/Filament/Pages/AiSettings.php` | Create |
 | `app/Filament/Actions/GenerateAiPostAction.php` | Create |
+| `app/Jobs/GenerateAiPostJob.php` | Create |
 | `app/Filament/Resources/PostResource.php` | Modify (add action) |
 | `tests/Unit/Services/AiServiceTest.php` | Create |
 | `tests/Unit/Services/Ai/OpenAiProviderTest.php` | Create |
@@ -326,3 +346,4 @@ Livewire action attached to PostResource form.
 | `tests/Unit/Services/Ai/CustomProviderTest.php` | Create |
 | `tests/Feature/Filament/Pages/AiSettingsTest.php` | Create |
 | `tests/Feature/Filament/Actions/GenerateAiPostActionTest.php` | Create |
+| `tests/Feature/Jobs/GenerateAiPostJobTest.php` | Create |

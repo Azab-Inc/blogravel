@@ -24,7 +24,7 @@ class AiSettings extends Page
 
     protected static ?string $navigationLabel = 'AI Settings';
 
-    public ?array $providers = [];
+    public int $providerCount = 0;
 
     public ?string $defaultProvider = null;
 
@@ -34,21 +34,7 @@ class AiSettings extends Page
     {
         $tenantId = auth()->user()->tenant_id;
 
-        $this->providers = AiProvider::where('tenant_id', $tenantId)
-            ->get()
-            ->map(fn (AiProvider $p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'type' => $p->type->value,
-                'model' => $p->model,
-                'base_url' => $p->base_url,
-                'api_key' => $p->api_key,
-                'temperature' => $p->temperature,
-                'max_tokens' => $p->max_tokens,
-                'custom_template' => $p->custom_template,
-                'enabled' => $p->enabled,
-            ])
-            ->toArray();
+        $this->providerCount = AiProvider::where('tenant_id', $tenantId)->count();
 
         $this->defaultProvider = Setting::where('tenant_id', $tenantId)
             ->where('key', 'ai_default_provider')
@@ -75,7 +61,7 @@ class AiSettings extends Page
                     ->schema([
                         Placeholder::make('provider_count')
                             ->label('Configured Providers')
-                            ->content(fn () => (string) count($this->providers)),
+                            ->content(fn () => (string) $this->providerCount),
                     ]),
                 Section::make('Defaults')
                     ->schema([

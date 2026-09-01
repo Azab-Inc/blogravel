@@ -265,6 +265,12 @@ Livewire action attached to PostResource form.
 
 Queued job implementing `ShouldQueue`.
 
+**Tenant Queue Isolation:**
+- Job dispatches to queue `ai-generation-{tenant_id}`
+- Each tenant's AI jobs run in their own queue, preventing one tenant's heavy load from slowing others
+- Queue worker listens to `ai-generation-*` wildcard (or multiple named queues)
+- Example: Tenant A's 5 pending jobs do not block Tenant B's jobs from processing
+
 **Constructor:**
 - `string $postId` — the draft post to update
 - `string $providerId` — AI provider to use
@@ -272,6 +278,7 @@ Queued job implementing `ShouldQueue`.
 - `string $prompt` — user's prompt
 - `array $outputTypes` — what to generate
 - `array $options` — length_type, length_value
+- Sets queue dynamically: `$this->onQueue("ai-generation-{$tenantId}")`
 
 **`handle()` method:**
 1. Load Post and AiProvider from DB
@@ -285,6 +292,11 @@ Queued job implementing `ShouldQueue`.
 - Catches `AiGenerationException`
 - Sends error notification to user with failure reason
 - Post remains as draft with original state
+
+**Queue worker command:**
+```
+php artisan queue:work --queue=ai-generation-default,ai-generation-*
+```
 
 ---
 

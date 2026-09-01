@@ -1282,6 +1282,29 @@ it('sends error notification on failure', function () {
         return $notification->toArray()['title'] === 'AI generation failed';
     });
 });
+
+it('dispatches to tenant-specific queue', function () {
+    $user = User::factory()->create();
+    $provider = AiProvider::factory()->create([
+        'tenant_id' => $user->tenant_id,
+    ]);
+
+    $post = Post::factory()->create([
+        'tenant_id' => $user->tenant_id,
+        'author_id' => $user->id,
+    ]);
+
+    $job = new GenerateAiPostJob(
+        $post->id,
+        $provider->id,
+        'gpt-4o',
+        'test',
+        ['title'],
+        []
+    );
+
+    expect($job->queue)->toBe("ai-generation-{$user->tenant_id}");
+});
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1323,7 +1346,13 @@ class GenerateAiPostJob implements ShouldQueue
         public string $prompt,
         public array $outputTypes,
         public array $options,
-    ) {}
+    ) {
+        // Tenant queue isolation: each tenant gets its own queue
+        $post = Post::find($postId);
+        if ($post) {
+            $this->onQueue("ai-generation-{$post->tenant_id}");
+        }
+    }
 
     public function handle(AiService $aiService): void
     {

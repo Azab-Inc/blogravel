@@ -61,7 +61,7 @@ class ApiKeyResource extends Resource
                     ->sortable(),
                 TextColumn::make('abilities')
                     ->badge()
-                    ->formatStateUsing(fn (array $state) => implode(', ', array_map(fn ($a) => $a->value, $state))),
+                    ->formatStateUsing(fn ($state) => $state->value),
                 TextColumn::make('last_used_at')
                     ->label('Last Used')
                     ->since()

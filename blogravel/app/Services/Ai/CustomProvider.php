@@ -55,9 +55,12 @@ class CustomProvider implements AiProviderInterface
 
     private function replacePlaceholders(array $data, array $placeholders): array
     {
-        return json_decode(
-            str_replace(array_keys($placeholders), array_values($placeholders), json_encode($data)),
-            true
-        );
+        array_walk_recursive($data, function (mixed &$value) use ($placeholders): void {
+            if (is_string($value)) {
+                $value = str_replace(array_keys($placeholders), array_values($placeholders), $value);
+            }
+        });
+
+        return $data;
     }
 }

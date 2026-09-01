@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 
 test('user model has createToken method', function () {
     $user = User::factory()->create();
@@ -15,5 +16,5 @@ test('user can create personal access token', function () {
 });
 
 test('personal_access_tokens table exists', function () {
-    expect(\Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens'))->toBeTrue();
+    expect(Schema::hasTable('personal_access_tokens'))->toBeTrue();
 });

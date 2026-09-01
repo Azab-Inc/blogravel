@@ -80,7 +80,7 @@ it('stores per-tenant integrations: ai providers, api keys, settings, webhooks, 
     $subscription = Subscription::factory()->for($tenant)->create();
 
     expect($tenant->aiProviders)->toHaveCount(1);
-    expect($apiKey->abilities)->toBe([ApiKeyAbility::Read]);
+    expect($apiKey->abilities->toArray())->toBe([ApiKeyAbility::Read]);
     expect($tenant->settings)->toHaveCount(1);
     expect($tenant->webhooks)->toHaveCount(1);
     expect($tenant->invitations)->toHaveCount(1);

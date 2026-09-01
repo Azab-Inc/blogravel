@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('author_id')->constrained('users')->cascadeOnDelete();
+            $table->uuid('author_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->string('slug');
             $table->longText('content');

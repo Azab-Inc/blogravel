@@ -2,9 +2,10 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Enums\Role;
 use Filament\Auth\Pages\Register as BaseRegister;
-use Filament\Schemas\Components\Component;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 
@@ -42,6 +43,7 @@ class Register extends BaseRegister
     protected function handleRegistration(array $data): Model
     {
         $data['name'] = trim($data['first_name'].' '.$data['last_name']);
+        $data['role'] = Role::SuperAdmin;
 
         return parent::handleRegistration($data);
     }

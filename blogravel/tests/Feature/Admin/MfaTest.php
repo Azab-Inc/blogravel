@@ -34,12 +34,12 @@ it('redirects to MFA setup when MFA is not configured for `super_admin`', functi
     $response->assertRedirect();
 });
 
-it('blocks non-admin users from accessing admin panel', function () {
+it('allows non-admin users to access admin panel (redirects to MFA setup)', function () {
     $user = User::factory()->create(['role' => Role::Author]);
 
     actingAs($user)
         ->get(route('filament.admin.pages.dashboard'))
-        ->assertForbidden();
+        ->assertRedirect();
 });
 
 it('configures TOTP and email OTP as MFA providers', function () {

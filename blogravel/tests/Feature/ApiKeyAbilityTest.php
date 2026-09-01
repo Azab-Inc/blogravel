@@ -9,7 +9,7 @@ it('rejects write request with read-only api key', function () {
     $key->save();
 
     $this->withHeader('X-Api-Key', $key->token)
-        ->postJson('/api/v1/posts', ['title' => 'x'])
+        ->postJson('/api/v1/posts', ['title' => 'x', 'content' => 'test content'])
         ->assertForbidden();
 });
 
@@ -44,12 +44,12 @@ it('allows read request with read ability', function () {
 });
 
 it('allows write request with write ability', function () {
-    $key = ApiKey::factory()->create();
+    $key = ApiKey::factory()->withTenantUser()->create();
     $key->abilities = [ApiKeyAbility::Write];
     $key->save();
 
     $this->withHeader('X-Api-Key', $key->token)
-        ->postJson('/api/v1/posts', ['title' => 'x'])
+        ->postJson('/api/v1/posts', ['title' => 'x', 'content' => 'test content'])
         ->assertSuccessful();
 });
 
@@ -64,7 +64,7 @@ it('allows draft read with draft_read ability', function () {
 });
 
 it('allows request with multiple abilities', function () {
-    $key = ApiKey::factory()->create();
+    $key = ApiKey::factory()->withTenantUser()->create();
     $key->abilities = [ApiKeyAbility::Read, ApiKeyAbility::Write];
     $key->save();
 
@@ -73,7 +73,7 @@ it('allows request with multiple abilities', function () {
         ->assertOk();
 
     $this->withHeader('X-Api-Key', $key->token)
-        ->postJson('/api/v1/posts', ['title' => 'x'])
+        ->postJson('/api/v1/posts', ['title' => 'x', 'content' => 'test content'])
         ->assertSuccessful();
 });
 

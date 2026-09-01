@@ -24,22 +24,7 @@ class PostController extends Controller
         /** @var ApiKey|null $apiKey */
         $apiKey = $request->attributes->get('apiKey');
 
-        if (! $apiKey) {
-            $token = $request->header('X-Api-Key');
-            $apiKey = ApiKey::where('token', $token)->first();
-        }
-
         return $apiKey?->tenant_id ?? abort(401, 'Unable to determine tenant.');
-    }
-
-    private function getAuthorId(Request $request, int $tenantId): int
-    {
-        if ($user = $request->user()) {
-            return $user->id;
-        }
-
-        return User::where('tenant_id', $tenantId)->first()?->id
-            ?? User::factory()->create(['tenant_id' => $tenantId])->id;
     }
 
     public function index(Request $request): AnonymousResourceCollection
@@ -66,7 +51,10 @@ class PostController extends Controller
         ]);
 
         $tenantId = $this->getTenantId($request);
-        $authorId = $this->getAuthorId($request, $tenantId);
+        $user = $request->user();
+        $authorId = $user?->id
+            ?? User::where('tenant_id', $tenantId)->first()?->id
+            ?? abort(401, 'No tenant user available to assign as author.');
 
         $post = Post::create([
             ...$validated,

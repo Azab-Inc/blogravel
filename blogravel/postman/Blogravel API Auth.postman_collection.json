@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "Blogravel API Auth",
-    "_postman_id": "blogravel-api-auth-collection",
-    "description": "API collection for Blogravel auth and protected endpoints. Set the `token` variable after running the Login request.",
+    "name": "Blogravel API",
+    "_postman_id": "blogravel-api-collection",
+    "description": "API collection for Blogravel. Auth endpoints use Sanctum Bearer tokens. Post endpoints use API key via X-Api-Key header.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -13,6 +13,11 @@
     },
     {
       "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
       "value": "",
       "type": "string"
     }
@@ -98,8 +103,8 @@
             "method": "GET",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
               },
               {
                 "key": "Accept",
@@ -111,7 +116,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "posts"]
             },
-            "description": "List all published posts. Requires a valid Bearer token."
+            "description": "List all published posts. Requires a valid API key with read ability."
           }
         },
         {
@@ -120,8 +125,8 @@
             "method": "GET",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
               },
               {
                 "key": "Accept",
@@ -133,7 +138,37 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "posts", "1"]
             },
-            "description": "Retrieve a single post by ID. Requires a valid Bearer token."
+            "description": "Retrieve a single post by ID. Requires a valid API key with read ability."
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Post\",\n  \"content\": \"Post content here.\",\n  \"status\": \"draft\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts"]
+            },
+            "description": "Create a new post. Requires a valid API key with write ability."
           }
         }
       ]

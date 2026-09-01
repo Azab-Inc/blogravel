@@ -5,11 +5,10 @@ namespace App\Models;
 use App\Enums\Plan;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['domain', 'name', 'plan'])]
-class Tenant extends Model
+class Tenant extends BaseModel
 {
     use HasFactory;
 

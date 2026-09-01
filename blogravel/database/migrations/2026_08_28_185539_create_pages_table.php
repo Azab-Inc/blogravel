@@ -10,8 +10,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('title');
             $table->string('slug');
             $table->longText('content');

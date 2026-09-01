@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PostController extends Controller
 {
-    private function getTenantId(Request $request): int
+    private function getTenantId(Request $request): string
     {
         $user = $request->user();
 

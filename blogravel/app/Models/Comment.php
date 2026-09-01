@@ -5,11 +5,10 @@ namespace App\Models;
 use App\Enums\CommentStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['tenant_id', 'post_id', 'author_name', 'author_email', 'content', 'status'])]
-class Comment extends Model
+class Comment extends BaseModel
 {
     use HasFactory;
 

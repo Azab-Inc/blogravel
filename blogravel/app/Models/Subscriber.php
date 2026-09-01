@@ -5,12 +5,11 @@ namespace App\Models;
 use App\Enums\SubscriberStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable(['tenant_id', 'email', 'name', 'status'])]
-class Subscriber extends Model
+class Subscriber extends BaseModel
 {
     use HasFactory;
 

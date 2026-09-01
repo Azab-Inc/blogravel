@@ -71,7 +71,7 @@ class TagController extends Controller
         return response()->json(null, 204);
     }
 
-    private function getTenantId(Request $request): int
+    private function getTenantId(Request $request): string
     {
         $user = $request->user();
 

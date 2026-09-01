@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ai_providers', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->uuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('name');
             $table->text('api_key');
             $table->string('base_url')->nullable();

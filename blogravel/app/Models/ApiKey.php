@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['tenant_id', 'name', 'token', 'abilities', 'last_used_at', 'expires_at'])]
 #[Hidden(['token'])]
-class ApiKey extends Model
+class ApiKey extends BaseModel
 {
     use HasFactory;
 

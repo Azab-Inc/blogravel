@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Services\Ai\CustomProvider;
+use App\Services\Ai\OllamaProvider;
+use App\Services\Ai\OpenAiProvider;
+use App\Services\AiService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +21,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AiService::class, function ($app) {
+            return new AiService(
+                $app->make(OpenAiProvider::class),
+                $app->make(OllamaProvider::class),
+                $app->make(CustomProvider::class),
+            );
+        });
     }
 
     /**

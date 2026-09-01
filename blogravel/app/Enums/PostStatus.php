@@ -17,6 +17,15 @@ enum PostStatus: string
         };
     }
 
+    public function color(): string
+    {
+        return match ($this) {
+            self::Draft => 'gray',
+            self::Scheduled => 'warning',
+            self::Published => 'success',
+        };
+    }
+
     public static function values(): array
     {
         return array_map(static fn (self $status): string => $status->value, self::cases());

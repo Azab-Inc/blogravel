@@ -265,11 +265,11 @@ Livewire action attached to PostResource form.
 
 Queued job implementing `ShouldQueue`.
 
-**Tenant Queue Isolation:**
-- Job dispatches to queue `ai-generation-{tenant_id}`
-- Each tenant's AI jobs run in their own queue, preventing one tenant's heavy load from slowing others
-- Queue worker listens to `ai-generation-*` wildcard (or multiple named queues)
-- Example: Tenant A's 5 pending jobs do not block Tenant B's jobs from processing
+**Tenant Queue Isolation (bounded pool):**
+- Job dispatches to queue `ai-generation-{pool}` where pool = `crc32(tenant_id) % config('queue.ai_generation.pools', 4)`
+- Tenants distribute across a bounded pool of queues, so one tenant's backlog only blocks tenants sharing its pool queue (crc32 collision), never the fleet
+- Queue workers subscribe to the literal list: `php artisan queue:work --queue=ai-generation-0,ai-generation-1,ai-generation-2,ai-generation-3` (Laravel has no wildcard queue subscription)
+- `config/queue.php` gains `ai_generation.pools` (int, default 4) so pool count scales with deployment
 
 **Constructor:**
 - `string $postId` — the draft post to update
@@ -278,7 +278,7 @@ Queued job implementing `ShouldQueue`.
 - `string $prompt` — user's prompt
 - `array $outputTypes` — what to generate
 - `array $options` — length_type, length_value
-- Sets queue dynamically: `$this->onQueue("ai-generation-{$tenantId}")`
+- Sets queue dynamically: `$this->onQueue("ai-generation-{pool}")` where pool = crc32 of the post's tenant_id modulo the configured pool count
 
 **`handle()` method:**
 1. Load Post and AiProvider from DB
@@ -295,7 +295,7 @@ Queued job implementing `ShouldQueue`.
 
 **Queue worker command:**
 ```
-php artisan queue:work --queue=ai-generation-default,ai-generation-*
+php artisan queue:work --queue=ai-generation-0,ai-generation-1,ai-generation-2,ai-generation-3
 ```
 
 ---

@@ -31,9 +31,14 @@ class GenerateAiPostAction extends Action
                     ->options(fn () => AiProvider::where('tenant_id', auth()->user()->tenant_id)
                         ->where('enabled', true)
                         ->pluck('name', 'id'))
-                    ->default(fn () => Setting::where('tenant_id', auth()->user()->tenant_id)
-                        ->where('key', 'ai_default_provider')
-                        ->value('value'))
+                    ->default(function () {
+                        $setting = Setting::where('tenant_id', auth()->user()->tenant_id)
+                            ->whereIn('key', ['ai_last_provider', 'ai_default_provider'])
+                            ->orderByRaw("case when key = 'ai_last_provider' then 0 else 1 end")
+                            ->value('value');
+
+                        return $setting;
+                    })
                     ->required(),
                 TextInput::make('ai_model')
                     ->label('Model')
@@ -68,7 +73,12 @@ class GenerateAiPostAction extends Action
                         'categories' => 'Categories',
                         'tags' => 'Tags',
                     ])
-                    ->default(['title', 'content', 'excerpt', 'categories', 'tags'])
+                    ->default(fn () => json_decode(
+                        Setting::where('tenant_id', auth()->user()->tenant_id)
+                            ->where('key', 'ai_default_output_types')
+                            ->value('value') ?? '[]',
+                        true
+                    ) ?: ['title', 'content', 'excerpt', 'categories', 'tags'])
                     ->columns(3),
             ])
             ->action(function (array $data, ?Post $record): void {
@@ -90,6 +100,11 @@ class GenerateAiPostAction extends Action
                 Setting::updateOrCreate(
                     ['tenant_id' => $tenantId, 'key' => 'ai_last_model'],
                     ['value' => $data['ai_model']]
+                );
+
+                Setting::updateOrCreate(
+                    ['tenant_id' => $tenantId, 'key' => 'ai_last_provider'],
+                    ['value' => $data['ai_provider_id']]
                 );
 
                 $post = $record ?? Post::create([

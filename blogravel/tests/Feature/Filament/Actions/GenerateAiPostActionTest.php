@@ -106,6 +106,11 @@ it('creates a draft post and dispatches the generation job when the action runs 
         ->where('tenant_id', $tenant->id)
         ->where('key', 'ai_last_model')
         ->value('value'))->toBe('gpt-4o');
+
+    expect(Setting::query()
+        ->where('tenant_id', $tenant->id)
+        ->where('key', 'ai_last_provider')
+        ->value('value'))->toBe($provider->id);
 });
 
 it('reuses the existing record and dispatches the generation job when the action runs on the edit page', function () {
@@ -183,4 +188,107 @@ it('rejects a provider from another tenant with a validation error and dispatche
 
     Queue::assertNotPushed(GenerateAiPostJob::class);
     expect(Post::query()->where('tenant_id', $tenant->id)->count())->toBe(0);
+});
+
+it('preselects the last used provider over the default provider', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'has_email_authentication' => true,
+        'role' => Role::Author,
+    ]);
+    $defaultProvider = AiProvider::factory()->create([
+        'tenant_id' => $tenant->id,
+        'enabled' => true,
+    ]);
+    $lastProvider = AiProvider::factory()->create([
+        'tenant_id' => $tenant->id,
+        'enabled' => true,
+    ]);
+
+    Setting::factory()->create([
+        'tenant_id' => $tenant->id,
+        'key' => 'ai_default_provider',
+        'value' => $defaultProvider->id,
+    ]);
+    Setting::factory()->create([
+        'tenant_id' => $tenant->id,
+        'key' => 'ai_last_provider',
+        'value' => $lastProvider->id,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(CreatePost::class)
+        ->mountAction(TestAction::make('generateAi')->schemaComponent(true))
+        ->assertActionDataSet([
+            'ai_provider_id' => $lastProvider->id,
+        ]);
+});
+
+it('falls back to the default provider when no last provider is saved', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'has_email_authentication' => true,
+        'role' => Role::Author,
+    ]);
+    $defaultProvider = AiProvider::factory()->create([
+        'tenant_id' => $tenant->id,
+        'enabled' => true,
+    ]);
+
+    Setting::factory()->create([
+        'tenant_id' => $tenant->id,
+        'key' => 'ai_default_provider',
+        'value' => $defaultProvider->id,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(CreatePost::class)
+        ->mountAction(TestAction::make('generateAi')->schemaComponent(true))
+        ->assertActionDataSet([
+            'ai_provider_id' => $defaultProvider->id,
+        ]);
+});
+
+it('defaults output types to the saved tenant setting', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'has_email_authentication' => true,
+        'role' => Role::Author,
+    ]);
+
+    Setting::factory()->create([
+        'tenant_id' => $tenant->id,
+        'key' => 'ai_default_output_types',
+        'value' => json_encode(['title', 'tags']),
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(CreatePost::class)
+        ->mountAction(TestAction::make('generateAi')->schemaComponent(true))
+        ->assertActionDataSet([
+            'ai_output_types' => ['title', 'tags'],
+        ]);
+});
+
+it('defaults output types to all types when no setting is saved', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'has_email_authentication' => true,
+        'role' => Role::Author,
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test(CreatePost::class)
+        ->mountAction(TestAction::make('generateAi')->schemaComponent(true))
+        ->assertActionDataSet([
+            'ai_output_types' => ['title', 'content', 'excerpt', 'categories', 'tags'],
+        ]);
 });

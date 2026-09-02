@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\PostStatus;
 use App\Exceptions\AiGenerationException;
 use App\Models\AiProvider;
 use App\Models\Category;
@@ -36,7 +37,9 @@ class GenerateAiPostJob implements ShouldQueue
         $post = Post::find($postId);
 
         if ($post) {
-            $this->onQueue("ai-generation-{$post->tenant_id}");
+            $tenantPoolCount = (int) config('queue.ai_generation.pools', 4);
+            $pool = $tenantPoolCount > 0 ? crc32($post->tenant_id) % $tenantPoolCount : 0;
+            $this->onQueue("ai-generation-{$pool}");
         }
     }
 
@@ -65,7 +68,7 @@ class GenerateAiPostJob implements ShouldQueue
             return;
         }
 
-        $updateData = [];
+        $updateData = ['status' => PostStatus::Draft];
 
         if (isset($result['title'])) {
             $updateData['title'] = $result['title'];
@@ -81,6 +84,8 @@ class GenerateAiPostJob implements ShouldQueue
 
         if (! empty($updateData)) {
             $post->update($updateData);
+        } else {
+            $post->update(['status' => PostStatus::Draft]);
         }
 
         if (isset($result['categories']) && is_array($result['categories'])) {
@@ -109,6 +114,23 @@ class GenerateAiPostJob implements ShouldQueue
             true,
             'AI content generated',
             "Post [{$post->title}] — {$fieldCount} field(s) generated. Saved as draft."
+        ));
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        $post = Post::find($this->postId);
+
+        if (! $post) {
+            return;
+        }
+
+        $user = User::find($post->author_id);
+
+        $user?->notify(new AiPostGenerated(
+            false,
+            'AI generation failed',
+            "An unexpected error occurred: {$e->getMessage()}"
         ));
     }
 }

@@ -97,7 +97,115 @@ it('sends error notification on failure', function () {
     });
 });
 
-it('dispatches to tenant-specific queue', function () {
+it('forces a published post back to draft when generating', function () {
+    Http::fake([
+        'api.openai.com/*' => Http::response([
+            'choices' => [
+                ['message' => ['content' => json_encode([
+                    'title' => 'Regenerated Title',
+                    'content' => '<p>Fresh content</p>',
+                ])]],
+            ],
+        ], 200),
+    ]);
+
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    $provider = AiProvider::factory()->create([
+        'type' => AiProviderType::OpenAi,
+        'base_url' => 'https://api.openai.com/v1',
+        'tenant_id' => $tenant->id,
+    ]);
+
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+        'status' => PostStatus::Published,
+        'content' => '<p>Old live content</p>',
+    ]);
+
+    Notification::fake();
+
+    $job = new GenerateAiPostJob(
+        $post->id,
+        $provider->id,
+        'gpt-4o',
+        'Rewrite this',
+        ['title', 'content'],
+        []
+    );
+
+    $job->handle(app(AiService::class));
+
+    $post->refresh();
+
+    expect($post->status)->toBe(PostStatus::Draft)
+        ->and($post->title)->toBe('Regenerated Title')
+        ->and($post->content)->toBe('<p>Fresh content</p>');
+});
+
+it('notifies the author when the job fails unexpectedly', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    $provider = AiProvider::factory()->create([
+        'tenant_id' => $tenant->id,
+    ]);
+
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+    ]);
+
+    Notification::fake();
+
+    $job = new GenerateAiPostJob(
+        $post->id,
+        $provider->id,
+        'gpt-4o',
+        'test',
+        ['title'],
+        []
+    );
+
+    $job->failed(new RuntimeException('boom'));
+
+    Notification::assertSentTo($user, function (AiPostGenerated $notification) {
+        return $notification->success === false
+            && $notification->title === 'AI generation failed'
+            && str_contains($notification->body, 'An unexpected error occurred: boom');
+    });
+});
+
+it('does nothing when failed() runs for a deleted post', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    $provider = AiProvider::factory()->create([
+        'tenant_id' => $tenant->id,
+    ]);
+
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+    ]);
+
+    Notification::fake();
+
+    $job = new GenerateAiPostJob(
+        $post->id,
+        $provider->id,
+        'gpt-4o',
+        'test',
+        ['title'],
+        []
+    );
+
+    $post->delete();
+    $job->failed(new RuntimeException('boom'));
+
+    Notification::assertNothingSent();
+});
+
+it('dispatches to a bounded pool queue derived from the tenant id', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create(['tenant_id' => $tenant->id]);
     $provider = AiProvider::factory()->create([
@@ -118,5 +226,35 @@ it('dispatches to tenant-specific queue', function () {
         []
     );
 
-    expect($job->queue)->toBe("ai-generation-{$tenant->id}");
+    $pool = crc32($tenant->id) % (int) config('queue.ai_generation.pools', 4);
+
+    expect($job->queue)->toBe("ai-generation-{$pool}")
+        ->and($pool)->toBeGreaterThanOrEqual(0)
+        ->and($pool)->toBeLessThan(4);
+});
+
+it('dispatches different tenants into the valid pool range', function () {
+    $provider = AiProvider::factory()->create();
+
+    foreach (['tenant-a', 'tenant-b'] as $tenantId) {
+        $post = Post::factory()->create([
+            'tenant_id' => $tenantId,
+            'author_id' => User::factory()->create(['tenant_id' => $tenantId])->id,
+        ]);
+
+        $job = new GenerateAiPostJob(
+            $post->id,
+            $provider->id,
+            'gpt-4o',
+            'test',
+            ['title'],
+            []
+        );
+
+        $pool = crc32($tenantId) % (int) config('queue.ai_generation.pools', 4);
+
+        expect($job->queue)->toBe("ai-generation-{$pool}")
+            ->and($pool)->toBeGreaterThanOrEqual(0)
+            ->and($pool)->toBeLessThan(4);
+    }
 });

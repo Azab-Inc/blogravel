@@ -67,3 +67,22 @@ it('has app authentication recovery enabled', function () {
 
     expect($appAuth)->not->toBeNull();
 });
+
+it('enables database notifications with 30 second polling', function () {
+    $panel = Filament::getPanel('admin');
+
+    expect($panel->hasDatabaseNotifications())->toBeTrue()
+        ->and($panel->getDatabaseNotificationsPollingInterval())->toBe('30s');
+});
+
+it('renders the database notifications bell on panel pages', function () {
+    $user = User::factory()->create([
+        'has_email_authentication' => true,
+        'role' => Role::SuperAdmin,
+    ]);
+
+    actingAs($user)
+        ->get(route('filament.admin.pages.dashboard'))
+        ->assertOk()
+        ->assertSee('database-notifications');
+});

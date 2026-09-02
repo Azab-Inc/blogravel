@@ -115,3 +115,13 @@ it('throws http error on failure', function () {
     $service = new CustomProvider;
     $service->generate($aiProvider, 'test', ['title']);
 })->throws(AiGenerationException::class, 'HTTP 403');
+
+it('throws invalid template exception when custom_template is malformed', function () {
+    $aiProvider = AiProvider::factory()->custom()->create([
+        'base_url' => 'https://api.example.com',
+        'custom_template' => 'not-json{{',
+    ]);
+
+    $service = new CustomProvider;
+    $service->generate($aiProvider, 'test', ['title']);
+})->throws(AiGenerationException::class, 'invalid custom template');

@@ -20,4 +20,9 @@ class AiGenerationException extends RuntimeException
     {
         return new static("AI provider [{$providerName}] returned an invalid response format.");
     }
+
+    public static function invalidTemplate(string $providerName): static
+    {
+        return new static("AI provider [{$providerName}] has an invalid custom template.");
+    }
 }

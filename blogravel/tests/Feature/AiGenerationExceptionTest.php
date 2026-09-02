@@ -26,6 +26,12 @@ test('invalidResponse returns correct exception', function () {
     expect($exception->getMessage())->toBe('AI provider [gemini] returned an invalid response format.');
 });
 
+test('invalidTemplate returns correct exception', function () {
+    $exception = AiGenerationException::invalidTemplate('custom');
+
+    expect($exception->getMessage())->toBe('AI provider [custom] has an invalid custom template.');
+});
+
 test('AiProviderInterface is an interface', function () {
     expect(interface_exists(AiProviderInterface::class))->toBeTrue();
 });

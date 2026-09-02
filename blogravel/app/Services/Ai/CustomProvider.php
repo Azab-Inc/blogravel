@@ -18,7 +18,7 @@ class CustomProvider implements AiProviderInterface
         $template = json_decode($provider->custom_template, true);
 
         if (! is_array($template)) {
-            throw AiGenerationException::invalidResponse($provider->name);
+            throw AiGenerationException::invalidTemplate($provider->name);
         }
 
         $placeholders = [

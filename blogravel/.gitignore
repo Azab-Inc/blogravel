@@ -30,3 +30,4 @@ frankenphp-worker.php
 config/psysh/
 config/psysh/manual_update_check.json
 core.*
+test-results/

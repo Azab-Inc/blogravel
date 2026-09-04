@@ -6,7 +6,6 @@ use App\Enums\ApiKeyAbility;
 use App\Filament\Resources\ApiKeyResource\Pages;
 use App\Models\ApiKey;
 use BackedEnum;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
@@ -18,12 +17,15 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use UnitEnum;
 
 class ApiKeyResource extends Resource
 {
     protected static ?string $model = ApiKey::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-key';
+
+    protected static UnitEnum|string|null $navigationGroup = 'Administration';
 
     protected static ?string $modelLabel = 'API Key';
 
@@ -79,9 +81,9 @@ class ApiKeyResource extends Resource
                 EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+
+                DeleteBulkAction::make(),
+
             ]);
     }
 

@@ -2,7 +2,7 @@
   "info": {
     "name": "Blogravel API",
     "_postman_id": "blogravel-api-collection",
-    "description": "API collection for Blogravel. Auth endpoints use Sanctum Bearer tokens. Post endpoints use API key via X-Api-Key header.",
+    "description": "API collection for Blogravel. Auth endpoints use Sanctum Bearer tokens. Resource endpoints use API key via X-Api-Key header.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,6 +20,26 @@
       "key": "api_key",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "post_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "page_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tag_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -31,14 +51,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -49,7 +63,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "login"]
             },
-            "description": "Authenticate and receive a Bearer token. Set the `token` collection variable from the response."
+            "description": "Authenticate and receive a Bearer token."
           },
           "event": [
             {
@@ -71,25 +85,16 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            },
+            "body": { "mode": "raw", "raw": "" },
             "url": {
               "raw": "{{base_url}}/api/v1/logout",
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "logout"]
             },
-            "description": "Revoke the current Bearer token. Requires a valid token."
+            "description": "Revoke the current Bearer token."
           }
         }
       ]
@@ -102,21 +107,15 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Api-Key",
-                "value": "{{api_key}}"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/posts",
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "posts"]
             },
-            "description": "List all published posts. Requires a valid API key with read ability."
+            "description": "List all posts. Requires read ability."
           }
         },
         {
@@ -124,21 +123,15 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "X-Api-Key",
-                "value": "{{api_key}}"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "url": {
-              "raw": "{{base_url}}/api/v1/posts/1",
+              "raw": "{{base_url}}/api/v1/posts/{{post_id}}",
               "host": ["{{base_url}}"],
-              "path": ["api", "v1", "posts", "1"]
+              "path": ["api", "v1", "posts", "{{post_id}}"]
             },
-            "description": "Retrieve a single post by ID. Requires a valid API key with read ability."
+            "description": "Retrieve a single post by ID. Requires read ability."
           }
         },
         {
@@ -146,29 +139,419 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "X-Api-Key",
-                "value": "{{api_key}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"My Post\",\n  \"content\": \"Post content here.\",\n  \"status\": \"draft\"\n}"
+              "raw": "{\n  \"title\": \"My Post\",\n  \"content\": \"Post content here.\",\n  \"excerpt\": \"Short excerpt.\",\n  \"status\": \"draft\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/posts",
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "posts"]
             },
-            "description": "Create a new post. Requires a valid API key with write ability."
+            "description": "Create a new post. Requires write ability."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('post_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Post Title\",\n  \"content\": \"Updated content.\",\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts/{{post_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts", "{{post_id}}"]
+            },
+            "description": "Update an existing post. Requires write ability."
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts/{{post_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts", "{{post_id}}"]
+            },
+            "description": "Delete a post. Requires write ability."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pages",
+      "item": [
+        {
+          "name": "List Pages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pages"]
+            },
+            "description": "List all pages. Requires read ability."
+          }
+        },
+        {
+          "name": "Get Page",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pages/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pages", "{{page_id}}"]
+            },
+            "description": "Retrieve a single page by ID. Requires read ability."
+          }
+        },
+        {
+          "name": "Create Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"About Us\",\n  \"content\": \"Page content here.\",\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pages"]
+            },
+            "description": "Create a new page. Requires write ability."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('page_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Page",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Page Title\",\n  \"content\": \"Updated content.\",\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pages/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pages", "{{page_id}}"]
+            },
+            "description": "Update an existing page. Requires write ability."
+          }
+        },
+        {
+          "name": "Delete Page",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pages/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pages", "{{page_id}}"]
+            },
+            "description": "Delete a page. Requires write ability."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "description": "List all categories. Requires read ability."
+          }
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories", "{{category_id}}"]
+            },
+            "description": "Retrieve a single category by ID. Requires read ability."
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Technology\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories"]
+            },
+            "description": "Create a new category. Requires write ability."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('category_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tech & Science\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories", "{{category_id}}"]
+            },
+            "description": "Update an existing category. Requires write ability."
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories", "{{category_id}}"]
+            },
+            "description": "Delete a category. Requires write ability."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tags",
+      "item": [
+        {
+          "name": "List Tags",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tags"]
+            },
+            "description": "List all tags. Requires read ability."
+          }
+        },
+        {
+          "name": "Get Tag",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tags", "{{tag_id}}"]
+            },
+            "description": "Retrieve a single tag by ID. Requires read ability."
+          }
+        },
+        {
+          "name": "Create Tag",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"laravel\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/tags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tags"]
+            },
+            "description": "Create a new tag. Requires write ability."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data && json.data.id) {",
+                  "  pm.collectionVariables.set('tag_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Tag",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"php\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tags", "{{tag_id}}"]
+            },
+            "description": "Update an existing tag. Requires write ability."
+          }
+        },
+        {
+          "name": "Delete Tag",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tags", "{{tag_id}}"]
+            },
+            "description": "Delete a tag. Requires write ability."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drafts",
+      "item": [
+        {
+          "name": "List Drafts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{api_key}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drafts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "drafts"]
+            },
+            "description": "List draft posts. Requires draft_read ability."
           }
         }
       ]

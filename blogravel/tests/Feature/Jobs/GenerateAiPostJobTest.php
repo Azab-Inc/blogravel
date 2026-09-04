@@ -258,3 +258,87 @@ it('dispatches different tenants into the valid pool range', function () {
             ->and($pool)->toBeLessThan(4);
     }
 });
+
+it('syncs categories and tags from generated content', function () {
+    Http::fake([
+        'api.openai.com/*' => Http::response([
+            'choices' => [
+                ['message' => ['content' => json_encode([
+                    'title' => 'Post With Taxonomies',
+                    'content' => '<p>Content</p>',
+                    'categories' => ['Laravel', 'PHP'],
+                    'tags' => ['tutorial', 'beginner'],
+                ])]],
+            ],
+        ], 200),
+    ]);
+
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    $provider = AiProvider::factory()->create([
+        'type' => AiProviderType::OpenAi,
+        'base_url' => 'https://api.openai.com/v1',
+        'tenant_id' => $tenant->id,
+    ]);
+
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+        'status' => PostStatus::Draft,
+    ]);
+
+    Notification::fake();
+
+    $job = new GenerateAiPostJob(
+        $post->id,
+        $provider->id,
+        'gpt-4o',
+        'Write about Laravel',
+        ['title', 'content', 'categories', 'tags'],
+        []
+    );
+
+    $job->handle(app(AiService::class));
+
+    $post->refresh();
+
+    expect($post->categories)->toHaveCount(2)
+        ->and($post->tags)->toHaveCount(2)
+        ->and($post->categories->pluck('name')->toArray())->toContain('Laravel', 'PHP')
+        ->and($post->tags->pluck('name')->toArray())->toContain('tutorial', 'beginner');
+});
+
+it('handles provider disabled exception gracefully', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    $provider = AiProvider::factory()->create([
+        'tenant_id' => $tenant->id,
+        'enabled' => false,
+    ]);
+
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+    ]);
+
+    Notification::fake();
+
+    $job = new GenerateAiPostJob(
+        $post->id,
+        $provider->id,
+        'gpt-4o',
+        'test',
+        ['title'],
+        []
+    );
+
+    $job->handle(app(AiService::class));
+
+    $post->refresh();
+
+    Notification::assertSentTo($user, function (AiPostGenerated $notification) {
+        return $notification->success === false
+            && $notification->title === 'AI generation failed'
+            && str_contains($notification->body, 'is disabled');
+    });
+});

@@ -49,3 +49,13 @@ test('validates email format', function () {
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['email']);
 });
+
+test('returns 401 on non-existent email', function () {
+    $response = $this->postJson('/api/v1/login', [
+        'email' => 'nobody@example.com',
+        'password' => 'password',
+    ]);
+
+    $response->assertUnauthorized()
+        ->assertJson(['message' => 'Invalid credentials']);
+});

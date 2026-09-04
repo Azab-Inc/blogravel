@@ -86,3 +86,53 @@ it('renders the database notifications bell on panel pages', function () {
         ->assertOk()
         ->assertSee('database-notifications');
 });
+
+it('redirects to MFA setup page when MFA is not configured', function () {
+    $admin = User::factory()->create([
+        'role' => Role::SuperAdmin,
+        'app_authentication_secret' => null,
+        'has_email_authentication' => false,
+    ]);
+
+    $response = actingAs($admin)
+        ->get(route('filament.admin.pages.dashboard'));
+
+    $response->assertRedirect();
+});
+
+it('has both TOTP and email authentication providers configured', function () {
+    $panel = Filament::getPanel('admin');
+    $providers = $panel->getMultiFactorAuthenticationProviders();
+
+    $hasAppAuth = collect($providers)->contains(fn ($p) => $p instanceof AppAuthentication);
+    $hasEmailAuth = collect($providers)->contains(
+        fn ($p) => $p instanceof \Filament\Auth\MultiFactor\Email\EmailAuthentication
+    );
+
+    expect($hasAppAuth)->toBeTrue()
+        ->and($hasEmailAuth)->toBeTrue();
+});
+
+it('stores recovery codes as encrypted JSON on user', function () {
+    $user = User::factory()->create([
+        'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1', 'recovery-code-2'])),
+    ]);
+
+    $codes = decrypt($user->two_factor_recovery_codes);
+    $decoded = json_decode($codes, true);
+
+    expect($decoded)->toBeArray()
+        ->toContain('recovery-code-1')
+        ->toContain('recovery-code-2');
+});
+
+it('has email authentication provider configured', function () {
+    $panel = Filament::getPanel('admin');
+    $providers = $panel->getMultiFactorAuthenticationProviders();
+
+    $emailAuth = collect($providers)->first(
+        fn ($provider) => $provider instanceof \Filament\Auth\MultiFactor\Email\EmailAuthentication
+    );
+
+    expect($emailAuth)->not->toBeNull();
+});

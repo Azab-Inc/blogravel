@@ -31,3 +31,8 @@ config/psysh/
 config/psysh/manual_update_check.json
 core.*
 test-results/
+
+# Playwright
+/tests/e2e/.auth/
+/test-results/
+/playwright-report/

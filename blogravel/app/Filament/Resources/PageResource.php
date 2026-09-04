@@ -8,7 +8,7 @@ use App\Models\Page;
 use BackedEnum;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -43,9 +43,8 @@ class PageResource extends Resource
                 Textarea::make('content')
                     ->rows(10)
                     ->required(),
-                CheckboxList::make('status')
+                Select::make('status')
                     ->options(PostStatus::class)
-                    ->columns(3)
                     ->required(),
             ]);
     }

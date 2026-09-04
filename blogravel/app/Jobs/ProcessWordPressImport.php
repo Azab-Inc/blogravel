@@ -2,26 +2,27 @@
 
 namespace App\Jobs;
 
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
 
 class ProcessWordPressImport implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable;
 
     /**
-     * Create a new job instance.
+     * @param  array  $items  Parsed items from WxrParser
      */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(
+        public array $items,
+        public string $tenantId,
+        public string $userId,
+    ) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        //
+        $job = new WordPressImportJob($this->items, $this->tenantId, $this->userId);
+        $job->handle();
     }
 }

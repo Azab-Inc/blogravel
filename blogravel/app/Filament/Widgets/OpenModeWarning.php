@@ -11,8 +11,6 @@ class OpenModeWarning extends Widget
 
     protected string $view = 'filament.widgets.open-mode-warning';
 
-    public ?int $apiKeyCount = null;
-
     public static function getSort(): int
     {
         return 100;
@@ -20,7 +18,7 @@ class OpenModeWarning extends Widget
 
     public function getApiKeyCount(): int
     {
-        return $this->apiKeyCount ??= ApiKey::count();
+        return ApiKey::count();
     }
 
     public function isVisible(): bool

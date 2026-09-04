@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\StoreCategoryRequest;
+use App\Http\Requests\Api\V1\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\ApiKey;
 use App\Models\Category;
@@ -23,12 +25,9 @@ class CategoryController extends Controller
         return CategoryResource::collection($categories);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCategoryRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
+        $validated = $request->validated();
         $tenantId = $this->getTenantId($request);
 
         $category = Category::create([
@@ -47,11 +46,9 @@ class CategoryController extends Controller
         return new CategoryResource($category->loadCount('posts'));
     }
 
-    public function update(Request $request, Category $category): JsonResponse
+    public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['name'])) {
             $validated['slug'] = Str::slug($validated['name']);

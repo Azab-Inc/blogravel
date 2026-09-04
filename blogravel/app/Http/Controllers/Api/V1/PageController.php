@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\StorePageRequest;
+use App\Http\Requests\Api\V1\UpdatePageRequest;
 use App\Http\Resources\PageResource;
 use App\Models\ApiKey;
 use App\Models\Page;
@@ -23,13 +25,9 @@ class PageController extends Controller
         return PageResource::collection($pages);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StorePageRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'status' => 'in:draft,scheduled,published',
-        ]);
+        $validated = $request->validated();
 
         $tenantId = $this->getTenantId($request);
         $user = $request->user();
@@ -55,13 +53,9 @@ class PageController extends Controller
         return new PageResource($page);
     }
 
-    public function update(Request $request, Page $page): JsonResponse
+    public function update(UpdatePageRequest $request, Page $page): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'content' => 'sometimes|string',
-            'status' => 'in:draft,scheduled,published',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['title'])) {
             $validated['slug'] = Str::slug($validated['title']);

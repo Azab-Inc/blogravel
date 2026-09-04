@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\StoreTagRequest;
+use App\Http\Requests\Api\V1\UpdateTagRequest;
 use App\Http\Resources\TagResource;
 use App\Models\ApiKey;
 use App\Models\Tag;
@@ -23,12 +25,9 @@ class TagController extends Controller
         return TagResource::collection($tags);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreTagRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
+        $validated = $request->validated();
         $tenantId = $this->getTenantId($request);
 
         $tag = Tag::create([
@@ -47,11 +46,9 @@ class TagController extends Controller
         return new TagResource($tag->loadCount('posts'));
     }
 
-    public function update(Request $request, Tag $tag): JsonResponse
+    public function update(UpdateTagRequest $request, Tag $tag): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['name'])) {
             $validated['slug'] = Str::slug($validated['name']);

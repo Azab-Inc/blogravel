@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\StorePostRequest;
+use App\Http\Requests\Api\V1\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\ApiKey;
 use App\Models\Post;
@@ -37,18 +39,9 @@ class PostController extends Controller
         return PostResource::collection($posts);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StorePostRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'excerpt' => 'nullable|string|max:500',
-            'status' => 'in:draft,scheduled,published',
-            'category_ids' => 'nullable|array',
-            'category_ids.*' => 'exists:categories,id',
-            'tag_ids' => 'nullable|array',
-            'tag_ids.*' => 'exists:tags,id',
-        ]);
+        $validated = $request->validated();
 
         $tenantId = $this->getTenantId($request);
         $user = $request->user();
@@ -82,20 +75,11 @@ class PostController extends Controller
         return new PostResource($post->load(['author', 'categories', 'tags']));
     }
 
-    public function update(Request $request, Post $post): JsonResponse
+    public function update(UpdatePostRequest $request, Post $post): JsonResponse
     {
         $this->authorize('update', $post);
 
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'content' => 'sometimes|string',
-            'excerpt' => 'nullable|string|max:500',
-            'status' => 'in:draft,scheduled,published',
-            'category_ids' => 'nullable|array',
-            'category_ids.*' => 'exists:categories,id',
-            'tag_ids' => 'nullable|array',
-            'tag_ids.*' => 'exists:tags,id',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['title'])) {
             $validated['slug'] = \Str::slug($validated['title']);

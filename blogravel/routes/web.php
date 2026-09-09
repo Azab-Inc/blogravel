@@ -1,10 +1,23 @@
 <?php
 
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InvitationController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
+// Feeds
+Route::get('/feeds/{resource}', [FeedController::class, 'posts'])
+    ->whereIn('resource', ['posts'])
+    ->name('feed.posts');
+
+Route::get('/feeds/categories/{slug}', [FeedController::class, 'category'])
+    ->name('feed.category');
+
+Route::get('/feeds/authors/{author}', [FeedController::class, 'author'])
+    ->name('feed.author');
+
+// Invitations
 Route::get('/invitations/{token}', [InvitationController::class, 'show'])
     ->name('invitations.accept');
 

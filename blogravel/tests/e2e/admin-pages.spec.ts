@@ -13,6 +13,7 @@ const PAGES = [
   { name: 'Settings', url: '/admin/settings', contains: 'Settings' },
   { name: 'AI Settings', url: '/admin/ai-settings', contains: 'AI Settings' },
   { name: 'Import WordPress', url: '/admin/import-word-press', contains: 'Import WordPress' },
+  { name: 'Invitations', url: '/admin/invitations', contains: 'Invitations' },
 ];
 
 test.describe('Admin Pages Smoke Tests', () => {

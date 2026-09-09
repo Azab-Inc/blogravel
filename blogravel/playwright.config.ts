@@ -13,6 +13,11 @@ export default defineConfig({
   projects: [
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
+      name: 'debug',
+      testMatch: /debug-login/,
+      use: { browserName: 'chromium' },
+    },
+    {
       name: 'chromium',
       use: {
         browserName: 'chromium',

@@ -11,6 +11,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PostController extends Controller
@@ -29,14 +30,17 @@ class PostController extends Controller
         return $apiKey?->tenant_id ?? abort(401, 'Unable to determine tenant.');
     }
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): CursorPaginator
     {
         $posts = Post::with(['author', 'categories', 'tags'])
             ->where('tenant_id', $this->getTenantId($request))
-            ->latest()
-            ->paginate(15);
+            ->latest();
 
-        return PostResource::collection($posts);
+        return $this->cursorPaginate(
+            $posts,
+            ['*'],
+            ['id', 'created_at', 'published_at', 'title'],
+        );
     }
 
     public function store(StorePostRequest $request): JsonResponse

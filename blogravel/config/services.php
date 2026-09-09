@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'mfa' => [
+        'required' => env('MFA_REQUIRED', true),
+    ],
+
 ];

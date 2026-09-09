@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Filament\Pages\Auth\Register;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -81,4 +82,23 @@ test('registration fails with short password', function () {
         ])
         ->call('register')
         ->assertHasFormErrors(['password']);
+});
+
+test('registration assigns admin role, not superadmin', function () {
+    Livewire::test(Register::class)
+        ->fillForm([
+            'first_name' => 'Jane',
+            'last_name' => 'Smith',
+            'email' => 'jane@example.com',
+            'password' => 'password',
+            'passwordConfirmation' => 'password',
+        ])
+        ->call('register')
+        ->assertHasNoFormErrors();
+
+    $user = User::where('email', 'jane@example.com')->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->role)->toBe(Role::Admin);
+    expect($user->role)->not->toBe(Role::SuperAdmin);
 });

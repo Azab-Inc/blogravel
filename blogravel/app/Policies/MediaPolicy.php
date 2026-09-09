@@ -10,7 +10,7 @@ class MediaPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function view(User $user, Media $media): bool
@@ -20,22 +20,22 @@ class MediaPolicy
 
     public function create(User $user): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function update(User $user, Media $media): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function delete(User $user, Media $media): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function restore(User $user, Media $media): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function forceDelete(User $user, Media $media): bool

@@ -10,7 +10,7 @@ class PagePolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->role === Role::SuperAdmin || $user->role === Role::Admin || $user->role === Role::Editor;
     }
 
     public function view(User $user, Page $page): bool
@@ -20,22 +20,30 @@ class PagePolicy
 
     public function create(User $user): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function update(User $user, Page $page): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return match ($user->role) {
+            Role::SuperAdmin => true,
+            Role::Admin, Role::Editor => true,
+            default => false,
+        };
     }
 
     public function delete(User $user, Page $page): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return match ($user->role) {
+            Role::SuperAdmin => true,
+            Role::Admin, Role::Editor => true,
+            default => false,
+        };
     }
 
     public function restore(User $user, Page $page): bool
     {
-        return $user->role === Role::SuperAdmin || $user->role === Role::Editor;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function forceDelete(User $user, Page $page): bool

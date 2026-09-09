@@ -10,48 +10,58 @@ class PostPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor, Role::Author], true);
     }
 
     public function view(User $user, Post $post): bool
     {
-        return true;
+        return match ($user->role) {
+            Role::SuperAdmin, Role::Admin, Role::Editor => true,
+            Role::Author => $post->author_id === $user->id,
+            default => false,
+        };
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return in_array($user->role, [Role::SuperAdmin, Role::Admin, Role::Editor], true);
     }
 
     public function update(User $user, Post $post): bool
     {
-        if ($user->role === Role::SuperAdmin || $user->role === Role::Editor) {
-            return true;
-        }
-
-        return $user->role === Role::Author && $post->author_id === $user->id;
+        return match ($user->role) {
+            Role::SuperAdmin, Role::Admin, Role::Editor => true,
+            Role::Author => $post->author_id === $user->id,
+            default => false,
+        };
     }
 
     public function delete(User $user, Post $post): bool
     {
-        if ($user->role === Role::SuperAdmin) {
-            return true;
-        }
-
-        if ($user->role === Role::Editor && $post->author_id === $user->id) {
-            return true;
-        }
-
-        return $user->role === Role::Author && $post->author_id === $user->id;
+        return match ($user->role) {
+            Role::SuperAdmin => true,
+            Role::Admin, Role::Editor => true,
+            Role::Author => $post->author_id === $user->id,
+            default => false,
+        };
     }
 
     public function restore(User $user, Post $post): bool
     {
-        return $this->delete($user, $post);
+        return match ($user->role) {
+            Role::SuperAdmin => true,
+            Role::Admin, Role::Editor => true,
+            default => false,
+        };
     }
 
     public function forceDelete(User $user, Post $post): bool
     {
         return $user->role === Role::SuperAdmin;
+    }
+
+    private function sameTenant(User $user, Post $post): bool
+    {
+        return $user->tenant_id !== null && $user->tenant_id === $post->tenant_id;
     }
 }

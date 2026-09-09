@@ -43,7 +43,7 @@ class Register extends BaseRegister
     protected function handleRegistration(array $data): Model
     {
         $data['name'] = trim($data['first_name'].' '.$data['last_name']);
-        $data['role'] = Role::SuperAdmin;
+        $data['role'] = Role::Admin;
 
         return parent::handleRegistration($data);
     }

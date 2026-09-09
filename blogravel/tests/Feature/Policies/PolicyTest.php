@@ -213,28 +213,60 @@ it('allows all users to view any tag', function () {
 
 it('allows super_admin to manage users', function () {
     $tenant = Tenant::factory()->create();
+    $otherTenant = Tenant::factory()->create();
     $user = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
     $otherUser = User::factory()->create(['tenant_id' => $tenant->id]);
+    $crossTenantUser = User::factory()->create(['tenant_id' => $otherTenant->id]);
 
     expect((new UserPolicy)->viewAny($user))->toBeTrue()
         ->and((new UserPolicy)->view($user, $otherUser))->toBeTrue()
+        ->and((new UserPolicy)->view($user, $crossTenantUser))->toBeTrue()
         ->and((new UserPolicy)->create($user))->toBeTrue()
         ->and((new UserPolicy)->update($user, $otherUser))->toBeTrue()
+        ->and((new UserPolicy)->update($user, $crossTenantUser))->toBeTrue()
         ->and((new UserPolicy)->delete($user, $otherUser))->toBeTrue()
         ->and((new UserPolicy)->forceDelete($user, $otherUser))->toBeTrue();
 });
 
-it('denies editor from managing users', function () {
+it('allows admin to manage users within their tenant only', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $otherUser = User::factory()->create(['tenant_id' => $tenant->id]);
+    $otherTenant = Tenant::factory()->create();
+    $admin = User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]);
+    $sameTenantUser = User::factory()->create(['tenant_id' => $tenant->id]);
+    $crossTenantUser = User::factory()->create(['tenant_id' => $otherTenant->id]);
 
-    expect((new UserPolicy)->viewAny($user))->toBeFalse()
-        ->and((new UserPolicy)->view($user, $otherUser))->toBeFalse()
-        ->and((new UserPolicy)->create($user))->toBeFalse()
-        ->and((new UserPolicy)->update($user, $otherUser))->toBeFalse()
-        ->and((new UserPolicy)->delete($user, $otherUser))->toBeFalse()
-        ->and((new UserPolicy)->forceDelete($user, $otherUser))->toBeFalse();
+    expect((new UserPolicy)->viewAny($admin))->toBeTrue()
+        ->and((new UserPolicy)->view($admin, $sameTenantUser))->toBeTrue()
+        ->and((new UserPolicy)->view($admin, $crossTenantUser))->toBeFalse()
+        ->and((new UserPolicy)->create($admin))->toBeTrue()
+        ->and((new UserPolicy)->update($admin, $sameTenantUser))->toBeTrue()
+        ->and((new UserPolicy)->update($admin, $crossTenantUser))->toBeFalse()
+        ->and((new UserPolicy)->delete($admin, $sameTenantUser))->toBeTrue()
+        ->and((new UserPolicy)->delete($admin, $crossTenantUser))->toBeFalse();
+});
+
+it('denies admin from deleting themselves or super admins', function () {
+    $tenant = Tenant::factory()->create();
+    $admin = User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]);
+    $superAdmin = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
+
+    expect((new UserPolicy)->delete($admin, $admin))->toBeFalse()
+        ->and((new UserPolicy)->delete($admin, $superAdmin))->toBeFalse();
+});
+
+it('allows editor to view authors but not manage users', function () {
+    $tenant = Tenant::factory()->create();
+    $editor = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
+    $author = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
+    $otherEditor = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
+
+    expect((new UserPolicy)->viewAny($editor))->toBeTrue()
+        ->and((new UserPolicy)->view($editor, $author))->toBeTrue()
+        ->and((new UserPolicy)->view($editor, $otherEditor))->toBeFalse()
+        ->and((new UserPolicy)->create($editor))->toBeFalse()
+        ->and((new UserPolicy)->update($editor, $author))->toBeFalse()
+        ->and((new UserPolicy)->delete($editor, $author))->toBeFalse()
+        ->and((new UserPolicy)->forceDelete($editor, $author))->toBeFalse();
 });
 
 it('denies author from managing users', function () {

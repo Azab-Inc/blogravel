@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -100,6 +101,21 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        return match ($user->role) {
+            Role::SuperAdmin => $query,
+            Role::Admin => $query->where('tenant_id', $user->tenant_id),
+            Role::Editor => $query
+                ->where('tenant_id', $user->tenant_id)
+                ->where('role', Role::Author->value),
+            default => $query->whereKey($user->id),
+        };
     }
 
     public static function getPages(): array

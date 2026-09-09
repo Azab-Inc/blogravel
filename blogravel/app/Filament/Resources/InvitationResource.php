@@ -50,7 +50,7 @@ class InvitationResource extends Resource
                     ->maxLength(255)
                     ->visible(fn ($get) => $get('type') === 'email'),
                 Select::make('role')
-                    ->options(Role::class)
+                    ->options(collect(Role::cases())->reject(fn (Role $role) => $role === Role::SuperAdmin)->mapWithKeys(fn (Role $role) => [$role->value => $role->label()])->all())
                     ->required()
                     ->default(Role::Author->value)
                     ->native(false),

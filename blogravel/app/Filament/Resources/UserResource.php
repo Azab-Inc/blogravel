@@ -55,7 +55,7 @@ class UserResource extends Resource
                         ->label('Generate secure password')
                         ->action(fn ($set) => $set('password', Str::password(16)))),
                 Select::make('role')
-                    ->options(Role::class)
+                    ->options(collect(Role::cases())->reject(fn (Role $role) => $role === Role::SuperAdmin)->mapWithKeys(fn (Role $role) => [$role->value => $role->label()])->all())
                     ->required()
                     ->native(false),
                 Checkbox::make('can_invite')

@@ -24,6 +24,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
 - Always use route names over hardcoded urls where possible.
+- Never use inline imports, have imports at the top of files.
 
 ## Verification Scripts
 

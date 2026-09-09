@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\NavGroup;
 use App\Jobs\WordPressImportJob;
 use App\Services\WordPress\WxrParser;
 use BackedEnum;
@@ -17,7 +18,7 @@ class ImportWordPress extends Page
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-arrow-down-tray';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Content';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $navigationLabel = 'Import WordPress';
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\NavGroup;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
 use BackedEnum;
@@ -21,7 +22,7 @@ class CategoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-folder';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Content';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Content->value;
 
     protected static ?string $modelLabel = 'Category';
 

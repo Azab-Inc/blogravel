@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\ApiKeyAbility;
+use App\Enums\NavGroup;
 use App\Filament\Resources\ApiKeyResource\Pages;
 use App\Models\ApiKey;
 use BackedEnum;
@@ -25,7 +26,7 @@ class ApiKeyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-key';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Administration';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $modelLabel = 'API Key';
 

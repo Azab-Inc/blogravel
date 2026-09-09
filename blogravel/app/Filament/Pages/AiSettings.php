@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Enums\AiProviderType;
+use App\Enums\NavGroup;
 use App\Models\AiProvider;
 use App\Models\Setting;
 use BackedEnum;
@@ -29,7 +30,7 @@ class AiSettings extends Page
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cpu-chip';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Administration';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $navigationLabel = 'AI Settings';
 

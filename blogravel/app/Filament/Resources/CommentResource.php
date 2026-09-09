@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\CommentStatus;
+use App\Enums\NavGroup;
 use App\Filament\Resources\CommentResource\Pages;
 use App\Models\Comment;
 use BackedEnum;
@@ -25,7 +26,7 @@ class CommentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chat-bubble-left';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Content';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Content->value;
 
     protected static ?string $modelLabel = 'Comment';
 

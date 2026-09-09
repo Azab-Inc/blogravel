@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\NavGroup;
 use App\Enums\Role;
 use App\Models\Setting;
 use BackedEnum;
@@ -19,7 +20,7 @@ class Settings extends Page
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Administration';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $navigationLabel = 'Settings';
 

@@ -10,6 +10,10 @@ use App\Policies\PostPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 
+/*
+ * Posts
+ */
+
 it('allows author to view own posts', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
@@ -18,123 +22,80 @@ it('allows author to view own posts', function () {
     expect((new PostPolicy)->view($user, $post))->toBeTrue();
 });
 
-it('allows author to update own posts', function () {
+it('allows author to manage own posts but not others', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $user->id, 'tenant_id' => $tenant->id]);
+    $ownPost = Post::factory()->create(['author_id' => $user->id, 'tenant_id' => $tenant->id]);
+    $otherPost = Post::factory()->create(['tenant_id' => $tenant->id]);
 
-    expect((new PostPolicy)->update($user, $post))->toBeTrue();
+    expect((new PostPolicy)->create($user))->toBeFalse()
+        ->and((new PostPolicy)->update($user, $ownPost))->toBeTrue()
+        ->and((new PostPolicy)->delete($user, $ownPost))->toBeTrue()
+        ->and((new PostPolicy)->update($user, $otherPost))->toBeFalse()
+        ->and((new PostPolicy)->delete($user, $otherPost))->toBeFalse();
 });
 
-it('allows author to delete own posts', function () {
+it('allows admin to manage all posts within tenant', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $user->id, 'tenant_id' => $tenant->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]);
+    $post = Post::factory()->create(['author_id' => $admin->id, 'tenant_id' => $tenant->id]);
 
-    expect((new PostPolicy)->delete($user, $post))->toBeTrue();
-});
-
-it('denies author from updating others posts', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $otherUser = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $otherUser->id, 'tenant_id' => $tenant->id]);
-
-    expect((new PostPolicy)->update($user, $post))->toBeFalse();
-});
-
-it('denies author from deleting others posts', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $otherUser = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $otherUser->id, 'tenant_id' => $tenant->id]);
-
-    expect((new PostPolicy)->delete($user, $post))->toBeFalse();
-});
-
-it('allows editor to update any post', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $otherUser = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $otherUser->id, 'tenant_id' => $tenant->id]);
-
-    expect((new PostPolicy)->update($user, $post))->toBeTrue();
-});
-
-it('allows editor to delete own posts', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $user->id, 'tenant_id' => $tenant->id]);
-
-    expect((new PostPolicy)->delete($user, $post))->toBeTrue();
-});
-
-it('denies editor from deleting others posts', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $otherUser = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $otherUser->id, 'tenant_id' => $tenant->id]);
-
-    expect((new PostPolicy)->delete($user, $post))->toBeFalse();
+    expect((new PostPolicy)->create($admin))->toBeTrue()
+        ->and((new PostPolicy)->update($admin, $post))->toBeTrue()
+        ->and((new PostPolicy)->delete($admin, $post))->toBeTrue()
+        ->and((new PostPolicy)->forceDelete($admin, $post))->toBeFalse();
 });
 
 it('allows super_admin to do anything with posts', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
-    $otherUser = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $post = Post::factory()->create(['author_id' => $otherUser->id, 'tenant_id' => $tenant->id]);
+    $post = Post::factory()->create(['tenant_id' => $tenant->id]);
 
-    expect((new PostPolicy)->update($user, $post))->toBeTrue()
+    expect((new PostPolicy)->create($user))->toBeTrue()
+        ->and((new PostPolicy)->update($user, $post))->toBeTrue()
         ->and((new PostPolicy)->delete($user, $post))->toBeTrue()
         ->and((new PostPolicy)->forceDelete($user, $post))->toBeTrue();
 });
 
-it('allows all users to view any post', function () {
+it('allows admin and editor to view any post, author sees own + published', function () {
     $tenant = Tenant::factory()->create();
     $author = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]);
     $editor = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
     $superAdmin = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
     $post = Post::factory()->create(['author_id' => $author->id, 'tenant_id' => $tenant->id]);
 
     expect((new PostPolicy)->viewAny($author))->toBeTrue()
+        ->and((new PostPolicy)->viewAny($admin))->toBeTrue()
         ->and((new PostPolicy)->viewAny($editor))->toBeTrue()
         ->and((new PostPolicy)->viewAny($superAdmin))->toBeTrue()
         ->and((new PostPolicy)->view($author, $post))->toBeTrue()
+        ->and((new PostPolicy)->view($admin, $post))->toBeTrue()
         ->and((new PostPolicy)->view($editor, $post))->toBeTrue()
         ->and((new PostPolicy)->view($superAdmin, $post))->toBeTrue();
 });
 
-it('allows all users to create posts', function () {
-    $tenant = Tenant::factory()->create();
-    $author = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $editor = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $superAdmin = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
+/*
+ * Categories
+ */
 
-    expect((new PostPolicy)->create($author))->toBeTrue()
-        ->and((new PostPolicy)->create($editor))->toBeTrue()
-        ->and((new PostPolicy)->create($superAdmin))->toBeTrue();
+it('allows admin to manage categories', function () {
+    $tenant = Tenant::factory()->create();
+    $admin = User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]);
+    $category = Category::factory()->create(['tenant_id' => $tenant->id]);
+
+    expect((new CategoryPolicy)->create($admin))->toBeTrue()
+        ->and((new CategoryPolicy)->update($admin, $category))->toBeTrue()
+        ->and((new CategoryPolicy)->delete($admin, $category))->toBeTrue()
+        ->and((new CategoryPolicy)->forceDelete($admin, $category))->toBeFalse();
 });
 
-it('allows super_admin to manage categories', function () {
+it('allows super_admin to force delete categories', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
     $category = Category::factory()->create(['tenant_id' => $tenant->id]);
 
-    expect((new CategoryPolicy)->create($user))->toBeTrue()
-        ->and((new CategoryPolicy)->update($user, $category))->toBeTrue()
-        ->and((new CategoryPolicy)->delete($user, $category))->toBeTrue()
-        ->and((new CategoryPolicy)->forceDelete($user, $category))->toBeTrue();
-});
-
-it('allows editor to manage categories', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $category = Category::factory()->create(['tenant_id' => $tenant->id]);
-
-    expect((new CategoryPolicy)->create($user))->toBeTrue()
-        ->and((new CategoryPolicy)->update($user, $category))->toBeTrue()
-        ->and((new CategoryPolicy)->delete($user, $category))->toBeTrue()
-        ->and((new CategoryPolicy)->forceDelete($user, $category))->toBeFalse();
+    expect((new CategoryPolicy)->forceDelete($user, $category))->toBeTrue();
 });
 
 it('denies author from managing categories', function () {
@@ -144,45 +105,30 @@ it('denies author from managing categories', function () {
 
     expect((new CategoryPolicy)->create($user))->toBeFalse()
         ->and((new CategoryPolicy)->update($user, $category))->toBeFalse()
-        ->and((new CategoryPolicy)->delete($user, $category))->toBeFalse()
-        ->and((new CategoryPolicy)->forceDelete($user, $category))->toBeFalse();
+        ->and((new CategoryPolicy)->delete($user, $category))->toBeFalse();
 });
 
-it('allows all users to view any category', function () {
+/*
+ * Tags
+ */
+
+it('allows admin to manage tags', function () {
     $tenant = Tenant::factory()->create();
-    $author = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $editor = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $superAdmin = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
-    $category = Category::factory()->create(['tenant_id' => $tenant->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]);
+    $tag = Tag::factory()->create(['tenant_id' => $tenant->id]);
 
-    expect((new CategoryPolicy)->viewAny($author))->toBeTrue()
-        ->and((new CategoryPolicy)->viewAny($editor))->toBeTrue()
-        ->and((new CategoryPolicy)->viewAny($superAdmin))->toBeTrue()
-        ->and((new CategoryPolicy)->view($author, $category))->toBeTrue()
-        ->and((new CategoryPolicy)->view($editor, $category))->toBeTrue()
-        ->and((new CategoryPolicy)->view($superAdmin, $category))->toBeTrue();
+    expect((new TagPolicy)->create($admin))->toBeTrue()
+        ->and((new TagPolicy)->update($admin, $tag))->toBeTrue()
+        ->and((new TagPolicy)->delete($admin, $tag))->toBeTrue()
+        ->and((new TagPolicy)->forceDelete($admin, $tag))->toBeFalse();
 });
 
-it('allows super_admin to manage tags', function () {
+it('allows super_admin to force delete tags', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
     $tag = Tag::factory()->create(['tenant_id' => $tenant->id]);
 
-    expect((new TagPolicy)->create($user))->toBeTrue()
-        ->and((new TagPolicy)->update($user, $tag))->toBeTrue()
-        ->and((new TagPolicy)->delete($user, $tag))->toBeTrue()
-        ->and((new TagPolicy)->forceDelete($user, $tag))->toBeTrue();
-});
-
-it('allows editor to manage tags', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $tag = Tag::factory()->create(['tenant_id' => $tenant->id]);
-
-    expect((new TagPolicy)->create($user))->toBeTrue()
-        ->and((new TagPolicy)->update($user, $tag))->toBeTrue()
-        ->and((new TagPolicy)->delete($user, $tag))->toBeTrue()
-        ->and((new TagPolicy)->forceDelete($user, $tag))->toBeFalse();
+    expect((new TagPolicy)->forceDelete($user, $tag))->toBeTrue();
 });
 
 it('denies author from managing tags', function () {
@@ -192,26 +138,14 @@ it('denies author from managing tags', function () {
 
     expect((new TagPolicy)->create($user))->toBeFalse()
         ->and((new TagPolicy)->update($user, $tag))->toBeFalse()
-        ->and((new TagPolicy)->delete($user, $tag))->toBeFalse()
-        ->and((new TagPolicy)->forceDelete($user, $tag))->toBeFalse();
+        ->and((new TagPolicy)->delete($user, $tag))->toBeFalse();
 });
 
-it('allows all users to view any tag', function () {
-    $tenant = Tenant::factory()->create();
-    $author = User::factory()->create(['role' => 'author', 'tenant_id' => $tenant->id]);
-    $editor = User::factory()->create(['role' => 'editor', 'tenant_id' => $tenant->id]);
-    $superAdmin = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);
-    $tag = Tag::factory()->create(['tenant_id' => $tenant->id]);
+/*
+ * Users
+ */
 
-    expect((new TagPolicy)->viewAny($author))->toBeTrue()
-        ->and((new TagPolicy)->viewAny($editor))->toBeTrue()
-        ->and((new TagPolicy)->viewAny($superAdmin))->toBeTrue()
-        ->and((new TagPolicy)->view($author, $tag))->toBeTrue()
-        ->and((new TagPolicy)->view($editor, $tag))->toBeTrue()
-        ->and((new TagPolicy)->view($superAdmin, $tag))->toBeTrue();
-});
-
-it('allows super_admin to manage users', function () {
+it('allows super_admin to manage all users', function () {
     $tenant = Tenant::factory()->create();
     $otherTenant = Tenant::factory()->create();
     $user = User::factory()->create(['role' => 'super_admin', 'tenant_id' => $tenant->id]);

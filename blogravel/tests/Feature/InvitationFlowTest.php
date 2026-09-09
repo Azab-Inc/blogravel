@@ -62,7 +62,7 @@ test('accept invitation with existing user', function () {
     expect($existingUser->tenant_id)->toBe($tenant->id);
     expect($existingUser->role)->toBe(Role::Editor);
     expect($invitation->fresh()->accepted_at)->not->toBeNull();
-    $response->assertRedirect('/admin');
+    $response->assertRedirect(route('filament.admin.pages.dashboard'));
 });
 
 test('accept invitation with new user creates account', function () {
@@ -87,7 +87,7 @@ test('accept invitation with new user creates account', function () {
     expect($user->role)->toBe(Role::Author);
     expect($user->first_name)->toBe('New');
     expect($user->last_name)->toBe('User');
-    $response->assertRedirect('/admin');
+    $response->assertRedirect(route('filament.admin.pages.dashboard'));
 });
 
 test('reject expired invitation', function () {

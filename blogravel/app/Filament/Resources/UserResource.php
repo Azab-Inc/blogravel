@@ -6,14 +6,18 @@ use App\Enums\Role;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -41,14 +45,21 @@ class UserResource extends Resource
                     ->unique(ignoreRecord: true),
                 TextInput::make('password')
                     ->password()
+                    ->revealable()
                     ->required()
                     ->maxLength(255)
                     ->visibleOn('create')
-                    ->dehydrated(fn ($state): string => filled($state) ? bcrypt($state) : ''),
+                    ->suffixAction(Action::make('generatePassword')
+                        ->icon('heroicon-m-sparkles')
+                        ->label('Generate secure password')
+                        ->action(fn ($set) => $set('password', Str::password(16)))),
                 Select::make('role')
                     ->options(Role::class)
                     ->required()
                     ->native(false),
+                Checkbox::make('can_invite')
+                    ->label('Can invite users')
+                    ->default(false),
                 TextInput::make('tenant_id')
                     ->disabled()
                     ->dehydrated(false),
@@ -71,6 +82,9 @@ class UserResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (Role $state): string => $state->label())
                     ->sortable(),
+                IconColumn::make('can_invite')
+                    ->label('Can Invite')
+                    ->boolean(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),

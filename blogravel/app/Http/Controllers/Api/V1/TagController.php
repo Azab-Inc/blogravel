@@ -10,19 +10,22 @@ use App\Models\ApiKey;
 use App\Models\Tag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Str;
 
 class TagController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): CursorPaginator
     {
         $tags = Tag::withCount('posts')
             ->where('tenant_id', $this->getTenantId($request))
-            ->orderBy('name')
-            ->paginate(15);
+            ->orderBy('name');
 
-        return TagResource::collection($tags);
+        return $this->cursorPaginate(
+            $tags,
+            ['*'],
+            ['id', 'name', 'slug'],
+        );
     }
 
     public function store(StoreTagRequest $request): JsonResponse
@@ -57,7 +60,7 @@ class TagController extends Controller
         $tag->update($validated);
 
         return response()->json([
-            'data' => new TagResource($tag),
+            'data' => new TagResource($tag->loadCount('posts')),
         ]);
     }
 
@@ -71,7 +74,6 @@ class TagController extends Controller
     private function getTenantId(Request $request): string
     {
         $user = $request->user();
-
         if ($user) {
             return $user->tenant_id;
         }

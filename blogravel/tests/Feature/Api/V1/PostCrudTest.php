@@ -30,7 +30,7 @@ test('returns paginated list of posts', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/posts')
+        ->getJson(route('posts.index'))
         ->assertOk()
         ->assertJsonStructure([
             'data' => [
@@ -53,7 +53,7 @@ test('returns single post with author categories and tags', function () {
     $post->tags()->attach($tag->id);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson("/api/v1/posts/{$post->id}")
+        ->getJson(route('posts.show', $post))
         ->assertOk()
         ->assertJsonStructure([
             'data' => [
@@ -69,7 +69,7 @@ test('returns 404 for nonexistent post', function () {
     ['apiKey' => $apiKey] = createPostApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/posts/nonexistent-uuid')
+        ->getJson(route('posts.show', 'nonexistent-uuid'))
         ->assertNotFound();
 });
 
@@ -77,7 +77,7 @@ test('creates a post with valid data', function () {
     ['user' => $user, 'apiKey' => $apiKey] = createPostApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/posts', [
+        ->postJson(route('posts.store'), [
             'title' => 'Test Post',
             'content' => 'Test content here',
             'status' => 'draft',
@@ -97,7 +97,7 @@ test('validates title is required on create', function () {
     ['apiKey' => $apiKey] = createPostApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/posts', [
+        ->postJson(route('posts.store'), [
             'content' => 'Content without title',
         ])
         ->assertUnprocessable()
@@ -108,7 +108,7 @@ test('validates content is required on create', function () {
     ['apiKey' => $apiKey] = createPostApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/posts', [
+        ->postJson(route('posts.store'), [
             'title' => 'Title without content',
         ])
         ->assertUnprocessable()
@@ -119,7 +119,7 @@ test('validates status must be draft scheduled or published on create', function
     ['apiKey' => $apiKey] = createPostApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/posts', [
+        ->postJson(route('posts.store'), [
             'title' => 'Valid Title',
             'content' => 'Valid content',
             'status' => 'invalid_status',
@@ -138,7 +138,7 @@ test('updates a post', function () {
 
     $this->actingAs($user)
         ->withHeader('X-Api-Key', $apiKey->token)
-        ->putJson("/api/v1/posts/{$post->id}", [
+        ->putJson(route('posts.update', $post), [
             'title' => 'Updated Title',
             'content' => 'Updated content',
         ])
@@ -163,7 +163,7 @@ test('validates status must be draft scheduled or published on update', function
 
     $this->actingAs($user)
         ->withHeader('X-Api-Key', $apiKey->token)
-        ->putJson("/api/v1/posts/{$post->id}", [
+        ->putJson(route('posts.update', $post), [
             'status' => 'bad_status',
         ])
         ->assertUnprocessable()
@@ -180,7 +180,7 @@ test('soft deletes a post', function () {
 
     $this->actingAs($user)
         ->withHeader('X-Api-Key', $apiKey->token)
-        ->deleteJson("/api/v1/posts/{$post->id}")
+        ->deleteJson(route('posts.destroy', $post))
         ->assertSuccessful();
 
     $this->assertDatabaseMissing('posts', ['id' => $post->id]);

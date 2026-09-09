@@ -7,13 +7,13 @@ test('authenticated user can logout', function () {
     $token = $user->createToken('api-token')->plainTextToken;
 
     $response = $this->withHeader('Authorization', 'Bearer '.$token)
-        ->postJson('/api/v1/logout');
+        ->postJson(route('api.v1.logout'));
 
     $response->assertNoContent();
 });
 
 test('unauthenticated user cannot logout', function () {
-    $response = $this->postJson('/api/v1/logout');
+    $response = $this->postJson(route('api.v1.logout'));
 
     $response->assertUnauthorized();
 });

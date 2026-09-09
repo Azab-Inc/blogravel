@@ -10,19 +10,22 @@ use App\Models\ApiKey;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): CursorPaginator
     {
         $categories = Category::withCount('posts')
             ->where('tenant_id', $this->getTenantId($request))
-            ->orderBy('name')
-            ->paginate(15);
+            ->orderBy('name');
 
-        return CategoryResource::collection($categories);
+        return $this->cursorPaginate(
+            $categories,
+            ['*'],
+            ['id', 'name', 'slug'],
+        );
     }
 
     public function store(StoreCategoryRequest $request): JsonResponse
@@ -57,7 +60,7 @@ class CategoryController extends Controller
         $category->update($validated);
 
         return response()->json([
-            'data' => new CategoryResource($category),
+            'data' => new CategoryResource($category->loadCount('posts')),
         ]);
     }
 
@@ -71,7 +74,6 @@ class CategoryController extends Controller
     private function getTenantId(Request $request): string
     {
         $user = $request->user();
-
         if ($user) {
             return $user->tenant_id;
         }

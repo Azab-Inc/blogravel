@@ -11,18 +11,21 @@ use App\Models\Page;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): CursorPaginator
     {
         $pages = Page::where('tenant_id', $this->getTenantId($request))
-            ->latest()
-            ->paginate(15);
+            ->latest();
 
-        return PageResource::collection($pages);
+        return $this->cursorPaginate(
+            $pages,
+            ['*'],
+            ['id', 'title', 'slug', 'created_at'],
+        );
     }
 
     public function store(StorePageRequest $request): JsonResponse
@@ -33,7 +36,7 @@ class PageController extends Controller
         $user = $request->user();
         $authorId = $user?->id
             ?? User::where('tenant_id', $tenantId)->first()?->id
-            ?? abort(401, 'No tenant user available.');
+            ?? abort(401, 'No tenant user available to assign as author.');
 
         $page = Page::create([
             ...$validated,
@@ -78,7 +81,6 @@ class PageController extends Controller
     private function getTenantId(Request $request): string
     {
         $user = $request->user();
-
         if ($user) {
             return $user->tenant_id;
         }

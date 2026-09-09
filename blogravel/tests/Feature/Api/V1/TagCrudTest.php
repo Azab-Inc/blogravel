@@ -26,7 +26,7 @@ test('returns paginated list of tags', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/tags')
+        ->getJson(route('tags.index'))
         ->assertOk()
         ->assertJsonStructure([
             'data' => [
@@ -43,7 +43,7 @@ test('returns single tag with posts count', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson("/api/v1/tags/{$tag->id}")
+        ->getJson(route('tags.show', $tag))
         ->assertOk()
         ->assertJsonStructure([
             'data' => ['id', 'name', 'slug', 'posts_count'],
@@ -55,7 +55,7 @@ test('returns 404 for nonexistent tag', function () {
     ['apiKey' => $apiKey] = createTagApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/tags/nonexistent-uuid')
+        ->getJson(route('tags.show', 'nonexistent-uuid'))
         ->assertNotFound();
 });
 
@@ -63,7 +63,7 @@ test('creates a tag with valid data', function () {
     ['user' => $user, 'apiKey' => $apiKey] = createTagApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/tags', [
+        ->postJson(route('tags.store'), [
             'name' => 'Laravel',
         ])
         ->assertCreated()
@@ -81,7 +81,7 @@ test('validates name is required on tag create', function () {
     ['apiKey' => $apiKey] = createTagApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/tags', [])
+        ->postJson(route('tags.store'), [])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['name']);
 });
@@ -90,7 +90,7 @@ test('validates name max 255 on tag create', function () {
     ['apiKey' => $apiKey] = createTagApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/tags', [
+        ->postJson(route('tags.store'), [
             'name' => str_repeat('a', 256),
         ])
         ->assertUnprocessable()
@@ -105,7 +105,7 @@ test('updates a tag', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->putJson("/api/v1/tags/{$tag->id}", [
+        ->putJson(route('tags.update', $tag), [
             'name' => 'Updated Tag',
         ])
         ->assertOk()
@@ -127,7 +127,7 @@ test('soft deletes a tag', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->deleteJson("/api/v1/tags/{$tag->id}")
+        ->deleteJson(route('tags.destroy', $tag))
         ->assertNoContent();
 
     $this->assertDatabaseMissing('tags', ['id' => $tag->id]);

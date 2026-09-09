@@ -26,7 +26,7 @@ test('returns paginated list of pages', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/pages')
+        ->getJson(route('pages.index'))
         ->assertOk()
         ->assertJsonStructure([
             'data' => [
@@ -43,7 +43,7 @@ test('returns single page', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson("/api/v1/pages/{$page->id}")
+        ->getJson(route('pages.show', $page))
         ->assertOk()
         ->assertJsonStructure([
             'data' => ['id', 'title', 'slug', 'content', 'status'],
@@ -54,7 +54,7 @@ test('returns 404 for nonexistent page', function () {
     ['apiKey' => $apiKey] = createPageApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/pages/nonexistent-uuid')
+        ->getJson(route('pages.show', 'nonexistent-uuid'))
         ->assertNotFound();
 });
 
@@ -62,7 +62,7 @@ test('creates a page with valid data', function () {
     ['user' => $user, 'apiKey' => $apiKey] = createPageApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/pages', [
+        ->postJson(route('pages.store'), [
             'title' => 'Test Page',
             'content' => 'Test page content',
             'status' => 'draft',
@@ -82,7 +82,7 @@ test('validates title is required on page create', function () {
     ['apiKey' => $apiKey] = createPageApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/pages', [
+        ->postJson(route('pages.store'), [
             'content' => 'Content without title',
         ])
         ->assertUnprocessable()
@@ -93,7 +93,7 @@ test('validates content is required on page create', function () {
     ['apiKey' => $apiKey] = createPageApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/pages', [
+        ->postJson(route('pages.store'), [
             'title' => 'Title without content',
         ])
         ->assertUnprocessable()
@@ -104,7 +104,7 @@ test('validates status enum on page create', function () {
     ['apiKey' => $apiKey] = createPageApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/pages', [
+        ->postJson(route('pages.store'), [
             'title' => 'Valid Title',
             'content' => 'Valid content',
             'status' => 'invalid_status',
@@ -122,7 +122,7 @@ test('updates a page', function () {
 
     $this->actingAs($user)
         ->withHeader('X-Api-Key', $apiKey->token)
-        ->putJson("/api/v1/pages/{$page->id}", [
+        ->putJson(route('pages.update', $page), [
             'title' => 'Updated Page Title',
             'content' => 'Updated content',
         ])
@@ -146,7 +146,7 @@ test('validates status enum on page update', function () {
 
     $this->actingAs($user)
         ->withHeader('X-Api-Key', $apiKey->token)
-        ->putJson("/api/v1/pages/{$page->id}", [
+        ->putJson(route('pages.update', $page), [
             'status' => 'bad_status',
         ])
         ->assertUnprocessable()
@@ -162,7 +162,7 @@ test('soft deletes a page', function () {
 
     $this->actingAs($user)
         ->withHeader('X-Api-Key', $apiKey->token)
-        ->deleteJson("/api/v1/pages/{$page->id}")
+        ->deleteJson(route('pages.destroy', $page))
         ->assertNoContent();
 
     $this->assertDatabaseMissing('pages', ['id' => $page->id]);

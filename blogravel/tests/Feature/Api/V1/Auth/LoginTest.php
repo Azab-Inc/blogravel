@@ -9,7 +9,7 @@ test('returns a sanctum token on valid credentials', function () {
         'password' => Hash::make('password'),
     ]);
 
-    $response = $this->postJson('/api/v1/login', [
+    $response = $this->postJson(route('api.v1.login'), [
         'email' => 'test@example.com',
         'password' => 'password',
     ]);
@@ -24,7 +24,7 @@ test('returns 401 on invalid credentials', function () {
         'password' => Hash::make('password'),
     ]);
 
-    $response = $this->postJson('/api/v1/login', [
+    $response = $this->postJson(route('api.v1.login'), [
         'email' => 'test@example.com',
         'password' => 'wrong-password',
     ]);
@@ -34,14 +34,14 @@ test('returns 401 on invalid credentials', function () {
 });
 
 test('validates required fields', function () {
-    $response = $this->postJson('/api/v1/login', []);
+    $response = $this->postJson(route('api.v1.login'), []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['email', 'password']);
 });
 
 test('validates email format', function () {
-    $response = $this->postJson('/api/v1/login', [
+    $response = $this->postJson(route('api.v1.login'), [
         'email' => 'not-an-email',
         'password' => 'password',
     ]);
@@ -51,7 +51,7 @@ test('validates email format', function () {
 });
 
 test('returns 401 on non-existent email', function () {
-    $response = $this->postJson('/api/v1/login', [
+    $response = $this->postJson(route('api.v1.login'), [
         'email' => 'nobody@example.com',
         'password' => 'password',
     ]);

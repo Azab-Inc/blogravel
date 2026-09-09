@@ -27,7 +27,7 @@ test('returns paginated list of categories', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/categories')
+        ->getJson(route('categories.index'))
         ->assertOk()
         ->assertJsonStructure([
             'data' => [
@@ -51,7 +51,7 @@ test('returns single category with posts count', function () {
     });
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson("/api/v1/categories/{$category->id}")
+        ->getJson(route('categories.show', $category))
         ->assertOk()
         ->assertJsonStructure([
             'data' => ['id', 'name', 'slug', 'posts_count'],
@@ -63,7 +63,7 @@ test('returns 404 for nonexistent category', function () {
     ['apiKey' => $apiKey] = createCategoryApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->getJson('/api/v1/categories/nonexistent-uuid')
+        ->getJson(route('categories.show', 'nonexistent-uuid'))
         ->assertNotFound();
 });
 
@@ -71,7 +71,7 @@ test('creates a category with valid data', function () {
     ['user' => $user, 'apiKey' => $apiKey] = createCategoryApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/categories', [
+        ->postJson(route('categories.store'), [
             'name' => 'Technology',
         ])
         ->assertCreated()
@@ -89,7 +89,7 @@ test('validates name is required on category create', function () {
     ['apiKey' => $apiKey] = createCategoryApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/categories', [])
+        ->postJson(route('categories.store'), [])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['name']);
 });
@@ -98,7 +98,7 @@ test('validates name max 255 on category create', function () {
     ['apiKey' => $apiKey] = createCategoryApiKey();
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->postJson('/api/v1/categories', [
+        ->postJson(route('categories.store'), [
             'name' => str_repeat('a', 256),
         ])
         ->assertUnprocessable()
@@ -113,7 +113,7 @@ test('updates a category', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->putJson("/api/v1/categories/{$category->id}", [
+        ->putJson(route('categories.update', $category), [
             'name' => 'Updated Category',
         ])
         ->assertOk()
@@ -135,7 +135,7 @@ test('soft deletes a category', function () {
     ]);
 
     $this->withHeader('X-Api-Key', $apiKey->token)
-        ->deleteJson("/api/v1/categories/{$category->id}")
+        ->deleteJson(route('categories.destroy', $category))
         ->assertNoContent();
 
     $this->assertDatabaseMissing('categories', ['id' => $category->id]);

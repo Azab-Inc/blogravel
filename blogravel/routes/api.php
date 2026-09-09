@@ -4,12 +4,27 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\PageController;
 use App\Http\Controllers\Api\V1\PostController;
+use App\Http\Controllers\Api\V1\PublicReadController;
 use App\Http\Controllers\Api\V1\TagController;
 use Illuminate\Support\Facades\Route;
 
+// Public reads — no API key required; tenant resolved from Host header or ?tenant=
+Route::prefix('v1/public')->group(function () {
+    Route::get('/{resource}', [PublicReadController::class, 'index'])
+        ->whereIn('resource', ['posts', 'pages', 'categories', 'tags'])
+        ->name('api.v1.public.index');
+
+    Route::get('/{resource}/{id}', [PublicReadController::class, 'show'])
+        ->whereIn('resource', ['posts', 'pages', 'categories', 'tags'])
+        ->name('api.v1.public.show');
+});
+
+// Authenticated routes — require API key
 Route::prefix('v1')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::post('/login', [AuthController::class, 'login'])->name('api.v1.login');
+    Route::post('/logout', [AuthController::class, 'logout'])
+        ->middleware('auth:sanctum')
+        ->name('api.v1.logout');
 
     // Posts
     Route::apiResource('posts', PostController::class)
@@ -48,5 +63,7 @@ Route::prefix('v1')->group(function () {
         ->only(['store', 'update', 'destroy']);
 
     // Drafts
-    Route::get('/drafts', fn () => response()->json(['data' => []]))->middleware('api.key.ability:draft_read');
+    Route::get('/drafts', fn () => response()->json(['data' => []]))
+        ->middleware('api.key.ability:draft_read')
+        ->name('api.v1.drafts');
 });

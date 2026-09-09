@@ -57,7 +57,8 @@ class UserResource extends Resource
                 Select::make('role')
                     ->options(collect(Role::cases())->reject(fn (Role $role) => $role === Role::SuperAdmin)->mapWithKeys(fn (Role $role) => [$role->value => $role->label()])->all())
                     ->required()
-                    ->native(false),
+                    ->native(false)
+                    ->disabledOn('edit'),
                 Checkbox::make('can_invite')
                     ->label('Can invite users')
                     ->default(false),

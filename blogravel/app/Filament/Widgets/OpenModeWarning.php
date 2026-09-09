@@ -16,13 +16,19 @@ class OpenModeWarning extends Widget
         return 100;
     }
 
-    public function getApiKeyCount(): int
+    public static function canView(): bool
     {
-        return ApiKey::count();
+        return static::getApiKeyCount() === 0;
     }
 
-    public function isVisible(): bool
+    protected static function getApiKeyCount(): int
     {
-        return $this->getApiKeyCount() === 0;
+        $user = auth()->user();
+
+        if (! $user || ! $user->tenant_id) {
+            return 0;
+        }
+
+        return ApiKey::where('tenant_id', $user->tenant_id)->count();
     }
 }

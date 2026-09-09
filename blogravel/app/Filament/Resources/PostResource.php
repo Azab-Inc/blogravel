@@ -3,9 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Enums\PostStatus;
+use App\Enums\Role;
 use App\Filament\Actions\GenerateAiPostAction;
 use App\Filament\Resources\PostResource\Pages;
 use App\Models\Post;
+use App\Models\Setting;
 use BackedEnum;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -19,6 +21,7 @@ use Filament\Schemas\Components\Actions as SchemaActions;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class PostResource extends Resource
@@ -101,6 +104,27 @@ class PostResource extends Resource
     public static function getRelations(): array
     {
         return [];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user->role === Role::Author) {
+            $canViewOthers = Setting::where('tenant_id', $user->tenant_id)
+                ->where('key', 'authors_can_view_others_posts')
+                ->value('value') === 'true';
+
+            if (! $canViewOthers) {
+                $query->where(function ($q) use ($user) {
+                    $q->where('author_id', $user->id)
+                        ->orWhere('status', PostStatus::Published);
+                });
+            }
+        }
+
+        return $query;
     }
 
     public static function getPages(): array

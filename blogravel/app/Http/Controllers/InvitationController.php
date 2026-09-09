@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class InvitationController extends Controller
 {
@@ -20,11 +21,9 @@ class InvitationController extends Controller
             ]);
         }
 
-        $existingUser = User::where('email', $invitation->email)->first();
-
         return view('invitations.accept', [
             'invitation' => $invitation,
-            'existingUser' => $existingUser,
+            'existingUser' => $this->resolveExistingUser($invitation, request()->input('email')),
         ]);
     }
 
@@ -38,7 +37,7 @@ class InvitationController extends Controller
             ]);
         }
 
-        $existingUser = User::where('email', $invitation->email)->first();
+        $existingUser = $this->resolveExistingUser($invitation, $request->input('email'));
 
         if ($existingUser) {
             $existingUser->update([
@@ -48,18 +47,31 @@ class InvitationController extends Controller
 
             Auth::login($existingUser);
         } else {
-            $request->validate([
-                'first_name' => ['required', 'string', 'max:255'],
-                'last_name' => ['required', 'string', 'max:255'],
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
-            ]);
+            if ($invitation->type === 'shareable') {
+                $validated = $request->validate([
+                    'first_name' => ['required', 'string', 'max:255'],
+                    'last_name' => ['required', 'string', 'max:255'],
+                    'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+                    'password' => ['required', 'string', 'min:8', 'confirmed'],
+                ]);
+
+                $email = $validated['email'];
+            } else {
+                $validated = $request->validate([
+                    'first_name' => ['required', 'string', 'max:255'],
+                    'last_name' => ['required', 'string', 'max:255'],
+                    'password' => ['required', 'string', 'min:8', 'confirmed'],
+                ]);
+
+                $email = $invitation->email;
+            }
 
             $user = User::create([
-                'name' => trim($request->first_name.' '.$request->last_name),
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $invitation->email,
-                'password' => Hash::make($request->password),
+                'name' => trim($validated['first_name'].' '.$validated['last_name']),
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'email' => $email,
+                'password' => Hash::make($validated['password']),
                 'tenant_id' => $invitation->tenant_id,
                 'role' => $invitation->role,
             ]);
@@ -69,6 +81,15 @@ class InvitationController extends Controller
 
         $invitation->update(['accepted_at' => now()]);
 
-        return redirect('/admin');
+        return redirect()->route('filament.admin.pages.dashboard');
+    }
+
+    /**
+     * For email invitations the invited email is fixed; for shareable links
+     * the email is supplied by the acceptor.
+     */
+    private function resolveExistingUser(Invitation $invitation, ?string $email): ?User
+    {
+        return User::where('email', $invitation->type === 'shareable' ? $email : $invitation->email)->first();
     }
 }

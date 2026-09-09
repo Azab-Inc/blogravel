@@ -6,8 +6,7 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::get('/invitations/{token}', [InvitationController::class, 'show'])
-    ->name('invitations.accept')
-    ->middleware('signed');
+    ->name('invitations.accept');
 
 Route::post('/invitations/{token}', [InvitationController::class, 'accept'])
     ->name('invitations.accept.post');

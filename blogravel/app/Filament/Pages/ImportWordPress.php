@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Enums\NavGroup;
+use App\Enums\Role;
 use App\Jobs\WordPressImportJob;
 use App\Services\WordPress\WxrParser;
 use BackedEnum;
@@ -21,6 +22,11 @@ class ImportWordPress extends Page
     protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $navigationLabel = 'Import WordPress';
+
+    public static function canAccess(): bool
+    {
+        return in_array(auth()->user()?->role, [Role::SuperAdmin, Role::Admin], true);
+    }
 
     public ?array $file = null;
 

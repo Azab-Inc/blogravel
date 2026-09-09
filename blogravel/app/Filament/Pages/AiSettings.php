@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\AiProviderType;
 use App\Enums\NavGroup;
+use App\Enums\Role;
 use App\Models\AiProvider;
 use App\Models\Setting;
 use BackedEnum;
@@ -33,6 +34,11 @@ class AiSettings extends Page
     protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $navigationLabel = 'AI Settings';
+
+    public static function canAccess(): bool
+    {
+        return in_array(auth()->user()?->role, [Role::SuperAdmin, Role::Admin], true);
+    }
 
     public int $providerCount = 0;
 

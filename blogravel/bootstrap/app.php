@@ -24,4 +24,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+        $exceptions->renderable(function (Throwable $e, Request $request) {
+            if (app()->environment('local') && ! $request->is('api/*')) {
+                file_put_contents(storage_path('logs/exception-capture.log'),
+                    date('Y-m-d H:i:s')." {$request->method()} {$request->path()}\n".
+                    $e->getMessage()."\n".
+                    $e->getTraceAsString()."\n\n",
+                    FILE_APPEND
+                );
+            }
+
+            return null;
+        });
     })->create();

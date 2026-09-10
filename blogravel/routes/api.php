@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\DraftController;
 use App\Http\Controllers\Api\V1\PageController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\PublicReadController;
@@ -82,7 +83,18 @@ Route::prefix('v1')->group(function () {
         ->only(['store', 'update', 'destroy']);
 
     // Drafts
-    Route::get('/drafts', fn () => response()->json(['data' => []]))
+    Route::get('/drafts', [DraftController::class, 'index'])
         ->middleware('api.key.ability:draft_read')
         ->name('api.v1.drafts');
+
+    Route::get('/drafts/{id}', [DraftController::class, 'show'])
+        ->middleware('api.key.ability:draft_read')
+        ->name('api.v1.drafts.show');
+
+    Route::get('/drafts/{id}/preview', [DraftController::class, 'showBySignedUrl'])
+        ->name('api.v1.drafts.preview');
+
+    Route::post('/drafts/{id}/preview-url', [DraftController::class, 'createSignedUrl'])
+        ->middleware('api.key.ability:write')
+        ->name('api.v1.drafts.preview-url');
 });

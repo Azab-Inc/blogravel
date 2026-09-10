@@ -7,6 +7,7 @@ use App\Models\ApiKey;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<ApiKey>
@@ -17,10 +18,13 @@ class ApiKeyFactory extends Factory
 
     public function definition(): array
     {
+        $plaintext = Str::random(60);
+
         return [
             'tenant_id' => Tenant::factory(),
             'name' => fake()->word(),
-            'token' => fake()->unique()->uuid(),
+            'token' => $plaintext,
+            'key_hash' => hash('sha256', $plaintext),
             'abilities' => [fake()->randomElement(ApiKeyAbility::cases())],
             'last_used_at' => null,
             'expires_at' => null,

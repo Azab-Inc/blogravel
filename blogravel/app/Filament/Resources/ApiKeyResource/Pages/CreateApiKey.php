@@ -13,7 +13,9 @@ class CreateApiKey extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['token'] = Str::random(60);
+        $plaintext = Str::random(60);
+        $data['token'] = $plaintext;
+        $data['key_hash'] = hash('sha256', $plaintext);
         $data['tenant_id'] = auth()->user()->tenant_id;
 
         return $data;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\PageController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\PublicReadController;
 use App\Http\Controllers\Api\V1\TagController;
+use App\Http\Controllers\SubscribeController;
 use Illuminate\Support\Facades\Route;
 
 // Public reads — no API key required; tenant resolved from Host header or ?tenant=
@@ -17,6 +18,18 @@ Route::prefix('v1/public')->group(function () {
     Route::get('/{resource}/{id}', [PublicReadController::class, 'show'])
         ->whereIn('resource', ['posts', 'pages', 'categories', 'tags'])
         ->name('api.v1.public.show');
+});
+
+// Public subscribe endpoints — tenant resolved from Host header
+Route::prefix('v1')->group(function () {
+    Route::post('/subscribe', [SubscribeController::class, 'subscribe'])
+        ->name('api.subscribe');
+
+    Route::get('/confirm/{token}', [SubscribeController::class, 'confirm'])
+        ->name('api.confirm');
+
+    Route::get('/unsubscribe/{token}', [SubscribeController::class, 'unsubscribe'])
+        ->name('api.unsubscribe');
 });
 
 // Authenticated routes — require API key

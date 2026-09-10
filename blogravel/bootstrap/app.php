@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureApiKeyHasAbility;
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\VerifyWebhookSignature;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
             'api.key.ability' => EnsureApiKeyHasAbility::class,
+            'webhook.signature' => VerifyWebhookSignature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

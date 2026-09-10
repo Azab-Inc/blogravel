@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\PageController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\PublicReadController;
 use App\Http\Controllers\Api\V1\TagController;
+use App\Http\Controllers\SoroWebhookController;
 use App\Http\Controllers\SubscribeController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,11 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/unsubscribe/{token}', [SubscribeController::class, 'unsubscribe'])
         ->name('api.unsubscribe');
+
+    // Webhook endpoints — HMAC verified
+    Route::post('/webhooks/soro', SoroWebhookController::class)
+        ->middleware('webhook.signature:soro_secret')
+        ->name('api.webhooks.soro');
 });
 
 // Authenticated routes — require API key

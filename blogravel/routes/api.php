@@ -8,7 +8,9 @@ use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\PublicReadController;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\SoroWebhookController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscribeController;
+use App\Http\Middleware\EnsureApiKeyHasAbility;
 use Illuminate\Support\Facades\Route;
 
 // Public reads — no API key required; tenant resolved from Host header or ?tenant=
@@ -37,6 +39,11 @@ Route::prefix('v1')->group(function () {
     Route::post('/webhooks/soro', SoroWebhookController::class)
         ->middleware('webhook.signature:soro_secret')
         ->name('api.webhooks.soro');
+
+    // Stripe webhook — raw body, no auth
+    Route::post('/webhooks/stripe', StripeWebhookController::class)
+        ->withoutMiddleware([EnsureApiKeyHasAbility::class])
+        ->name('api.webhooks.stripe');
 });
 
 // Authenticated routes — require API key
@@ -52,7 +59,7 @@ Route::prefix('v1')->group(function () {
         ->only(['index', 'show']);
 
     Route::apiResource('posts', PostController::class)
-        ->middleware('api.key.ability:write')
+        ->middleware(['api.key.ability:write', 'plan.limit:posts'])
         ->only(['store', 'update', 'destroy']);
 
     // Pages

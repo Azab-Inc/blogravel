@@ -22,6 +22,7 @@ Route::get('/invitations/{token}', [InvitationController::class, 'show'])
     ->name('invitations.accept');
 
 Route::post('/invitations/{token}', [InvitationController::class, 'accept'])
+    ->middleware('plan.limit:users')
     ->name('invitations.accept.post');
 
 Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->group(function () {

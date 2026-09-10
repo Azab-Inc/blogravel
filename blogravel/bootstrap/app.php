@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureApiKeyHasAbility;
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\EnsureWithinPlanLimits;
 use App\Http\Middleware\VerifyWebhookSignature;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
             'api.key.ability' => EnsureApiKeyHasAbility::class,
             'webhook.signature' => VerifyWebhookSignature::class,
+            'plan.limit' => EnsureWithinPlanLimits::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -50,7 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
 
-        $exceptions->renderable(function (\Throwable $e, Request $request) {
+        $exceptions->renderable(function (Throwable $e, Request $request) {
             // Validation and Authentication exceptions: let Laravel's default
             // handler produce the correct status codes and response shapes.
             if ($e instanceof ValidationException || $e instanceof AuthenticationException) {
@@ -71,7 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $status, ['Content-Type' => 'application/problem+json']);
         });
 
-        $exceptions->renderable(function (\Throwable $e, Request $request) {
+        $exceptions->renderable(function (Throwable $e, Request $request) {
             if (app()->environment('local') && ! $request->is('api/*')) {
                 file_put_contents(storage_path('logs/exception-capture.log'),
                     date('Y-m-d H:i:s')." {$request->method()} {$request->path()}\n".

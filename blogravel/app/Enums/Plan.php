@@ -21,4 +21,23 @@ enum Plan: string
     {
         return array_map(static fn (self $plan): string => $plan->value, self::cases());
     }
+
+    /**
+     * Get a specific limit for this plan.
+     * Returns null if the limit is unlimited.
+     */
+    public function limit(string $key): ?int
+    {
+        $plans = config('billing.plans');
+
+        return $plans[$this->value][$key] ?? null;
+    }
+
+    /**
+     * Check if the plan has a specific limit.
+     */
+    public function hasLimit(string $key): bool
+    {
+        return $this->limit($key) !== null;
+    }
 }

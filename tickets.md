@@ -30,7 +30,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#22](https://github.com/Azab-Inc/blogravel/issues/22) | Media storage & uploads | Done |
 | [#23](https://github.com/Azab-Inc/blogravel/issues/23) | CI/CD pipeline (GitHub Actions) | Todo |
 | [#24](https://github.com/Azab-Inc/blogravel/issues/24) | GDPR subscriber data deletion & privacy controls | Done |
-| [#25](https://github.com/Azab-Inc/blogravel/issues/25) | Automated database backups | Todo |
+| [#25](https://github.com/Azab-Inc/blogravel/issues/25) | Automated database backups | Done |
 | [#26](https://github.com/Azab-Inc/blogravel/issues/26) | Starter theme accessibility (WCAG 2.1 AA) | Todo |
 | [#27](https://github.com/Azab-Inc/blogravel/issues/27) | Self-hosted deployment packaging & docs | Todo |
 | [#28](https://github.com/Azab-Inc/blogravel/issues/28) | UI feedback & toast notifications | Todo |

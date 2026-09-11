@@ -86,4 +86,14 @@ class Tenant extends BaseModel
     {
         return $this->hasMany(Subscription::class);
     }
+
+    public function backupRules(): HasMany
+    {
+        return $this->hasMany(BackupRule::class);
+    }
+
+    public function backups(): HasMany
+    {
+        return $this->hasMany(Backup::class);
+    }
 }

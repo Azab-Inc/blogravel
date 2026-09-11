@@ -147,17 +147,18 @@
 **Files:**
 - Create: `app/Filament/Resources/SettingResource.php`
 - Create: `app/Filament/Resources/SettingResource/Pages/ListSettings.php`
-- Create: `app/Filament/Resources/SettingResource/Pages/ManageSettings.php`
+- Create: `app/Filament/Resources/SettingResource/Pages/CreateSetting.php`
+- Create: `app/Filament/Resources/SettingResource/Pages/EditSetting.php`
 
 **Form:** key (text), value (textarea)
 **Table:** key, value, updated_at
 
 This is a simple key-value store per tenant.
 
-- [ ] Create SettingResource with form and table
-- [ ] Create List and Manage pages
-- [ ] Run Pint + reload Octane
-- [ ] Verify resource loads
+- [x] Create SettingResource with form and table
+- [x] Create List, Create, Edit pages
+- [x] Run Pint + reload Octane
+- [x] Verify resource loads
 
 ---
 
@@ -221,3 +222,85 @@ This is a simple key-value store per tenant.
 - [ ] Manual check: role restrictions work (login as Author, verify cannot access User/Settings resources)
 - [ ] Run `vendor/bin/pint --format agent` — no changes needed
 - [ ] Commit all Phase 3 work
+
+---
+
+## Task 11: User Profile Settings Page
+
+**Goal:** Allow users to click their name in the Filament top-right user menu to access a profile settings page where they can edit their name, email, change password, and close their account.
+
+**Files:**
+- Create: `app/Filament/Pages/Auth/EditProfile.php`
+- Modify: `app/Providers/Filament/AdminPanelProvider.php` (register page, configure user menu link)
+
+**Context:** The Filament top-right user menu currently shows the user's name (e.g., "Ada Minner") but clicking it does nothing. The goal is to link this to a new Filament page.
+
+### Sub-task 11a: Create ProfileSettings Filament Page
+
+- [x] Create `app/Filament/Pages/Auth/EditProfile.php` extending `Filament\Auth\Pages\EditProfile`
+- [x] Add form with: first_name, last_name, email fields (pre-filled from auth user)
+- [x] Form uses `filament()->getUser()` to load current user data via base class
+- [x] On save, update the authenticated user's profile (validate email uniqueness excluding self)
+- [x] Add success notification after save (via base class)
+- [x] Set page title to "Profile Settings"
+- [x] Register in `AdminPanelProvider.php` via `->profile(EditProfile::class)`
+
+### Sub-task 11b: Add Password Change to Profile Page
+
+- [x] Add password section to profile form: password, password_confirmation, currentPassword
+- [x] Validate current_password matches before allowing change (via base class `currentPassword()` rule)
+- [x] Hash new password via base class `dehydrateStateUsing(fn ($state) => Hash::make($state))`
+- [x] Clear password fields after successful update (via base class)
+- [x] Password confirmation field always visible, required when password filled
+
+### Sub-task 11c: Add Account Closure with Admin Protection
+
+- [x] Add "Danger Zone" section at bottom of profile page
+- [x] Add "Close Account" button with confirmation modal
+- [x] On confirm: soft-delete the user (set `deleted_at` timestamp)
+- [x] If user is the ONLY admin/super_admin in their tenant: soft-delete tenant too
+- [x] Log the user out after account closure
+- [x] Redirect to login page with success message
+
+### Sub-task 11d: Migration for Soft Delete Columns
+
+- [x] Create migration: `add_deleted_at_to_users_table`
+- [x] Create migration: `add_deleted_at_to_tenants_table`
+- [x] Add `SoftDeletes` trait to User model
+- [x] Add `SoftDeletes` trait to Tenant model
+- [x] Scope queries to exclude soft-deleted users/tenants
+
+### Sub-task 11e: Configure User Menu Link
+
+- [x] In `AdminPanelProvider.php`, use `->profile(EditProfile::class)` to wire the menu item
+- [x] Clicking the user's name navigates to `/admin/profile`
+
+### Sub-task 11f: Tests
+
+- [x] Test: authenticated user can access profile settings page
+- [x] Test: user can update first_name, last_name, email
+- [x] Test: user can change password with valid currentPassword
+- [x] Test: password change fails with wrong currentPassword
+- [x] Test: user can close their own account (soft delete)
+- [x] Test: last admin closure also soft-deletes tenant
+- [x] Test: non-last-admin closure does NOT delete tenant
+
+---
+
+## Task 12: Database Migrations for Soft Delete Support
+
+**Files:**
+- Create: `database/migrations/2026_09_10_000000_add_deleted_at_to_users_table.php`
+- Create: `database/migrations/2026_09_10_000001_add_deleted_at_to_tenants_table.php`
+- Modify: `app/Models/User.php` — add `SoftDeletes` trait
+- Modify: `app/Models/Tenant.php` — add `SoftDeletes` trait
+
+**Details:**
+- [x] Add `deleted_at` column to `users` table (nullable timestamp, index)
+- [x] Add `deleted_at` column to `tenants` table (nullable timestamp, index)
+- [x] Add `use Illuminate\Database\Eloquent\SoftDeletes;` and `use SoftDeletes;` to User model
+- [x] Add `use SoftDeletes;` to Tenant model
+- [x] Ensure tenant scoping in `BelongsToTenant` trait excludes soft-deleted tenants
+- [x] Run `php artisan migrate`
+- [x] Run `vendor/bin/pint --format agent`
+- [x] Run `php artisan test --compact`

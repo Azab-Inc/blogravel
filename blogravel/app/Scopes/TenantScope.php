@@ -55,6 +55,7 @@ class TenantScope implements Scope
             return;
         }
 
-        $builder->where('tenant_id', $user->tenant_id);
+        $builder->where('tenant_id', $user->tenant_id)
+            ->whereHas('tenant', fn ($q) => $q->withTrashed()->whereNull('deleted_at'));
     }
 }

@@ -12,14 +12,12 @@ class CreateMedia extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $file = $data['file'];
-
-        $path = Storage::disk('public')->putFile('media', $file);
+        $path = $data['file'];
 
         $data['file_path'] = $path;
         $data['url'] = Storage::disk('public')->url($path);
-        $data['mime_type'] = $file->getMimeType();
-        $data['size'] = $file->getSize();
+        $data['mime_type'] = Storage::disk('public')->mimeType($path);
+        $data['size'] = Storage::disk('public')->size($path);
         $data['tenant_id'] = auth()->user()->tenant_id;
 
         unset($data['file']);

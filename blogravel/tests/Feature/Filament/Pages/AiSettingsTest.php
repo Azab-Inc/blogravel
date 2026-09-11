@@ -8,7 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 
 it('ai settings page renders for admin', function () {
-    $user = User::factory()->create(['has_email_authentication' => true]);
+    $user = User::factory()->create(['role' => 'super_admin', 'has_email_authentication' => true]);
     $this->actingAs($user);
 
     $response = $this->get('/admin/ai-settings');
@@ -17,7 +17,7 @@ it('ai settings page renders for admin', function () {
 
 it('shows configured providers and saved defaults', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -51,7 +51,7 @@ it('shows configured providers and saved defaults', function () {
 
 it('saves default provider and output types', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -78,7 +78,7 @@ it('saves default provider and output types', function () {
 it('scopes providers and settings to the current tenant', function () {
     $tenant = Tenant::factory()->create();
     $otherTenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -103,7 +103,7 @@ it('scopes providers and settings to the current tenant', function () {
 
 it('creates a provider via the repeater', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -137,7 +137,7 @@ it('creates a provider via the repeater', function () {
 
 it('edits an existing provider via the repeater', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -163,7 +163,7 @@ it('edits an existing provider via the repeater', function () {
 
 it('deletes a provider when its repeater item is removed', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -200,7 +200,7 @@ it('deletes a provider when its repeater item is removed', function () {
 
 it('deletes every provider when all repeater items are removed', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -220,7 +220,7 @@ it('deletes every provider when all repeater items are removed', function () {
 
 it('preserves the stored api key when the repeater api key is blank', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -245,7 +245,7 @@ it('preserves the stored api key when the repeater api key is blank', function (
 
 it('never exposes existing provider api keys in the page html', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -264,7 +264,7 @@ it('never exposes existing provider api keys in the page html', function () {
 
 it('requires model for each repeater item', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);
@@ -289,7 +289,7 @@ it('requires model for each repeater item', function () {
 
 it('requires custom template when provider type is custom', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create([
+    $user = User::factory()->create(['role' => 'super_admin',
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
     ]);

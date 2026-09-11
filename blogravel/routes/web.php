@@ -2,9 +2,17 @@
 
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+// Theme frontend routes
+Route::get('/', [ThemeController::class, 'home'])->name('theme.home');
+Route::get('/post/{slug}', [ThemeController::class, 'post'])->name('theme.post');
+Route::get('/category/{slug}', [ThemeController::class, 'category'])->name('theme.category');
+Route::get('/subscribe', [ThemeController::class, 'subscribeForm'])->name('theme.subscribe');
+Route::post('/subscribe/{tenant}', [ThemeController::class, 'subscribe'])->name('theme.subscribe.post');
+Route::get('/contact', [ThemeController::class, 'contactForm'])->name('theme.contact');
+Route::post('/contact/{tenant}', [ThemeController::class, 'contact'])->name('theme.contact.post');
 
 // Feeds
 Route::get('/feeds/{resource}', [FeedController::class, 'posts'])

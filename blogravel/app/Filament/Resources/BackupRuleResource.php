@@ -11,12 +11,16 @@ use App\Models\BackupRule;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Forms;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -39,47 +43,47 @@ class BackupRuleResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Forms\Components\Section::make('Backup Settings')->schema([
-                Forms\Components\TextInput::make('name')
+            Section::make('Backup Settings')->schema([
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255),
 
-                Forms\Components\Select::make('backup_content')
+                Select::make('backup_content')
                     ->options(BackupContent::class)
                     ->required()
                     ->default(BackupContent::Both),
 
-                Forms\Components\TextInput::make('schedule')
+                TextInput::make('schedule')
                     ->label('Cron Schedule')
                     ->required()
                     ->default('0 2 * * *')
                     ->helperText('e.g., 0 2 * * * = daily at 2am'),
 
-                Forms\Components\Select::make('destination')
+                Select::make('destination')
                     ->options(BackupDestination::class)
                     ->required()
                     ->default(BackupDestination::Email),
 
-                Forms\Components\Toggle::make('enabled')
+                Toggle::make('enabled')
                     ->default(true),
             ]),
 
-            Forms\Components\Section::make('FTP/SFTP Settings')
+            Section::make('FTP/SFTP Settings')
                 ->collapsible()
                 ->schema([
-                    Forms\Components\TextInput::make('ftp_host')
+                    TextInput::make('ftp_host')
                         ->label('Host'),
-                    Forms\Components\TextInput::make('ftp_port')
+                    TextInput::make('ftp_port')
                         ->label('Port')
                         ->numeric()
                         ->default(21),
-                    Forms\Components\TextInput::make('ftp_user')
+                    TextInput::make('ftp_user')
                         ->label('Username'),
-                    Forms\Components\TextInput::make('ftp_pass')
+                    TextInput::make('ftp_pass')
                         ->label('Password')
                         ->password()
                         ->revealable(),
-                    Forms\Components\TextInput::make('ftp_path')
+                    TextInput::make('ftp_path')
                         ->label('Remote Path')
                         ->default('/'),
                 ])
@@ -91,16 +95,16 @@ class BackupRuleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('backup_content')
+                TextColumn::make('backup_content')
                     ->badge(),
-                Tables\Columns\TextColumn::make('schedule'),
-                Tables\Columns\TextColumn::make('destination')
+                TextColumn::make('schedule'),
+                TextColumn::make('destination')
                     ->badge(),
-                Tables\Columns\IconColumn::make('enabled')
+                IconColumn::make('enabled')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('last_run_at')
+                TextColumn::make('last_run_at')
                     ->dateTime(),
             ])
             ->recordActions([
@@ -123,7 +127,7 @@ class BackupRuleResource extends Resource
                     }),
             ])
             ->toolbarActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                DeleteBulkAction::make(),
             ]);
     }
 

@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Database\Eloquent\Builder;
 
 abstract class Controller extends BaseController
 {
@@ -19,7 +16,7 @@ abstract class Controller extends BaseController
     /**
      * Cursor-paginate a query, accepting ?cursor=<opaque>&limit=<int>&fields=<csv>.
      *
-     * @param  Builder|\Illuminate\Database\Eloquent\Builder  $query
+     * @param  Builder|Builder  $query
      * @param  array<string>  $columns  columns to select
      * @param  string[]  $allowedFields  sortable fields allowed in ?fields=
      */

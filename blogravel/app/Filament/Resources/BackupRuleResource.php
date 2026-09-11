@@ -9,6 +9,8 @@ use App\Filament\Resources\BackupRuleResource\Pages;
 use App\Jobs\CreateBackupJob;
 use App\Models\BackupRule;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
@@ -102,8 +104,8 @@ class BackupRuleResource extends Resource
                     ->dateTime(),
             ])
             ->recordActions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('runNow')
+                EditAction::make(),
+                Action::make('runNow')
                     ->label('Run Now')
                     ->icon('heroicon-o-play')
                     ->color('success')

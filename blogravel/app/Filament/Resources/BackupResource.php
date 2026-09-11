@@ -3,20 +3,24 @@
 namespace App\Filament\Resources;
 
 use App\Enums\BackupStatus;
+use App\Enums\NavGroup;
 use App\Filament\Resources\BackupResource\Pages;
 use App\Models\Backup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class BackupResource extends Resource
 {
     protected static ?string $model = Backup::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $modelLabel = 'Backup';
 
@@ -51,11 +55,11 @@ class BackupResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->toolbarActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                DeleteBulkAction::make(),
             ]);
     }
 
-    public static function getEloquentQuery()
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->where('tenant_id', Auth::user()->tenant_id);

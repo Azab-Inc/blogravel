@@ -22,4 +22,4 @@ Schedule::call(function () {
         CreateBackupJob::dispatch($rule->id);
         $rule->update(['next_run_at' => $now->copy()->addHour()]);
     }
-})->everyFifteenMinutes()->withoutOverlapping();
+})->name('run-scheduled-backups')->everyFifteenMinutes()->withoutOverlapping();

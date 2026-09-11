@@ -35,6 +35,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/unsubscribe/{token}', [SubscribeController::class, 'unsubscribe'])
         ->name('api.unsubscribe');
 
+    Route::delete('/subscribers/{token}', [SubscribeController::class, 'destroy'])
+        ->name('api.subscribers.destroy');
+
     // Webhook endpoints — HMAC verified
     Route::post('/webhooks/soro', SoroWebhookController::class)
         ->middleware('webhook.signature:soro_secret')

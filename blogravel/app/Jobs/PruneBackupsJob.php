@@ -20,10 +20,14 @@ class PruneBackupsJob implements ShouldQueue
 
     public function handle(): void
     {
+        // Self-hosted (billing disabled) = unlimited retention
+        if (! config('billing.enabled')) {
+            return;
+        }
+
         $tenant = Tenant::findOrFail($this->tenantId);
         $retentionDays = $tenant->plan->limit('backup_retention_days');
 
-        // Self-hosted (billing disabled) = unlimited retention
         if (! $retentionDays) {
             return;
         }

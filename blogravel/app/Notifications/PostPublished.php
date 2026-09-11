@@ -23,7 +23,7 @@ class PostPublished extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $unsubscribeUrl = route('api.unsubscribe', ['token' => $notifiable->confirmation_token ?? '']);
+        $unsubscribeUrl = route('api.unsubscribe', ['token' => $notifiable->unsubscribe_token ?? '']);
 
         return (new MailMessage)
             ->subject('New post: '.$this->post->title)

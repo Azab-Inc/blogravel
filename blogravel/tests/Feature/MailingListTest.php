@@ -78,10 +78,10 @@ it('unsubscribes a subscriber', function () {
     $subscriber = Subscriber::factory()->create([
         'tenant_id' => $this->tenant->id,
         'status' => SubscriberStatus::Subscribed,
-        'confirmation_token' => Str::random(64),
+        'unsubscribe_token' => Str::random(64),
     ]);
 
-    $response = $this->get(route('api.unsubscribe', ['token' => $subscriber->confirmation_token]));
+    $response = $this->get(route('api.unsubscribe', ['token' => $subscriber->unsubscribe_token]));
 
     $response->assertOk();
     $subscriber->refresh();

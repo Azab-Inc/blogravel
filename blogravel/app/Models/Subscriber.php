@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['tenant_id', 'email', 'name', 'status', 'confirmation_token'])]
+#[Fillable(['tenant_id', 'email', 'name', 'status', 'confirmation_token', 'unsubscribe_token'])]
 class Subscriber extends BaseModel
 {
     use HasFactory, Notifiable;
@@ -31,7 +31,17 @@ class Subscriber extends BaseModel
             if (is_null($subscriber->confirmation_token)) {
                 $subscriber->confirmation_token = Str::random(64);
             }
+            if (is_null($subscriber->unsubscribe_token)) {
+                $subscriber->unsubscribe_token = Str::random(64);
+            }
         });
+    }
+
+    public function deleteSubscriber(): bool
+    {
+        $this->categories()->detach();
+
+        return $this->forceDelete();
     }
 
     protected function casts(): array

@@ -1,4 +1,4 @@
-<x-layouts.theme :tenant="$tenant">
+<x-theme::layouts.theme :tenant="$tenant">
     <article>
         <h1>{{ $post->title }}</h1>
         <div class="post-meta">
@@ -10,12 +10,12 @@
             @endif
         </div>
 
-        <div style="margin: 1.5rem 0; line-height: 1.8;">
+        <div class="post-content">
             {!! $post->content !!}
         </div>
 
         @if($post->tags->count())
-            <div style="margin-top: 1.5rem;">
+            <div class="post-tags">
                 @foreach($post->tags as $tag)
                     <span class="tag">{{ $tag->name }}</span>
                 @endforeach
@@ -23,7 +23,7 @@
         @endif
     </article>
 
-    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+    <div class="back-link">
         <a href="{{ route('theme.home') }}?tenant={{ $tenant->id }}">← Back to all posts</a>
     </div>
-</x-layouts.theme>
+</x-theme::layouts.theme>

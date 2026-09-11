@@ -1,7 +1,5 @@
-<x-layouts.theme :tenant="$tenant">
+<x-theme::layouts.theme :tenant="$tenant">
     <h1>Message Sent!</h1>
-    <div class="success">
-        <p>Thank you for reaching out. We'll get back to you soon.</p>
-    </div>
+    <x-theme::success-alert message="Your message has been sent. We'll get back to you soon." />
     <a href="{{ route('theme.home') }}?tenant={{ $tenant->id }}">← Back to home</a>
-</x-layouts.theme>
+</x-theme::layouts.theme>

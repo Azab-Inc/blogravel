@@ -5,10 +5,12 @@ namespace App\Filament\Pages;
 use App\Enums\Role;
 use App\Models\Setting;
 use App\Models\User;
+use App\Providers\ThemeServiceProvider;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -47,6 +49,8 @@ class Settings extends Page
                 'last_name' => $user->last_name,
                 'email' => $user->email,
                 'authors_can_view_others_posts' => $this->getSetting('authors_can_view_others_posts', 'false') === 'true',
+                'theme_enabled' => $this->getSetting('theme_enabled', 'true') === 'true',
+                'active_theme' => $this->getSetting('active_theme', config('theme.default', 'base')),
             ],
         ]);
     }
@@ -55,6 +59,26 @@ class Settings extends Page
     {
         return $schema
             ->components([
+                Section::make('Site')
+                    ->collapsible()
+                    ->schema([
+                        Toggle::make('authors_can_view_others_posts')
+                            ->label('Allow authors to view other authors\' draft posts')
+                            ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
+                            ->default(false),
+                        Toggle::make('theme_enabled')
+                            ->label('Enable public theme frontend')
+                            ->helperText('When enabled, visitors can view your blog via the public theme. When disabled, only the API is available (headless mode).')
+                            ->default(true),
+                        Select::make('active_theme')
+                            ->label('Active Theme')
+                            ->helperText('Select the theme used for your public blog frontend.')
+                            ->options(fn () => collect(app(ThemeServiceProvider::class)->getAvailableThemes())
+                                ->mapWithKeys(fn ($theme) => [$theme['name'] => $theme['name'].($theme['is_base'] ? ' (base)' : '')])
+                                ->toArray())
+                            ->default(config('theme.default', 'base'))
+                            ->visible(fn (Get $get): bool => $get('theme_enabled')),
+                    ]),
                 Section::make('Account')
                     ->collapsible()
                     ->schema([
@@ -119,14 +143,7 @@ class Settings extends Page
                                     ->action(fn () => $this->closeAccount()),
                             ]),
                     ]),
-                Section::make('Site')
-                    ->collapsible()
-                    ->schema([
-                        Toggle::make('authors_can_view_others_posts')
-                            ->label('Allow authors to view other authors\' draft posts')
-                            ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
-                            ->default(false),
-                    ]),
+
             ])
             ->statePath('data');
     }
@@ -161,6 +178,16 @@ class Settings extends Page
         Setting::updateOrCreate(
             ['tenant_id' => $tenantId, 'key' => 'authors_can_view_others_posts'],
             ['value' => $data['authors_can_view_others_posts'] ? 'true' : 'false']
+        );
+
+        Setting::updateOrCreate(
+            ['tenant_id' => $tenantId, 'key' => 'theme_enabled'],
+            ['value' => $data['theme_enabled'] ? 'true' : 'false']
+        );
+
+        Setting::updateOrCreate(
+            ['tenant_id' => $tenantId, 'key' => 'active_theme'],
+            ['value' => $data['active_theme'] ?? config('theme.default', 'base')]
         );
 
         Notification::make()

@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\Tenant;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\View;
+use Symfony\Component\HttpFoundation\Response;
+
+class ResolveTheme
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $tenant = $this->resolveTenant($request);
+
+        if ($tenant) {
+            $activeTheme = $this->getActiveTheme($tenant);
+            $this->registerThemeNamespaces($activeTheme);
+
+            $request->attributes->set('tenant', $tenant);
+            $request->attributes->set('active_theme', $activeTheme);
+        }
+
+        return $next($request);
+    }
+
+    private function resolveTenant(Request $request): ?Tenant
+    {
+        $routeTenant = $request->route('tenant');
+        if ($routeTenant instanceof Tenant) {
+            return $routeTenant;
+        }
+
+        $host = strtolower($request->getHost());
+        if (str_contains($host, ':')) {
+            $host = explode(':', $host, 2)[0];
+        }
+
+        $tenant = Tenant::where('domain', $host)->first();
+        if ($tenant) {
+            return $tenant;
+        }
+
+        $param = $request->input('tenant') ?? $routeTenant;
+        if (is_string($param) && $param !== '') {
+            return Tenant::where('domain', $param)->orWhere('id', $param)->first();
+        }
+
+        return null;
+    }
+
+    private function getActiveTheme(Tenant $tenant): string
+    {
+        $theme = $tenant->settings
+            ->where('key', 'active_theme')
+            ->first()?->value;
+
+        return $theme ?: config('theme.default', 'base');
+    }
+
+    private function registerThemeNamespaces(string $activeTheme): void
+    {
+        $basePath = base_path(config('theme.themes_dir', 'resources/themes'));
+        $baseTheme = config('theme.base', 'base');
+
+        $baseDir = $basePath.DIRECTORY_SEPARATOR.$baseTheme;
+        $themeDir = $basePath.DIRECTORY_SEPARATOR.$activeTheme;
+
+        if ($activeTheme !== $baseTheme && is_dir($themeDir.DIRECTORY_SEPARATOR.'components')) {
+            Blade::anonymousComponentPath($themeDir.DIRECTORY_SEPARATOR.'components', 'theme');
+            View::addNamespace('theme', $themeDir.DIRECTORY_SEPARATOR.'components');
+        }
+
+        if (is_dir($baseDir.DIRECTORY_SEPARATOR.'components')) {
+            Blade::anonymousComponentPath($baseDir.DIRECTORY_SEPARATOR.'components', 'theme');
+            View::addNamespace('theme', $baseDir.DIRECTORY_SEPARATOR.'components');
+        }
+    }
+}

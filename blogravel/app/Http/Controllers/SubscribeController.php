@@ -69,7 +69,7 @@ class SubscribeController extends Controller
 
     public function unsubscribe(Request $request, string $token): JsonResponse
     {
-        $subscriber = Subscriber::where('confirmation_token', $token)
+        $subscriber = Subscriber::where('unsubscribe_token', $token)
             ->where('status', SubscriberStatus::Subscribed)
             ->first();
 
@@ -79,10 +79,24 @@ class SubscribeController extends Controller
 
         $subscriber->update([
             'status' => SubscriberStatus::Unsubscribed,
-            'confirmation_token' => null,
+            'unsubscribe_token' => null,
         ]);
 
         return response()->json(['message' => 'Unsubscribed successfully.']);
+    }
+
+    public function destroy(Request $request, string $token): JsonResponse
+    {
+        $subscriber = Subscriber::where('unsubscribe_token', $token)
+            ->first();
+
+        if (! $subscriber) {
+            return response()->json(['message' => 'Invalid or expired token.'], 404);
+        }
+
+        $subscriber->deleteSubscriber();
+
+        return response()->json(['message' => 'Subscriber deleted successfully.'], 200);
     }
 
     public function notifySubscribers(Request $request, string $postId): JsonResponse

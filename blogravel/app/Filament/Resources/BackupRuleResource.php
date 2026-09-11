@@ -4,25 +4,29 @@ namespace App\Filament\Resources;
 
 use App\Enums\BackupContent;
 use App\Enums\BackupDestination;
+use App\Enums\NavGroup;
 use App\Filament\Resources\BackupRuleResource\Pages;
 use App\Jobs\CreateBackupJob;
 use App\Models\BackupRule;
+use BackedEnum;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class BackupRuleResource extends Resource
 {
     protected static ?string $model = BackupRule::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-path-rounded-square';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path-rounded-square';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
 
     protected static ?string $modelLabel = 'Backup Rule';
 
@@ -30,9 +34,9 @@ class BackupRuleResource extends Resource
 
     protected static ?int $navigationSort = 40;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
+        return $schema->schema([
             Forms\Components\Section::make('Backup Settings')->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
@@ -121,7 +125,7 @@ class BackupRuleResource extends Resource
             ]);
     }
 
-    public static function getEloquentQuery()
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->where('tenant_id', Auth::user()->tenant_id);

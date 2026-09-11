@@ -15,6 +15,7 @@ class ThemeController extends Controller
     public function home(Request $request): Response
     {
         $tenant = $this->resolveTenant($request);
+        $this->ensureThemeEnabled($tenant);
 
         $posts = Post::with(['author', 'categories'])
             ->where('tenant_id', $tenant->id)
@@ -33,6 +34,7 @@ class ThemeController extends Controller
     public function post(Request $request, string $slug): Response
     {
         $tenant = $this->resolveTenant($request);
+        $this->ensureThemeEnabled($tenant);
 
         $post = Post::with(['author', 'categories', 'tags'])
             ->where('tenant_id', $tenant->id)
@@ -46,6 +48,7 @@ class ThemeController extends Controller
     public function category(Request $request, string $slug): Response
     {
         $tenant = $this->resolveTenant($request);
+        $this->ensureThemeEnabled($tenant);
 
         $category = Category::where('tenant_id', $tenant->id)
             ->where('slug', $slug)
@@ -64,12 +67,15 @@ class ThemeController extends Controller
     public function subscribeForm(Request $request): Response
     {
         $tenant = $this->resolveTenant($request);
+        $this->ensureThemeEnabled($tenant);
 
         return response()->view('theme.subscribe', compact('tenant'));
     }
 
     public function subscribe(Request $request, Tenant $tenant): Response
     {
+        $this->ensureThemeEnabled($tenant);
+
         $request->validate([
             'email' => 'required|email|max:255',
         ]);
@@ -85,12 +91,15 @@ class ThemeController extends Controller
     public function contactForm(Request $request): Response
     {
         $tenant = $this->resolveTenant($request);
+        $this->ensureThemeEnabled($tenant);
 
         return response()->view('theme.contact', compact('tenant'));
     }
 
     public function contact(Request $request, Tenant $tenant): Response
     {
+        $this->ensureThemeEnabled($tenant);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
@@ -110,24 +119,22 @@ class ThemeController extends Controller
         return response()->view('theme.contact-success', compact('tenant'));
     }
 
+    private function ensureThemeEnabled(Tenant $tenant): void
+    {
+        $enabled = $tenant->settings
+            ->where('key', 'theme_enabled')
+            ->first()?->value;
+
+        if ($enabled === 'false') {
+            abort(404, 'Theme is disabled.');
+        }
+    }
+
     private function resolveTenant(Request $request): Tenant
     {
-        $host = strtolower($request->getHost());
-        if (str_contains($host, ':')) {
-            $host = explode(':', $host, 2)[0];
-        }
-
-        $tenant = Tenant::where('domain', $host)->first();
-        if ($tenant) {
+        $tenant = $request->attributes->get('tenant');
+        if ($tenant instanceof Tenant) {
             return $tenant;
-        }
-
-        $param = $request->input('tenant');
-        if ($param) {
-            $tenant = Tenant::where('domain', $param)->orWhere('id', $param)->first();
-            if ($tenant) {
-                return $tenant;
-            }
         }
 
         abort(404, 'Tenant not found.');

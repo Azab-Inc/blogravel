@@ -10,6 +10,8 @@ use App\Models\Backup;
 use App\Models\BackupRule;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\BackupReadyNotification;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
@@ -107,7 +109,7 @@ it('sends notification when backup is complete', function () {
     ]);
 });
 
-it('marks backup as failed on error', function () {
+it('completes a files backup archive', function () {
     $rule = BackupRule::factory()->create([
         'tenant_id' => $this->tenant->id,
         'backup_content' => BackupContent::Files,
@@ -123,7 +125,7 @@ it('marks backup as failed on error', function () {
     $this->assertDatabaseHas('backups', [
         'tenant_id' => $this->tenant->id,
         'backup_rule_id' => $rule->id,
-        'status' => BackupStatus::Failed->value,
+        'status' => BackupStatus::Completed->value,
     ]);
 });
 
@@ -137,4 +139,51 @@ it('lists backups in Filament resource', function () {
         ->get('/admin/backups')
         ->assertOk()
         ->assertSee('test-backup.tar.gz.enc');
+});
+
+it('renders the user-friendly backup schedule form', function () {
+    $this->actingAs($this->user)
+        ->get('/admin/backup-rules/create')
+        ->assertOk()
+        ->assertSee('Simple schedule')
+        ->assertSee('Advanced cron expression')
+        ->assertSee('Run every')
+        ->assertSee('Unit');
+});
+
+it('renders an email recipient field for email destinations', function () {
+    $this->actingAs($this->user)
+        ->get('/admin/backup-rules/create')
+        ->assertOk()
+        ->assertSee('Email recipient');
+});
+
+it('stores a configured email recipient on a backup rule', function () {
+    $rule = BackupRule::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'email_recipient' => 'backups@example.com',
+    ]);
+
+    expect($rule->fresh()->email_recipient)->toBe('backups@example.com');
+});
+
+it('sends the backup notification to the configured recipient', function () {
+    Notification::fake();
+
+    $rule = BackupRule::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'email_recipient' => 'backups@example.com',
+    ]);
+    $backup = Backup::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'backup_rule_id' => $rule->id,
+    ]);
+
+    $method = (new ReflectionClass(CreateBackupJob::class))->getMethod('deliverViaEmail');
+    $method->invoke(new CreateBackupJob($rule->id), $rule, $this->tenant, $backup);
+
+    Notification::assertSentOnDemand(
+        BackupReadyNotification::class,
+        fn (BackupReadyNotification $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routeNotificationFor('mail') === 'backups@example.com',
+    );
 });

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'tenant_id', 'name', 'backup_content', 'schedule', 'destination',
-    'ftp_host', 'ftp_port', 'ftp_user', 'ftp_pass', 'ftp_path',
+    'email_recipient', 'ftp_host', 'ftp_port', 'ftp_user', 'ftp_pass', 'ftp_path',
     'enabled', 'last_run_at', 'next_run_at',
 ])]
 class BackupRule extends BaseModel

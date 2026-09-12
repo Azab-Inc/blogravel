@@ -10,14 +10,17 @@ use App\Jobs\CreateBackupJob;
 use App\Models\BackupRule;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -53,16 +56,119 @@ class BackupRuleResource extends Resource
                     ->required()
                     ->default(BackupContent::Both),
 
+                Radio::make('schedule_mode')
+                    ->label('Schedule format')
+                    ->options([
+                        'simple' => 'Simple schedule',
+                        'cron' => 'Advanced cron expression',
+                    ])
+                    ->default('simple')
+                    ->inline()
+                    ->live()
+                    ->required(),
+
+                TextInput::make('schedule_interval')
+                    ->label('Run every')
+                    ->numeric()
+                    ->minValue(1)
+                    ->default(1)
+                    ->required(fn (Get $get): bool => $get('schedule_mode') === 'simple')
+                    ->visible(fn (Get $get): bool => $get('schedule_mode') === 'simple'),
+
+                Select::make('schedule_unit')
+                    ->label('Unit')
+                    ->options([
+                        'minute' => 'Minute(s)',
+                        'hour' => 'Hour(s)',
+                        'day' => 'Day(s)',
+                        'week' => 'Week(s)',
+                        'month' => 'Month(s)',
+                    ])
+                    ->default('day')
+                    ->live()
+                    ->required(fn (Get $get): bool => $get('schedule_mode') === 'simple')
+                    ->visible(fn (Get $get): bool => $get('schedule_mode') === 'simple'),
+
+                TextInput::make('schedule_time')
+                    ->label('At')
+                    ->type('time')
+                    ->default('02:00')
+                    ->required(fn (Get $get): bool => $get('schedule_mode') === 'simple' && in_array($get('schedule_unit'), ['day', 'week', 'month'], true))
+                    ->visible(fn (Get $get): bool => $get('schedule_mode') === 'simple' && in_array($get('schedule_unit'), ['day', 'week', 'month'], true)),
+
+                Select::make('schedule_weekday')
+                    ->label('On')
+                    ->options([
+                        1 => 'Monday',
+                        2 => 'Tuesday',
+                        3 => 'Wednesday',
+                        4 => 'Thursday',
+                        5 => 'Friday',
+                        6 => 'Saturday',
+                        7 => 'Sunday',
+                    ])
+                    ->default(1)
+                    ->required(fn (Get $get): bool => $get('schedule_mode') === 'simple' && $get('schedule_unit') === 'week')
+                    ->visible(fn (Get $get): bool => $get('schedule_mode') === 'simple' && $get('schedule_unit') === 'week'),
+
+                Select::make('schedule_month_day')
+                    ->label('On day')
+                    ->options(array_combine(range(1, 28), range(1, 28)))
+                    ->default(1)
+                    ->required(fn (Get $get): bool => $get('schedule_mode') === 'simple' && $get('schedule_unit') === 'month')
+                    ->visible(fn (Get $get): bool => $get('schedule_mode') === 'simple' && $get('schedule_unit') === 'month'),
+
+                Placeholder::make('schedule_preview')
+                    ->label('Preview')
+                    ->content(function (Get $get): string {
+                        $interval = (int) ($get('schedule_interval') ?: 1);
+                        $unit = (string) ($get('schedule_unit') ?: 'day');
+                        $time = (string) ($get('schedule_time') ?: '02:00');
+
+                        if (in_array($unit, ['minute', 'hour'], true)) {
+                            return sprintf('Every %d %s', $interval, $unit.($interval === 1 ? '' : 's'));
+                        }
+
+                        return sprintf('Every %d %s at %s', $interval, $unit.($interval === 1 ? '' : 's'), $time);
+                    })
+                    ->visible(fn (Get $get): bool => $get('schedule_mode') === 'simple'),
+
                 TextInput::make('schedule')
-                    ->label('Cron Schedule')
-                    ->required()
-                    ->default('0 2 * * *')
-                    ->helperText('e.g., 0 2 * * * = daily at 2am'),
+                    ->label('Cron expression')
+                    ->placeholder('0 2 * * *')
+                    ->helperText('Example: 0 2 * * * runs every day at 2:00 AM.')
+                    ->required(fn (Get $get): bool => $get('schedule_mode') === 'cron')
+                    ->visible(fn (Get $get): bool => $get('schedule_mode') === 'cron'),
 
                 Select::make('destination')
                     ->options(BackupDestination::class)
                     ->required()
+                    ->live()
                     ->default(BackupDestination::Email),
+
+                TextInput::make('email_recipient')
+                    ->label('Email recipient')
+                    ->email()
+                    ->default(fn (): ?string => auth()->user()?->email)
+                    ->required(function (Get $get): bool {
+                        $destination = $get('destination');
+
+                        if ($destination instanceof BackupDestination) {
+                            $destination = $destination->value;
+                        }
+
+                        return in_array($destination, ['email', 'both'], true);
+                    })
+                    ->visible(function (Get $get): bool {
+                        $destination = $get('destination');
+
+                        if ($destination instanceof BackupDestination) {
+                            $destination = $destination->value;
+                        }
+
+                        return in_array($destination, ['email', 'both'], true);
+                    })
+                    ->helperText('Backup notifications will be sent to this address.'),
 
                 Toggle::make('enabled')
                     ->default(true),
@@ -87,7 +193,15 @@ class BackupRuleResource extends Resource
                         ->label('Remote Path')
                         ->default('/'),
                 ])
-                ->visible(fn (Get $get) => in_array($get('destination'), ['ftp', 'both'])),
+                ->visible(function (Get $get): bool {
+                    $destination = $get('destination');
+
+                    if ($destination instanceof BackupDestination) {
+                        $destination = $destination->value;
+                    }
+
+                    return in_array($destination, ['ftp', 'both'], true);
+                }),
         ]);
     }
 

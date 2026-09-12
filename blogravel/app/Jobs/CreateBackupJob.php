@@ -106,24 +106,22 @@ class CreateBackupJob implements ShouldQueue
         $tempDir = storage_path('app/private/tmp-backup-'.$tenant->id);
         app('files')->makeDirectory($tempDir, 0755, true, true);
 
-        $files = [];
-
         // Database dump
         if (in_array($rule->backup_content->value, ['database', 'both'])) {
-            $dbFile = $this->dumpDatabase($tenant, $tempDir);
-            $files[] = $dbFile;
+            $this->dumpDatabase($tenant, $tempDir);
         }
 
         // Media files
         if (in_array($rule->backup_content->value, ['files', 'both'])) {
             $mediaPath = storage_path('app/public/media');
             if (is_dir($mediaPath)) {
-                $files[] = $mediaPath;
+                app('files')->copyDirectory($mediaPath, $tempDir.'/media');
             }
         }
 
         $archivePath = 'backups/'.$backup->filename;
         $fullArchivePath = storage_path('app/private/'.$archivePath);
+        app('files')->makeDirectory(dirname($fullArchivePath), 0755, true, true);
 
         // Create tar.gz
         $command = sprintf(
@@ -191,8 +189,15 @@ class CreateBackupJob implements ShouldQueue
 
     private function deliverViaEmail(BackupRule $rule, Tenant $tenant, Backup $backup): void
     {
-        $admins = $tenant->users()->where('role', 'admin')->get();
-        $admins->each(fn ($admin) => $admin->notify(new BackupReadyNotification($backup)));
+        $recipient = $rule->email_recipient
+            ?: $tenant->users()->where('role', 'admin')->value('email');
+
+        if (! $recipient) {
+            throw new \RuntimeException('No email recipient is configured for this backup rule.');
+        }
+
+        Notification::route('mail', $recipient)
+            ->notify(new BackupReadyNotification($backup));
     }
 
     private function deliverViaFtp(BackupRule $rule, Backup $backup): void

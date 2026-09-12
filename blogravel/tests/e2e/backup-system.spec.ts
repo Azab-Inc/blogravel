@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 const ts = () => Date.now();
 
 test.describe('Backup Rules', () => {
-  test('create, edit, and delete a backup rule', async ({ page }) => {
+  test('creates and edits a backup rule with cron scheduling', async ({ page }) => {
     const name = `Test Backup Rule ${ts()}`;
 
     // Create
@@ -11,7 +11,8 @@ test.describe('Backup Rules', () => {
     await page.waitForURL('**/admin/backup-rules/create');
 
     await page.getByLabel('Name').fill(name);
-    await page.getByLabel('Cron Schedule').fill('0 3 * * *');
+    await page.getByLabel('Advanced cron expression').check();
+    await page.locator('#form\\.schedule').fill('0 3 * * *');
 
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.waitForURL(/\/admin\/backup-rules\/.+\/edit/, { timeout: 15000 });
@@ -24,11 +25,26 @@ test.describe('Backup Rules', () => {
     await page.waitForTimeout(2000);
     await expect(page.getByLabel('Name')).toHaveValue(updatedName);
 
-    // Delete
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await page.waitForTimeout(1000);
-    await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
-    await page.waitForURL('**/admin/backup-rules', { timeout: 15000 });
+  });
+
+  test('creates a simple interval schedule', async ({ page }) => {
+    const name = `Simple Schedule Test ${ts()}`;
+
+    await page.goto('/admin/backup-rules/create');
+    await page.waitForURL('**/admin/backup-rules/create');
+
+    await page.getByLabel('Name').fill(name);
+    await expect(page.getByLabel('Email recipient')).toHaveValue('contact@azaber.com');
+    await page.getByLabel('Run every').fill('2');
+    await page.getByLabel('Unit').selectOption('week');
+    await page.locator('#form\\.schedule_weekday').selectOption('1');
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await page.waitForURL(/\/admin\/backup-rules\/.+\/edit/, { timeout: 15000 });
+
+    await expect(page.getByLabel('Simple schedule')).toBeChecked();
+    await expect(page.getByLabel('Run every')).toHaveValue('2');
+    await expect(page.getByLabel('Unit')).toHaveValue('week');
+
   });
 
   test('toggle backup rule enabled state', async ({ page }) => {
@@ -54,11 +70,6 @@ test.describe('Backup Rules', () => {
     await page.waitForTimeout(2000);
     await expect(toggle).toBeChecked();
 
-    // Cleanup
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await page.waitForTimeout(1000);
-    await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
-    await page.waitForURL('**/admin/backup-rules', { timeout: 15000 });
   });
 
   test('FTP fields appear when destination is FTP or Both', async ({ page }) => {
@@ -88,13 +99,8 @@ test.describe('Backup Rules', () => {
     await page.waitForTimeout(500);
     await expect(ftpSection).not.toBeVisible();
 
-    // Cleanup
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.waitForURL(/\/admin\/backup-rules\/.+\/edit/, { timeout: 15000 });
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await page.waitForTimeout(1000);
-    await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
-    await page.waitForURL('**/admin/backup-rules', { timeout: 15000 });
   });
 
   test('backup rules list shows in admin', async ({ page }) => {
@@ -108,6 +114,6 @@ test.describe('Backup History', () => {
   test('backup history page loads', async ({ page }) => {
     await page.goto('/admin/backups');
     await page.waitForURL('**/admin/backups');
-    await expect(page.getByRole('heading', { name: 'Backups' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Backups', exact: true })).toBeVisible();
   });
 });

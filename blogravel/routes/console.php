@@ -2,6 +2,7 @@
 
 use App\Jobs\CreateBackupJob;
 use App\Models\BackupRule;
+use App\Support\BackupSchedule;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
@@ -20,6 +21,6 @@ Schedule::call(function () {
 
     foreach ($rules as $rule) {
         CreateBackupJob::dispatch($rule->id);
-        $rule->update(['next_run_at' => $now->copy()->addHour()]);
+        $rule->update(['next_run_at' => BackupSchedule::nextRunAt($rule->schedule, $now)]);
     }
 })->name('run-scheduled-backups')->everyFifteenMinutes()->withoutOverlapping();

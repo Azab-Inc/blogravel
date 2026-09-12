@@ -115,8 +115,9 @@ services:
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
+        restart: unless-stopped
         command: >
-            /bin/bash -c "php artisan queue:work --sleep=3 --tries=3 --max-time=3600"
+            /bin/bash -c "php artisan queue:work redis --sleep=3 --tries=3 --timeout=0 --verbose"
 networks:
     sail:
         driver: bridge

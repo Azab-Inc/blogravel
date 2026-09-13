@@ -115,6 +115,44 @@ it('preserves legacy domain feed resolution while ignoring a different tenant pa
         ->and($response->json('title'))->not->toContain($otherTenant->name);
 });
 
+it('does not expose category feeds on non-tenant hosts', function (string $host) {
+    $this->get("http://{$host}/feeds/categories/laravel?tenant={$this->tenant->id}&format=json")
+        ->assertNotFound();
+})->with([
+    'admin.blogravel.com',
+    'nested.acme-bakery.blogravel.com',
+    'unknown.blogravel.com',
+]);
+
+it('does not expose author feeds on non-tenant hosts', function (string $host) {
+    $this->get("http://{$host}/feeds/authors/{$this->author->id}?tenant={$this->tenant->id}&format=json")
+        ->assertNotFound();
+})->with([
+    'admin.blogravel.com',
+    'nested.acme-bakery.blogravel.com',
+    'unknown.blogravel.com',
+]);
+
+it('keeps category feeds on the host tenant when the tenant parameter differs', function () {
+    $otherTenant = Tenant::factory()->create(['name' => 'Other Category Tenant']);
+
+    $response = $this->get("http://{$this->tenant->slug}.blogravel.com/feeds/categories/laravel?tenant={$otherTenant->id}&format=json");
+
+    $response->assertOk();
+    expect($response->json('title'))->toContain($this->tenant->name)
+        ->and($response->json('title'))->not->toContain($otherTenant->name);
+});
+
+it('keeps author feeds on the host tenant when the tenant parameter differs', function () {
+    $otherTenant = Tenant::factory()->create(['name' => 'Other Author Tenant']);
+
+    $response = $this->get("http://{$this->tenant->slug}.blogravel.com/feeds/authors/{$this->author->id}?tenant={$otherTenant->id}&format=json");
+
+    $response->assertOk();
+    expect($response->json('title'))->toContain($this->tenant->name)
+        ->and($response->json('title'))->not->toContain($otherTenant->name);
+});
+
 it('RSS feed contains author name and categories', function () {
     $body = $this->get(route('feed.posts', ['resource' => 'posts', 'format' => 'xml', 'tenant' => $this->tenant->id]))->getContent();
     $this->assertStringContainsString('<dc:creator>'.$this->author->name.'</dc:creator>', $body);

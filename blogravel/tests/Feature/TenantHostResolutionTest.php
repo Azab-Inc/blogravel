@@ -97,6 +97,53 @@ test('tenant migration backfills existing rows before enforcing slug constraints
         ->and($migratedTenants->pluck('domain')->all())->toBe(['first.legacy.test', 'second.legacy.test']);
 });
 
+test('tenant migration keeps the lowest id custom domain and clears normalized collisions', function () {
+    Artisan::call('migrate:rollback', ['--step' => 1]);
+
+    $canonicalId = '00000000-0000-0000-0000-000000000001';
+    $conflictingId = '00000000-0000-0000-0000-000000000002';
+    DB::table('tenants')->insert([
+        [
+            'id' => $conflictingId,
+            'domain' => 'conflicting.legacy.test',
+            'slug' => 'conflicting-tenant',
+            'custom_domain' => ' WWW.Example.TEST ',
+            'name' => 'Conflicting Tenant',
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'id' => $canonicalId,
+            'domain' => 'canonical.legacy.test',
+            'slug' => 'canonical-tenant',
+            'custom_domain' => 'www.example.test',
+            'name' => 'Canonical Tenant',
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
+
+    Artisan::call('migrate', ['--force' => true]);
+
+    expect(DB::table('tenants')->where('id', $canonicalId)->value('custom_domain'))
+        ->toBe('www.example.test')
+        ->and(DB::table('tenants')->where('id', $conflictingId)->value('custom_domain'))
+        ->toBeNull();
+
+    expect(fn () => DB::table('tenants')->insert([
+        'id' => '00000000-0000-0000-0000-000000000003',
+        'domain' => 'third.legacy.test',
+        'slug' => 'third-tenant',
+        'custom_domain' => 'www.example.test',
+        'name' => 'Third Tenant',
+        'plan' => 'free',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]))->toThrow(QueryException::class);
+});
+
 test('resolver matches a tenant by its generated platform host', function () {
     $tenant = Tenant::factory()->create(['name' => 'Acme Bakery']);
 

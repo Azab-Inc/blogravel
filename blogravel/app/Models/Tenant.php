@@ -18,11 +18,13 @@ class Tenant extends BaseModel
     protected static function booted(): void
     {
         static::creating(function (Tenant $tenant): void {
-            if ($tenant->slug) {
+            if ($tenant->slug && ! $tenant->isReservedSlug($tenant->slug)) {
                 return;
             }
 
-            $baseSlug = Str::slug($tenant->name) ?: 'tenant-'.$tenant->getKey();
+            $baseSlug = $tenant->slug
+                ? 'tenant-'.$tenant->getKey()
+                : (Str::slug($tenant->name) ?: 'tenant-'.$tenant->getKey());
             if ($tenant->isReservedSlug($baseSlug)) {
                 $baseSlug = 'tenant-'.$tenant->getKey();
             }

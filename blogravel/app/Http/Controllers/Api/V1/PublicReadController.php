@@ -79,24 +79,9 @@ class PublicReadController extends Controller
 
     private function resolveTenant(Request $request): Tenant
     {
-        // 1. Match Host header against tenant domain
-        $host = strtolower($request->getHost());
-        if (str_contains($host, ':')) {
-            $host = explode(':', $host, 2)[0];
-        }
-
-        $tenant = Tenant::where('domain', $host)->first();
-        if ($tenant) {
+        $tenant = $request->attributes->get('tenant');
+        if ($tenant instanceof Tenant) {
             return $tenant;
-        }
-
-        // 2. Fallback to ?tenant= query param (domain or UUID) — for local dev
-        $param = $request->input('tenant');
-        if ($param) {
-            $tenant = Tenant::where('domain', $param)->orWhere('id', $param)->first();
-            if ($tenant) {
-                return $tenant;
-            }
         }
 
         abort(404, 'Tenant not found.');

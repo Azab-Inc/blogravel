@@ -46,6 +46,15 @@ test('reserved tenant names receive deterministic resolvable fallback slugs', fu
         ->and(app(TenantHostResolver::class)->resolve($tenant->slug.'.blogravel.test')?->is($tenant))->toBeTrue();
 })->with(['admin', 'API', 'www']);
 
+test('explicit reserved slugs receive deterministic fallback slugs', function (string $slug) {
+    $tenant = Tenant::factory()->create([
+        'name' => 'Explicit Reserved Tenant',
+        'slug' => $slug,
+    ]);
+
+    expect($tenant->slug)->toBe('tenant-'.$tenant->id);
+})->with(['admin', 'API', 'www']);
+
 test('slug generation retries after a concurrent database uniqueness collision', function () {
     $inserted = false;
     Event::listen('eloquent.creating: '.Tenant::class, function (Tenant $tenant) use (&$inserted): void {
@@ -102,6 +111,32 @@ test('tenant migration backfills existing rows before enforcing slug constraints
     expect($migratedTenants)->toHaveCount(2)
         ->and($migratedTenants->pluck('slug')->all())->toBe(['legacy-bakery', 'legacy-bakery-2'])
         ->and($migratedTenants->pluck('domain')->all())->toBe(['first.legacy.test', 'second.legacy.test']);
+});
+
+test('tenant migration avoids reserved labels while backfilling existing rows', function () {
+    Artisan::call('migrate:rollback', ['--step' => 2]);
+
+    $tenants = collect(['Admin', 'API', 'WWW'])->mapWithKeys(function (string $name): array {
+        $id = (string) Str::uuid();
+
+        DB::table('tenants')->insert([
+            'id' => $id,
+            'domain' => strtolower($name).'.legacy.test',
+            'name' => $name,
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return [$name => $id];
+    });
+
+    Artisan::call('migrate', ['--force' => true]);
+
+    foreach ($tenants as $id) {
+        expect(DB::table('tenants')->where('id', $id)->value('slug'))
+            ->toBe('tenant-'.$id);
+    }
 });
 
 test('tenant migration keeps the lowest id custom domain and clears normalized collisions', function () {

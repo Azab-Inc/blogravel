@@ -16,13 +16,20 @@ return new class extends Migration
         });
 
         $usedSlugs = [];
+        $reservedLabels = array_map(
+            static fn (mixed $reservedLabel): string => strtolower(trim((string) $reservedLabel)),
+            config('tenancy.reserved_labels', []),
+        );
 
         DB::table('tenants')
             ->select(['id', 'name'])
             ->orderBy('domain')
             ->orderBy('id')
-            ->each(function (object $tenant) use (&$usedSlugs): void {
+            ->each(function (object $tenant) use (&$usedSlugs, $reservedLabels): void {
                 $baseSlug = Str::slug($tenant->name) ?: 'tenant-'.$tenant->id;
+                if (in_array(strtolower($baseSlug), $reservedLabels, true)) {
+                    $baseSlug = 'tenant-'.$tenant->id;
+                }
                 $slug = $baseSlug;
                 $suffix = 2;
 

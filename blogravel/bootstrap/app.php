@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureApiKeyHasAbility;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureWithinPlanLimits;
+use App\Http\Middleware\ResolvePublicTenant;
 use App\Http\Middleware\ResolveTenantHost;
 use App\Http\Middleware\ResolveTheme;
 use App\Http\Middleware\VerifyWebhookSignature;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'plan.limit' => EnsureWithinPlanLimits::class,
             'theme.resolve' => ResolveTheme::class,
             'tenant.host' => ResolveTenantHost::class,
+            'public.tenant' => ResolvePublicTenant::class,
         ]);
         $middleware->prepend(ResolveTenantHost::class);
     })

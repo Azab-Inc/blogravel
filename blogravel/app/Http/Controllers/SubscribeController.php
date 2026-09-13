@@ -129,19 +129,9 @@ class SubscribeController extends Controller
 
     private function resolveTenant(Request $request): ?Tenant
     {
-        $host = strtolower($request->getHost());
-        if (str_contains($host, ':')) {
-            $host = explode(':', $host, 2)[0];
-        }
-
-        $tenant = Tenant::where('domain', $host)->first();
-        if ($tenant) {
+        $tenant = $request->attributes->get('tenant');
+        if ($tenant instanceof Tenant) {
             return $tenant;
-        }
-
-        $param = $request->input('tenant');
-        if ($param) {
-            return Tenant::where('domain', $param)->orWhere('id', $param)->first();
         }
 
         return null;

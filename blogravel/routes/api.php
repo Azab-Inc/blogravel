@@ -14,7 +14,7 @@ use App\Http\Middleware\EnsureApiKeyHasAbility;
 use Illuminate\Support\Facades\Route;
 
 // Public reads — no API key required; tenant resolved from Host header or ?tenant=
-Route::prefix('v1/public')->group(function () {
+Route::prefix('v1/public')->middleware('public.tenant')->group(function () {
     Route::get('/{resource}', [PublicReadController::class, 'index'])
         ->whereIn('resource', ['posts', 'pages', 'categories', 'tags'])
         ->name('api.v1.public.index');
@@ -27,6 +27,7 @@ Route::prefix('v1/public')->group(function () {
 // Public subscribe endpoints — tenant resolved from Host header
 Route::prefix('v1')->group(function () {
     Route::post('/subscribe', [SubscribeController::class, 'subscribe'])
+        ->middleware('public.tenant')
         ->name('api.subscribe');
 
     Route::get('/confirm/{token}', [SubscribeController::class, 'confirm'])

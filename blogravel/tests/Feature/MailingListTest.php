@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
+    config([
+        'tenancy.platform_domain' => 'blogravel.test',
+        'tenancy.reserved_labels' => ['www', 'admin', 'api'],
+    ]);
+
     $this->tenant = Tenant::factory()->create(['domain' => 'mailingtest.com']);
     $this->category = Category::factory()->create(['tenant_id' => $this->tenant->id, 'slug' => 'laravel']);
     $this->author = User::factory()->create(['tenant_id' => $this->tenant->id]);
@@ -45,6 +50,67 @@ it('returns 201 with empty categories for subscribe-all', function () {
     $response->assertCreated();
     $subscriber = Subscriber::where('email', 'all@example.com')->first();
     $this->assertTrue($subscriber->categories->isEmpty());
+});
+
+it('subscribes through a generated tenant host', function () {
+    Notification::fake();
+
+    $this->postJson("http://{$this->tenant->slug}.blogravel.test/api/v1/subscribe", [
+        'email' => 'generated@example.com',
+    ])->assertCreated();
+
+    $this->assertDatabaseHas('subscribers', [
+        'tenant_id' => $this->tenant->id,
+        'email' => 'generated@example.com',
+    ]);
+});
+
+it('subscribes through a custom tenant host', function () {
+    Notification::fake();
+    $this->tenant->update(['custom_domain' => 'custom.mailing.test']);
+
+    $this->postJson('http://custom.mailing.test/api/v1/subscribe', [
+        'email' => 'custom@example.com',
+    ])->assertCreated();
+
+    $this->assertDatabaseHas('subscribers', [
+        'tenant_id' => $this->tenant->id,
+        'email' => 'custom@example.com',
+    ]);
+});
+
+it('subscribes through a legacy tenant host', function () {
+    Notification::fake();
+
+    $this->postJson("http://{$this->tenant->domain}/api/v1/subscribe", [
+        'email' => 'legacy@example.com',
+    ])->assertCreated();
+
+    $this->assertDatabaseHas('subscribers', [
+        'tenant_id' => $this->tenant->id,
+        'email' => 'legacy@example.com',
+    ]);
+});
+
+it('rejects subscription from an unknown host even with a tenant query', function () {
+    Notification::fake();
+
+    $this->postJson("http://unknown.mailing.test/api/v1/subscribe?tenant={$this->tenant->id}", [
+        'email' => 'unknown@example.com',
+    ])->assertNotFound();
+
+    $this->assertDatabaseMissing('subscribers', ['email' => 'unknown@example.com']);
+});
+
+it('rejects a subscription when the tenant query does not match the host', function () {
+    Notification::fake();
+    $otherTenant = Tenant::factory()->create(['domain' => 'other.mailing.test']);
+
+    $this->postJson("http://{$this->tenant->slug}.blogravel.test/api/v1/subscribe?tenant={$otherTenant->id}", [
+        'email' => 'mismatch@example.com',
+    ])->assertNotFound();
+
+    $this->assertDatabaseMissing('subscribers', ['email' => 'mismatch@example.com']);
 });
 
 it('returns 422 for invalid email', function () {

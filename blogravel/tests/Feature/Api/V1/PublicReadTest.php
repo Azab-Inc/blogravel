@@ -8,6 +8,11 @@ use App\Models\Tag;
 use App\Models\Tenant;
 
 beforeEach(function () {
+    config([
+        'tenancy.platform_domain' => 'blogravel.test',
+        'tenancy.reserved_labels' => ['www', 'admin', 'api'],
+    ]);
+
     $this->tenant = Tenant::factory()->create(['domain' => 'example.com']);
 });
 
@@ -56,11 +61,50 @@ it('resolves tenant from Host header', function () {
         'status' => PostStatus::Published,
     ]);
 
-    // In real production, Host header works. In tests, use ?tenant= param (same logic path).
-    $this->getJson(route('api.v1.public.index', ['resource' => 'posts', 'tenant' => $this->tenant->id]))
+    $this->getJson("http://{$this->tenant->domain}/api/v1/public/posts")
         ->assertOk()
         ->assertJsonCount(1, 'data');
 });
+
+it('resolves public reads from a generated tenant host', function () {
+    Post::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'status' => PostStatus::Published,
+    ]);
+
+    $this->getJson("http://{$this->tenant->slug}.blogravel.test/api/v1/public/posts")
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+});
+
+it('resolves public reads from a custom tenant host', function () {
+    $this->tenant->update(['custom_domain' => 'custom.example.test']);
+    Post::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'status' => PostStatus::Published,
+    ]);
+
+    $this->getJson('http://custom.example.test/api/v1/public/posts')
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+});
+
+it('rejects a public read when the tenant query does not match the host', function () {
+    $otherTenant = Tenant::factory()->create(['domain' => 'other.example.com']);
+
+    $this->getJson("http://{$this->tenant->slug}.blogravel.test/api/v1/public/posts?tenant={$otherTenant->id}")
+        ->assertNotFound();
+});
+
+it('rejects public reads from unknown reserved and malformed hosts', function (string $host) {
+    $this->getJson("http://{$host}/api/v1/public/posts?tenant={$this->tenant->id}")
+        ->assertNotFound();
+})->with([
+    'unknown.blogravel.test',
+    'admin.blogravel.test',
+    'nested.tenant.blogravel.test',
+    'tenant_name.blogravel.test',
+]);
 
 it('does not require an API key for public reads', function () {
     Post::factory()->create([

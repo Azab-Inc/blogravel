@@ -73,7 +73,7 @@ class Settings extends Page
                         Select::make('active_theme')
                             ->label('Active Theme')
                             ->helperText('Select the theme used for your public blog frontend.')
-                            ->options(fn () => collect(app(ThemeServiceProvider::class)->getAvailableThemes())
+                            ->options(fn () => collect(app()->getProvider(ThemeServiceProvider::class)?->getAvailableThemes() ?? [])
                                 ->mapWithKeys(fn ($theme) => [$theme['name'] => $theme['name'].($theme['is_base'] ? ' (base)' : '')])
                                 ->toArray())
                             ->default(config('theme.default', 'base'))

@@ -74,6 +74,21 @@ test.describe('Tenant subdomain routing', () => {
     await expect(page.locator('body')).toContainText(/thank|subscribed|success/i);
   });
 
+  test('submits contact and keeps the success page on the local tenant subdomain', async ({ page }) => {
+    await gotoHost(page, LOCAL_TENANT_HOST, '/contact');
+    await page.locator('input[name="name"]').fill('Playwright Subdomain');
+    await page.locator('input[name="email"]').fill(`playwright-${Date.now()}@example.com`);
+    await page.locator('textarea[name="message"]').fill('Hello from the local subdomain');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(new RegExp(`^http://${LOCAL_TENANT_HOST}:8000/contact/[0-9a-f-]+$`));
+    await expect(page.locator('body')).toContainText(/message sent|sent|success/i);
+    await expect(page.getByRole('link', { name: /Back to home/ })).toHaveAttribute(
+      'href',
+      new RegExp(`^http://${LOCAL_TENANT_HOST}:8000\\?tenant=[0-9a-f-]+$`),
+    );
+  });
+
   test('renders a tenant on the local path', async ({ page }) => {
     const response = await gotoHost(page, 'localhost', '/acmeio/');
 

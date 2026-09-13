@@ -9,12 +9,13 @@
 
 ## Evidence
 
-- TDD red Pest: `4 failed, 80 passed, 1 skipped` while proving parameterless local POST routes, contact mail assertions, and IPv6 feed handling were missing.
-- Final-review red Pest: `2 failed, 55 passed, 1 skipped` while proving post/category and success-page back links were still host-rooted.
-- Focused green Pest: `119 passed, 1 skipped` across routing, platform entry, feed, webhook, and theme suites.
-- Final-review Playwright red: `1 failed, 31 passed` while proving the local-subdomain POST retained the bound-tenant URL behavior.
-- Final-review Playwright green: `32 passed` after restarting `laravel.test` to reload Octane.
-- `vendor/bin/pint --dirty --format agent`: passed after formatting fixes.
+- Pest command: `php artisan test --compact tests/Feature/TenantHostResolutionTest.php tests/Feature/PlatformEntryTest.php tests/Feature/FeedsTest.php tests/Feature/SoroWebhookTest.php tests/Feature/ThemeTest.php tests/Feature/ThemeOverrideTest.php`
+- Pest output: `120 tests, 119 passed, 1 skipped, 315 assertions`.
+- Playwright command: `npx playwright test tests/e2e/theme-pages.spec.ts tests/e2e/subdomain-routing.spec.ts`
+- Playwright red output before correcting the compatibility assertion: `36 tests, 35 passed, 1 failed`; the failure correctly showed the host-mode success link retained `?tenant=`.
+- Playwright green output after the assertion correction: `36 passed`.
+- `docker compose restart laravel.test`: completed before green browser verification to reload Octane.
+- `vendor/bin/pint --dirty --format agent`: passed.
 - `git diff --check`: passed.
 
 The prior full Pest run on the parent change ran 482 tests and exposed four unrelated existing Filament failures in `GenerateAiPostActionTest` and `SettingsTest`; this follow-up did not alter those areas.

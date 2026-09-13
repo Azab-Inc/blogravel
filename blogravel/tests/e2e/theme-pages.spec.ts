@@ -30,6 +30,16 @@ test.describe('Theme Home Page', () => {
     await expect(page).toHaveURL(/\/acmeio\/contact$/);
   });
 
+  test('keeps local path post and category back links under the tenant path', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/post/omnis-qui-assumenda-nisi-in`);
+    await expect(page).toHaveURL(/\/acmeio\/post\/omnis-qui-assumenda-nisi-in$/);
+    await expect(page.getByRole('link', { name: /Back to all posts/ })).toHaveAttribute('href', /\/acmeio$/);
+
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/category/howard-walker`);
+    await expect(page).toHaveURL(/\/acmeio\/category\/howard-walker$/);
+    await expect(page.getByRole('link', { name: /Back to all posts/ })).toHaveAttribute('href', /\/acmeio$/);
+  });
+
   test('displays navigation links', async ({ page }) => {
     await page.goto(`${ACME_URL}/`);
     
@@ -132,6 +142,14 @@ test.describe('Theme Subscribe Page', () => {
     await expect(page.locator('body')).toContainText(/thank|subscribed|success/i);
   });
 
+  test('keeps the local path subscribe success link under the tenant path', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+    await page.locator('input[type="email"]').fill(`playwright-${Date.now()}@example.com`);
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page.getByRole('link', { name: /Back to home/ })).toHaveAttribute('href', /\/acmeio$/);
+  });
+
   test('subscribe form has proper accessibility', async ({ page }) => {
     await page.goto(`${ACME_URL}/subscribe`);
     
@@ -172,6 +190,16 @@ test.describe('Theme Contact Page', () => {
 
     await expect(page).toHaveURL(/\/acmeio\/contact$/);
     await expect(page.locator('body')).toContainText(/thank|sent|success/i);
+  });
+
+  test('keeps the local path contact success link under the tenant path', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/contact`);
+    await page.locator('input[name="name"]').fill('Playwright Local Success');
+    await page.locator('input[name="email"]').fill(`playwright-${Date.now()}@example.com`);
+    await page.locator('textarea[name="message"]').fill('Hello from the local path success test');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page.getByRole('link', { name: /Back to home/ })).toHaveAttribute('href', /\/acmeio$/);
   });
 
   test('contact form has proper accessibility', async ({ page }) => {

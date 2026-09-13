@@ -17,6 +17,8 @@ class TenantFactory extends Factory
     {
         return [
             'domain' => fake()->unique()->domainName(),
+            'slug' => null,
+            'custom_domain' => null,
             'name' => fake()->company(),
             'plan' => fake()->randomElement(Plan::cases()),
         ];

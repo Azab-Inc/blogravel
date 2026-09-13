@@ -7,11 +7,32 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
-#[Fillable(['domain', 'name', 'plan'])]
+#[Fillable(['domain', 'slug', 'custom_domain', 'name', 'plan'])]
 class Tenant extends BaseModel
 {
     use HasFactory, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::creating(function (Tenant $tenant): void {
+            if ($tenant->slug) {
+                return;
+            }
+
+            $baseSlug = Str::slug($tenant->name);
+            $slug = $baseSlug;
+            $suffix = 2;
+
+            while (static::withTrashed()->where('slug', $slug)->exists()) {
+                $slug = $baseSlug.'-'.$suffix;
+                $suffix++;
+            }
+
+            $tenant->slug = $slug;
+        });
+    }
 
     protected $casts = [
         'plan' => Plan::class,

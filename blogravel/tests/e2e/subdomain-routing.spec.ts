@@ -55,10 +55,10 @@ test.describe('Tenant subdomain routing', () => {
     await expect(page).toHaveURL(`http://${PLATFORM_HOST}:8000/admin`);
     await expect(page.locator('body')).toContainText('Dashboard');
 
-    const response = await gotoHost(page, ACME_HOST);
+    const response = await gotoHost(page, ACME_HOST, '/admin');
 
     expect(response?.status()).toBe(200);
-    await expect(page.locator('header h1')).toContainText('acme.io');
-    await expect(page.locator('body')).not.toContainText('Log in');
+    await expect(page).toHaveURL(`http://${ACME_HOST}:8000/admin`);
+    await expect(page.locator('body')).toContainText('Dashboard');
   });
 });

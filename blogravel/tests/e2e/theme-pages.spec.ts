@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 const ACME_URL = 'http://acmeio.blogravel.com:8000';
 const INVALID_TENANT_URL = 'http://unknown.blogravel.com:8000';
 const LOCAL_PATH_TENANT_URL = 'http://localhost:8000/acmeio';
+const LOCAL_PATH_HOME_URL = LOCAL_PATH_TENANT_URL;
 
 test.describe('Theme Home Page', () => {
   test('renders the home page with tenant name', async ({ page }) => {
@@ -24,20 +25,20 @@ test.describe('Theme Home Page', () => {
     await page.goto(`${LOCAL_PATH_TENANT_URL}/`);
 
     await page.getByRole('link', { name: 'Subscribe' }).click();
-    await expect(page).toHaveURL(/\/acmeio\/subscribe$/);
+    await expect(page).toHaveURL(`${LOCAL_PATH_TENANT_URL}/subscribe`);
 
     await page.getByRole('link', { name: 'Contact' }).click();
-    await expect(page).toHaveURL(/\/acmeio\/contact$/);
+    await expect(page).toHaveURL(`${LOCAL_PATH_TENANT_URL}/contact`);
   });
 
   test('keeps local path post and category back links under the tenant path', async ({ page }) => {
     await page.goto(`${LOCAL_PATH_TENANT_URL}/post/omnis-qui-assumenda-nisi-in`);
-    await expect(page).toHaveURL(/\/acmeio\/post\/omnis-qui-assumenda-nisi-in$/);
-    await expect(page.getByRole('link', { name: /Back to all posts/ })).toHaveAttribute('href', /\/acmeio$/);
+    await expect(page).toHaveURL(`${LOCAL_PATH_TENANT_URL}/post/omnis-qui-assumenda-nisi-in`);
+    await expect(page.getByRole('link', { name: /Back to all posts/ })).toHaveAttribute('href', LOCAL_PATH_HOME_URL);
 
     await page.goto(`${LOCAL_PATH_TENANT_URL}/category/howard-walker`);
-    await expect(page).toHaveURL(/\/acmeio\/category\/howard-walker$/);
-    await expect(page.getByRole('link', { name: /Back to all posts/ })).toHaveAttribute('href', /\/acmeio$/);
+    await expect(page).toHaveURL(`${LOCAL_PATH_TENANT_URL}/category/howard-walker`);
+    await expect(page.getByRole('link', { name: /Back to all posts/ })).toHaveAttribute('href', LOCAL_PATH_HOME_URL);
   });
 
   test('displays navigation links', async ({ page }) => {
@@ -138,7 +139,7 @@ test.describe('Theme Subscribe Page', () => {
     await page.locator('input[type="email"]').fill('playwright-local@example.com');
     await page.locator('button[type="submit"]').click();
 
-    await expect(page).toHaveURL(/\/acmeio\/subscribe$/);
+    await expect(page).toHaveURL(`${LOCAL_PATH_TENANT_URL}/subscribe`);
     await expect(page.locator('body')).toContainText(/thank|subscribed|success/i);
   });
 
@@ -147,7 +148,7 @@ test.describe('Theme Subscribe Page', () => {
     await page.locator('input[type="email"]').fill(`playwright-${Date.now()}@example.com`);
     await page.locator('button[type="submit"]').click();
 
-    await expect(page.getByRole('link', { name: /Back to home/ })).toHaveAttribute('href', /\/acmeio$/);
+    await expect(page.getByRole('link', { name: /Back to home/ })).toHaveAttribute('href', LOCAL_PATH_HOME_URL);
   });
 
   test('subscribe form has proper accessibility', async ({ page }) => {
@@ -188,7 +189,7 @@ test.describe('Theme Contact Page', () => {
     await page.locator('textarea[name="message"]').fill('Hello from the local path');
     await page.locator('button[type="submit"]').click();
 
-    await expect(page).toHaveURL(/\/acmeio\/contact$/);
+    await expect(page).toHaveURL(`${LOCAL_PATH_TENANT_URL}/contact`);
     await expect(page.locator('body')).toContainText(/thank|sent|success/i);
   });
 
@@ -199,7 +200,7 @@ test.describe('Theme Contact Page', () => {
     await page.locator('textarea[name="message"]').fill('Hello from the local path success test');
     await page.locator('button[type="submit"]').click();
 
-    await expect(page.getByRole('link', { name: /Back to home/ })).toHaveAttribute('href', /\/acmeio$/);
+    await expect(page.getByRole('link', { name: /Back to home/ })).toHaveAttribute('href', LOCAL_PATH_HOME_URL);
   });
 
   test('contact form has proper accessibility', async ({ page }) => {

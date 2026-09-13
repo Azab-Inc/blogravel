@@ -2,6 +2,7 @@
 
 use App\Enums\PostStatus;
 use App\Http\Middleware\ResolveTenantHost;
+use App\Mail\ContactMessage;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tenant;
@@ -437,11 +438,11 @@ test('local path theme forms post back to the local tenant routes', function () 
 
     $this->get('http://localhost/acmeio/subscribe')
         ->assertOk()
-        ->assertSee('action="http://localhost/acmeio/subscribe/', false);
+        ->assertSee('action="http://localhost/acmeio/subscribe"', false);
 
     $this->get('http://localhost/acmeio/contact')
         ->assertOk()
-        ->assertSee('action="http://localhost/acmeio/contact/', false);
+        ->assertSee('action="http://localhost/acmeio/contact"', false);
 });
 
 test('local path theme links preserve the tenant path', function () {
@@ -459,7 +460,7 @@ test('local path subscribe writes only to the path tenant', function () {
     $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
     $otherTenant = Tenant::factory()->create(['slug' => 'globex']);
 
-    $this->post('http://localhost/acmeio/subscribe/'.$otherTenant->id, [
+    $this->post('http://localhost/acmeio/subscribe', [
         'email' => 'local@example.com',
     ])->assertOk()->assertSee($tenant->name);
 
@@ -477,13 +478,17 @@ test('local path contact dispatches only for the path tenant', function () {
     Mail::fake();
     $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
     $otherTenant = Tenant::factory()->create(['slug' => 'globex']);
+    $tenant->settings()->create(['key' => 'contact_email', 'value' => 'acme@example.com']);
+    $otherTenant->settings()->create(['key' => 'contact_email', 'value' => 'globex@example.com']);
 
-    $this->post('http://localhost/acmeio/contact/'.$otherTenant->id, [
+    $this->post('http://localhost/acmeio/contact', [
         'name' => 'Local User',
         'email' => 'local@example.com',
         'message' => 'Hello from local path',
     ])->assertOk()->assertSee($tenant->name);
 
+    Mail::assertSent(ContactMessage::class, fn (ContactMessage $mail): bool => $mail->hasTo('acme@example.com'));
+    Mail::assertNotSent(ContactMessage::class, 'globex@example.com');
 });
 
 function createLocalPathTenantContent(): array

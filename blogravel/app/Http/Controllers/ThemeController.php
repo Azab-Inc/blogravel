@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactMessage;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Subscriber;
@@ -75,7 +76,7 @@ class ThemeController extends Controller
         return response()->view('theme.subscribe', compact('tenant'));
     }
 
-    public function subscribe(Request $request, Tenant $boundTenant): Response
+    public function subscribe(Request $request, ?Tenant $boundTenant = null): Response
     {
         $tenant = $this->resolveTenant($request, $boundTenant);
         $this->ensureThemeEnabled($tenant);
@@ -100,7 +101,7 @@ class ThemeController extends Controller
         return response()->view('theme.contact', compact('tenant'));
     }
 
-    public function contact(Request $request, Tenant $boundTenant): Response
+    public function contact(Request $request, ?Tenant $boundTenant = null): Response
     {
         $tenant = $this->resolveTenant($request, $boundTenant);
         $this->ensureThemeEnabled($tenant);
@@ -115,11 +116,11 @@ class ThemeController extends Controller
             ->where('key', 'contact_email')
             ->first()?->value ?? config('mail.from.address');
 
-        Mail::raw($request->message, function ($mail) use ($request, $contactEmail) {
-            $mail->to($contactEmail)
-                ->subject('Contact from '.$request->name)
-                ->replyTo($request->email);
-        });
+        Mail::to($contactEmail)->send(new ContactMessage(
+            name: $request->name,
+            senderEmail: $request->email,
+            message: $request->message,
+        ));
 
         return response()->view('theme.contact-success', compact('tenant'));
     }

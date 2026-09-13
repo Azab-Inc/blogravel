@@ -3,7 +3,7 @@
     <p class="muted">Send us a message.</p>
 
     <form method="POST" action="{{ request()->attributes->get('tenant_path_slug')
-        ? route('theme.local.contact.post', ['tenantSlug' => request()->attributes->get('tenant_path_slug'), 'tenant' => $tenant->id])
+        ? route('theme.local.contact.post', ['tenantSlug' => request()->attributes->get('tenant_path_slug')])
         : route('theme.contact.post', ['tenant' => $tenant->id]) }}">
         @csrf
         <x-theme::form-field name="name" label="Name" placeholder="Your name" :value="old('name')" />

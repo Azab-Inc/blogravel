@@ -6,12 +6,15 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tenant;
 use App\Services\Feeds\FeedData;
+use App\Services\TenantHostResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class FeedController extends Controller
 {
+    public function __construct(private TenantHostResolver $resolver) {}
+
     public function posts(Request $request): Response|JsonResponse
     {
         $format = $request->query('format', 'xml');
@@ -131,12 +134,7 @@ class FeedController extends Controller
             return $attributeTenant;
         }
 
-        $host = strtolower($request->getHost());
-        if (str_contains($host, ':')) {
-            $host = explode(':', $host, 2)[0];
-        }
-
-        if (in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true)) {
+        if ($this->resolver->isLocalHost($request->getHost())) {
             $param = $request->input('tenant');
             if ($param) {
                 $tenant = Tenant::where('domain', $param)->orWhere('id', $param)->first();

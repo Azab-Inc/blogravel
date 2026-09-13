@@ -111,6 +111,12 @@ it('uses the current tenant host for JSON feed links', function (string $host, a
     'local host' => ['localhost', ['name' => 'Local Feed']],
 ]);
 
+it('supports a bare IPv6 local host for feed tenant queries', function () {
+    $response = $this->get("http://[::1]/feeds/posts?tenant={$this->tenant->id}&format=json");
+
+    $response->assertOk();
+});
+
 it('excludes draft posts from feed', function () {
     Post::factory()->create([
         'tenant_id' => $this->tenant->id,

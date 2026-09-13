@@ -29,9 +29,9 @@ Route::prefix('{tenantSlug}')
         Route::get('/post/{slug}', [ThemeController::class, 'post'])->name('theme.local.post');
         Route::get('/category/{slug}', [ThemeController::class, 'category'])->name('theme.local.category');
         Route::get('/subscribe', [ThemeController::class, 'subscribeForm'])->name('theme.local.subscribe');
-        Route::post('/subscribe/{tenant}', [ThemeController::class, 'subscribe'])->name('theme.local.subscribe.post');
+        Route::post('/subscribe', [ThemeController::class, 'subscribe'])->name('theme.local.subscribe.post');
         Route::get('/contact', [ThemeController::class, 'contactForm'])->name('theme.local.contact');
-        Route::post('/contact/{tenant}', [ThemeController::class, 'contact'])->name('theme.local.contact.post');
+        Route::post('/contact', [ThemeController::class, 'contact'])->name('theme.local.contact.post');
     });
 
 // Feeds

@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureApiKeyHasAbility;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureWithinPlanLimits;
+use App\Http\Middleware\ResolveTenantHost;
 use App\Http\Middleware\ResolveTheme;
 use App\Http\Middleware\VerifyWebhookSignature;
 use Illuminate\Auth\AuthenticationException;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhook.signature' => VerifyWebhookSignature::class,
             'plan.limit' => EnsureWithinPlanLimits::class,
             'theme.resolve' => ResolveTheme::class,
+            'tenant.host' => ResolveTenantHost::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

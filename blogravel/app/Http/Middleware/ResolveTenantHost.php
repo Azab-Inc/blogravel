@@ -23,6 +23,10 @@ class ResolveTenantHost
             return $next($request);
         }
 
+        if ($request->route('tenant') || $request->filled('tenant')) {
+            return $next($request);
+        }
+
         $tenant = $this->resolver->resolve($host);
         if (! $tenant) {
             abort(404, 'Tenant host not found.');

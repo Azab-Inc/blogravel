@@ -29,6 +29,11 @@ class ResolveTheme
 
     private function resolveTenant(Request $request): ?Tenant
     {
+        $attributeTenant = $request->attributes->get('tenant');
+        if ($attributeTenant instanceof Tenant) {
+            return $attributeTenant;
+        }
+
         $routeTenant = $request->route('tenant');
         if ($routeTenant instanceof Tenant) {
             return $routeTenant;

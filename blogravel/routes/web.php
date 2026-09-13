@@ -2,11 +2,16 @@
 
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\PlatformEntryController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
+Route::domain((string) config('tenancy.platform_domain'))
+    ->get('/', PlatformEntryController::class)
+    ->name('home');
+
 // Theme frontend routes
-Route::middleware('theme.resolve')->group(function () {
+Route::middleware(['tenant.host', 'theme.resolve'])->group(function () {
     Route::get('/', [ThemeController::class, 'home'])->name('theme.home');
     Route::get('/post/{slug}', [ThemeController::class, 'post'])->name('theme.post');
     Route::get('/category/{slug}', [ThemeController::class, 'category'])->name('theme.category');

@@ -203,6 +203,26 @@ git diff --check
 
 Issue #46 remains `Todo` because the full suite still has the unrelated existing Filament failures documented above.
 
+## Final Acceptance Verification
+
+- SQLite tenant resolution regression: `33 passed, 1 skipped, 52 assertions`.
+- PostgreSQL tenant resolution and uniqueness tests: `34 passed, 54 assertions`.
+- Focused API, webhook, feeds, and tenant Pest tests: `128 passed, 1 skipped, 476 assertions`.
+- Playwright routing and theme suites: `22 passed`.
+- Full Pest suite: `438 passed, 4 failed, 14 skipped, 456 tests`; the four failures remain unrelated existing Filament AI action/settings coverage.
+- Pint: passed.
+- `git diff --check`: passed.
+- PostgreSQL migration `2026_09_13_000002_normalize_tenant_custom_domains`: applied to the local stack and `migrate:status` reports `Ran` in batch 5.
+- Issue #46: `OPEN`; project #17 item: `Todo`; `tickets.md`: `Todo`.
+
+## Acceptance Remediation
+
+The PostgreSQL raw duplicate-key regression now performs the insert inside a nested `DB::transaction()` savepoint and verifies the original tenant can be queried afterward. This prevents the expected PostgreSQL exception from poisoning the surrounding test transaction.
+
+The pending `2026_09_13_000002_normalize_tenant_custom_domains` migration was applied to the running local PostgreSQL stack with `docker compose exec -T laravel.test php artisan migrate --force`. `php artisan migrate:status` reports it as `Ran` in batch 5.
+
+Issue #46 is `OPEN` and its project #17 item is `Todo`; `tickets.md` also records `Todo`.
+
 The full combined focused fileset under PostgreSQL is not clean because the existing unknown-tenant feed test passes the non-UUID literal `nonexistent` into a UUID column and returns 500; that failure aborts the test transaction for subsequent tests. The migration backfill, collision, and new PostgreSQL index tests pass when run independently against the PostgreSQL `testing` database.
 
 ## Final Whole-Branch Findings

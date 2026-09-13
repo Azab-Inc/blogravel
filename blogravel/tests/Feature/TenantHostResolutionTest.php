@@ -265,16 +265,18 @@ test('database rejects case-colliding custom domains from raw inserts', function
         'custom_domain' => 'raw-domain.test',
     ]);
 
-    expect(fn () => DB::table('tenants')->insert([
-        'id' => (string) Str::uuid(),
-        'domain' => 'raw-domain-other.test',
-        'slug' => 'raw-domain-other',
-        'custom_domain' => 'RAW-DOMAIN.TEST',
-        'name' => 'Raw Collision Tenant',
-        'plan' => 'free',
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]))->toThrow(QueryException::class);
+    expect(fn () => DB::transaction(function (): void {
+        DB::table('tenants')->insert([
+            'id' => (string) Str::uuid(),
+            'domain' => 'raw-domain-other.test',
+            'slug' => 'raw-domain-other',
+            'custom_domain' => 'RAW-DOMAIN.TEST',
+            'name' => 'Raw Collision Tenant',
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }))->toThrow(QueryException::class);
 
     expect($tenant->fresh()->custom_domain)->toBe('raw-domain.test');
 });
@@ -292,16 +294,19 @@ test('PostgreSQL enforces the functional custom-domain uniqueness index', functi
         'custom_domain' => 'postgres-domain.test',
     ]);
 
-    expect(fn () => DB::table('tenants')->insert([
-        'id' => (string) Str::uuid(),
-        'domain' => 'postgres-domain-other.test',
-        'slug' => 'postgres-domain-other',
-        'custom_domain' => 'POSTGRES-DOMAIN.TEST',
-        'name' => 'PostgreSQL Collision Tenant',
-        'plan' => 'free',
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]))->toThrow(QueryException::class);
+    expect(fn () => DB::transaction(function (): void {
+        DB::table('tenants')->insert([
+            'id' => (string) Str::uuid(),
+            'domain' => 'postgres-domain-other.test',
+            'slug' => 'postgres-domain-other',
+            'custom_domain' => 'POSTGRES-DOMAIN.TEST',
+            'name' => 'PostgreSQL Collision Tenant',
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }))->toThrow(QueryException::class);
+
 })->group('pgsql');
 
 test('reserved platform labels are rejected before custom and legacy domain matching', function () {

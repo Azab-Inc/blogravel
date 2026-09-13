@@ -217,7 +217,7 @@ Issue #46 remains `Todo` because the full suite still has the unrelated existing
 
 ## Acceptance Remediation
 
-The PostgreSQL raw duplicate-key regression now performs the insert inside a nested `DB::transaction()` savepoint and verifies the original tenant can be queried afterward. This prevents the expected PostgreSQL exception from poisoning the surrounding test transaction.
+The complete PostgreSQL tenant test file passes after the raw duplicate-key insert was moved inside a nested `DB::transaction()` savepoint. The focused SQLite test verifies that the original tenant can be queried after the expected exception without poisoning the surrounding test transaction.
 
 The pending `2026_09_13_000002_normalize_tenant_custom_domains` migration was applied to the running local PostgreSQL stack with `docker compose exec -T laravel.test php artisan migrate --force`. `php artisan migrate:status` reports it as `Ran` in batch 5.
 

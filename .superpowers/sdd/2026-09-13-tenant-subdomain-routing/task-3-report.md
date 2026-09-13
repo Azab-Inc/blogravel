@@ -219,13 +219,13 @@ Removed the Playwright manual cookie rewrite. The setup now asserts that the log
 
 ```text
 php artisan test --compact tests/Feature/FeedsTest.php tests/Feature/TenantHostResolutionTest.php
-55 tests: 54 passed, 1 skipped, 182 assertions
+65 tests: 64 passed, 1 skipped, 205 assertions
 
 npx playwright test tests/e2e/subdomain-routing.spec.ts tests/e2e/theme-pages.spec.ts --project=chromium
 22 passed
 
 php artisan test --compact
-434 tests: 416 passed, 4 failed (unrelated existing Filament failures)
+437 tests: 419 passed, 4 failed (unrelated existing Filament failures)
 
 GET /up: 200
 GET /api/v1/posts without authentication: 401

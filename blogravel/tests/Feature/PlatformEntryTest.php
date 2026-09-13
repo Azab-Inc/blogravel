@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\PostStatus;
+use App\Http\Controllers\ThemeController;
 use App\Models\Post;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 
@@ -108,6 +110,43 @@ test('tenant host identity scopes subscribe and contact posts', function () {
         'email' => 'host@example.com',
         'tenant_id' => $otherTenant->id,
     ]);
+});
+
+test('subscribe ignores a mismatched bound tenant when the host tenant is resolved', function () {
+    $hostTenant = Tenant::factory()->create();
+    $boundTenant = Tenant::factory()->create();
+    $request = Request::create("http://{$hostTenant->slug}.blogravel.com/subscribe/{$boundTenant->id}", 'POST', [
+        'email' => 'authoritative-host@example.com',
+    ]);
+    $request->attributes->set('tenant', $hostTenant);
+
+    $response = app(ThemeController::class)->subscribe($request, $boundTenant);
+
+    expect($response->getOriginalContent()->getData()['tenant']->is($hostTenant))->toBeTrue();
+    $this->assertDatabaseHas('subscribers', [
+        'email' => 'authoritative-host@example.com',
+        'tenant_id' => $hostTenant->id,
+    ]);
+    $this->assertDatabaseMissing('subscribers', [
+        'email' => 'authoritative-host@example.com',
+        'tenant_id' => $boundTenant->id,
+    ]);
+});
+
+test('contact ignores a mismatched bound tenant when the host tenant is resolved', function () {
+    Mail::fake();
+    $hostTenant = Tenant::factory()->create();
+    $boundTenant = Tenant::factory()->create();
+    $request = Request::create("http://{$hostTenant->slug}.blogravel.com/contact/{$boundTenant->id}", 'POST', [
+        'name' => 'Host User',
+        'email' => 'authoritative-host@example.com',
+        'message' => 'Hello',
+    ]);
+    $request->attributes->set('tenant', $hostTenant);
+
+    $response = app(ThemeController::class)->contact($request, $boundTenant);
+
+    expect($response->getOriginalContent()->getData()['tenant']->is($hostTenant))->toBeTrue();
 });
 
 test('legacy domain hosts resolve their own tenant', function () {

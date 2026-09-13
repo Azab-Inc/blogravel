@@ -72,8 +72,9 @@ class ThemeController extends Controller
         return response()->view('theme.subscribe', compact('tenant'));
     }
 
-    public function subscribe(Request $request, Tenant $tenant): Response
+    public function subscribe(Request $request, Tenant $boundTenant): Response
     {
+        $tenant = $this->resolveTenant($request, $boundTenant);
         $this->ensureThemeEnabled($tenant);
 
         $request->validate([
@@ -96,8 +97,9 @@ class ThemeController extends Controller
         return response()->view('theme.contact', compact('tenant'));
     }
 
-    public function contact(Request $request, Tenant $tenant): Response
+    public function contact(Request $request, Tenant $boundTenant): Response
     {
+        $tenant = $this->resolveTenant($request, $boundTenant);
         $this->ensureThemeEnabled($tenant);
 
         $request->validate([
@@ -130,11 +132,20 @@ class ThemeController extends Controller
         }
     }
 
-    private function resolveTenant(Request $request): Tenant
+    private function resolveTenant(Request $request, ?Tenant $localFallback = null): Tenant
     {
         $tenant = $request->attributes->get('tenant');
         if ($tenant instanceof Tenant) {
             return $tenant;
+        }
+
+        if ($localFallback instanceof Tenant && in_array(strtolower($request->getHost()), [
+            'localhost',
+            '127.0.0.1',
+            '::1',
+            'lvh.me',
+        ], true)) {
+            return $localFallback;
         }
 
         abort(404, 'Tenant not found.');

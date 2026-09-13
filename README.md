@@ -101,13 +101,13 @@ SESSION_DOMAIN=.lvh.me
 Start the stack with Docker Compose from the repository root (app + PostgreSQL + Redis + queue worker + Mailpit):
 
 ```bash
-docker compose -f blogravel/compose.yaml up -d
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d
 ```
 
 Install dependencies and run migrations:
 
 ```bash
-docker compose -f blogravel/compose.yaml exec laravel.test composer setup
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test composer setup
 ```
 
 Access the application:
@@ -135,13 +135,13 @@ Visit `http://acme.lvh.me:8000` for a tenant with slug `acme` and `http://lvh.me
 ## Running Tests
 
 ```bash
-docker compose -f blogravel/compose.yaml exec laravel.test php artisan test
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test php artisan test
 ```
 
 Or with Pest directly:
 
 ```bash
-docker compose -f blogravel/compose.yaml exec laravel.test ./vendor/bin/pest
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test ./vendor/bin/pest
 ```
 
 ---

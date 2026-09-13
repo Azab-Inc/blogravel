@@ -24,7 +24,12 @@ class TenantHostResolver
         }
 
         $label = substr($host, 0, -strlen($suffix));
-        if ($label === '' || str_contains($label, '.') || in_array($label, config('tenancy.reserved_labels', []), true)) {
+        $reservedLabels = array_map(
+            static fn (mixed $reservedLabel): string => strtolower(trim((string) $reservedLabel)),
+            config('tenancy.reserved_labels', []),
+        );
+
+        if ($label === '' || str_contains($label, '.') || in_array($label, $reservedLabels, true)) {
             return null;
         }
 

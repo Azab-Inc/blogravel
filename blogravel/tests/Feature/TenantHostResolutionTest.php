@@ -5,21 +5,61 @@ use App\Models\Tenant;
 use App\Services\TenantHostResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 beforeEach(function () {
     config([
         'tenancy.platform_domain' => 'blogravel.test',
-        'tenancy.reserved_labels' => ['www', 'admin', 'api'],
+        'tenancy.reserved_labels' => [' WWW ', ' ADMIN ', ' Api '],
     ]);
 });
 
 test('tenant factory generates unique slugs from tenant names', function () {
-    $firstTenant = Tenant::factory()->create(['name' => 'Acme Bakery']);
+    $firstTenant = Tenant::factory()->create([
+        'domain' => 'legacy.example',
+        'name' => 'Acme Bakery',
+    ]);
     $secondTenant = Tenant::factory()->create(['name' => 'Acme Bakery']);
 
     expect($firstTenant->slug)->toBe('acme-bakery')
-        ->and($secondTenant->slug)->toBe('acme-bakery-2');
+        ->and($secondTenant->slug)->toBe('acme-bakery-2')
+        ->and($firstTenant->domain)->toBe('legacy.example');
+});
+
+test('tenant migration backfills existing rows before enforcing slug constraints', function () {
+    Artisan::call('migrate:rollback', ['--step' => 1]);
+
+    $firstId = (string) Str::uuid();
+    $secondId = (string) Str::uuid();
+    DB::table('tenants')->insert([
+        [
+            'id' => $firstId,
+            'domain' => 'first.legacy.test',
+            'name' => 'Legacy Bakery',
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'id' => $secondId,
+            'domain' => 'second.legacy.test',
+            'name' => 'Legacy Bakery',
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
+
+    Artisan::call('migrate', ['--force' => true]);
+
+    $migratedTenants = DB::table('tenants')->orderBy('domain')->get();
+
+    expect($migratedTenants)->toHaveCount(2)
+        ->and($migratedTenants->pluck('slug')->all())->toBe(['legacy-bakery', 'legacy-bakery-2'])
+        ->and($migratedTenants->pluck('domain')->all())->toBe(['first.legacy.test', 'second.legacy.test']);
 });
 
 test('resolver matches a tenant by its generated platform host', function () {

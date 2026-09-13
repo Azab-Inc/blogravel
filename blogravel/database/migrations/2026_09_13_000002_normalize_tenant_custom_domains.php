@@ -9,9 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('tenants', function (Blueprint $table): void {
-            $table->dropUnique('tenants_custom_domain_unique');
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE tenants DROP CONSTRAINT IF EXISTS tenants_custom_domain_unique');
+            DB::statement('DROP INDEX IF EXISTS tenants_custom_domain_unique');
+        } else {
+            Schema::table('tenants', function (Blueprint $table): void {
+                $table->dropUnique('tenants_custom_domain_unique');
+            });
+        }
 
         /**
          * When legacy values normalize to the same host, the lowest tenant ID

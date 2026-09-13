@@ -174,3 +174,33 @@ The full Laravel suite ran with `412 passed` and `4 failed` in unrelated existin
 
 - Full-suite failures remain in `GenerateAiPostActionTest` and `SettingsTest`; they need separate investigation before closing #46.
 - The focused tenant routing and theme browser suites are fully green.
+
+## Remaining Review Findings
+
+### Feed Serialization Coverage
+
+Added a single Pest matrix covering RSS and Atom responses on generated, custom, legacy, and local tenant hosts. Each response is parsed with SimpleXML and asserts the canonical home link, feed self link, and post item link preserve the request host, paths, tenant query, and post fragment.
+
+### Custom-Domain Migration Coverage
+
+Retained the existing SQLite raw-insert regression and added a `pgsql`-grouped test that skips on other drivers. On PostgreSQL it verifies the `tenants_custom_domain_lower_unique` functional index exists and rejects a raw mixed-case duplicate. The test requires the `pgsql` driver and a configured PostgreSQL test database.
+
+### Verification
+
+```text
+php artisan test --compact tests/Feature/FeedsTest.php tests/Feature/TenantHostResolutionTest.php
+51 tests: 50 passed, 1 skipped, 178 assertions (SQLite; PostgreSQL test skipped)
+
+DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=testing DB_USERNAME=sail DB_PASSWORD=password php artisan test --compact tests/Feature/TenantHostResolutionTest.php --filter='PostgreSQL enforces'
+1 passed, 2 assertions (PostgreSQL)
+
+npx playwright test tests/e2e/subdomain-routing.spec.ts tests/e2e/theme-pages.spec.ts --project=chromium
+22 passed
+
+vendor/bin/pint --dirty --format agent
+git diff --check
+```
+
+Issue #46 remains `Todo` because the full suite still has the unrelated existing Filament failures documented above.
+
+The full combined focused fileset under PostgreSQL is not clean because the existing unknown-tenant feed test passes the non-UUID literal `nonexistent` into a UUID column and returns 500; that failure aborts the test transaction for subsequent tests. The migration backfill, collision, and new PostgreSQL index tests pass when run independently against the PostgreSQL `testing` database.

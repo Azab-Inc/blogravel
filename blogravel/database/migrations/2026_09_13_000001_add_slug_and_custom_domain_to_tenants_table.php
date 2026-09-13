@@ -47,9 +47,18 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE tenants DROP CONSTRAINT IF EXISTS tenants_custom_domain_unique');
+            DB::statement('DROP INDEX IF EXISTS tenants_custom_domain_unique');
+        }
+
         Schema::table('tenants', function (Blueprint $table) {
             $table->dropUnique('tenants_slug_unique');
-            $table->dropUnique('tenants_custom_domain_unique');
+
+            if (DB::getDriverName() !== 'pgsql') {
+                $table->dropUnique('tenants_custom_domain_unique');
+            }
+
             $table->dropColumn(['slug', 'custom_domain']);
         });
     }

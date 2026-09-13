@@ -39,6 +39,45 @@ it('returns valid Atom feed for published posts', function () {
     $this->assertStringContainsString('My First Post', $body);
 });
 
+it('serializes canonical RSS and Atom links on every tenant host', function () {
+    $hostCases = [
+        'generated' => [$this->tenant->slug.'.blogravel.com', []],
+        'custom' => ['custom-feed.test', ['custom_domain' => 'custom-feed.test']],
+        'legacy' => ['feedtest.com', ['custom_domain' => null]],
+        'local' => ['localhost', ['custom_domain' => null]],
+    ];
+
+    foreach ($hostCases as [$expectedHost, $attributes]) {
+        $this->tenant->update($attributes);
+
+        foreach (['xml', 'atom'] as $format) {
+            $response = $this->get("http://{$expectedHost}/feeds/posts?tenant={$this->tenant->id}&format={$format}");
+            $response->assertOk();
+
+            $xml = simplexml_load_string($response->getContent());
+            expect($xml)->not->toBeFalse();
+
+            if ($format === 'xml') {
+                $canonicalUrl = (string) $xml->channel->link;
+                $selfUrl = (string) $xml->xpath('//*[local-name() = "link" and @rel = "self"]')[0]['href'];
+                $itemUrl = (string) $xml->channel->item->link;
+            } else {
+                $canonicalUrl = (string) $xml->xpath('//*[local-name() = "link" and @rel = "alternate"]')[0]['href'];
+                $selfUrl = (string) $xml->xpath('//*[local-name() = "link" and @rel = "self"]')[0]['href'];
+                $itemUrl = (string) $xml->xpath('//*[local-name() = "entry"]/*[local-name() = "link"]')[0]['href'];
+            }
+
+            expect(parse_url($canonicalUrl, PHP_URL_HOST))->toBe($expectedHost)
+                ->and(parse_url($canonicalUrl, PHP_URL_PATH))->toBe('/')
+                ->and(parse_url($selfUrl, PHP_URL_HOST))->toBe($expectedHost)
+                ->and(parse_url($selfUrl, PHP_URL_PATH))->toBe('/feeds/posts')
+                ->and(parse_url($selfUrl, PHP_URL_QUERY))->toContain('tenant='.$this->tenant->id)
+                ->and(parse_url($itemUrl, PHP_URL_HOST))->toBe($expectedHost)
+                ->and(parse_url($itemUrl, PHP_URL_FRAGMENT))->toBe('post-'.$this->post->slug);
+        }
+    }
+});
+
 it('returns valid JSON Feed for published posts', function () {
     $response = $this->get(route('feed.posts', ['resource' => 'posts', 'format' => 'json', 'tenant' => $this->tenant->id]));
     $response->assertOk()->assertHeader('Content-Type', 'application/feed+json; charset=UTF-8');

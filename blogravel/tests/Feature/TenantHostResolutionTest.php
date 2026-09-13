@@ -39,6 +39,13 @@ test('tenant names without slug content receive a deterministic fallback slug', 
     expect($tenant->slug)->toBe('tenant-'.$tenant->id);
 });
 
+test('reserved tenant names receive deterministic resolvable fallback slugs', function (string $name) {
+    $tenant = Tenant::factory()->create(['name' => $name]);
+
+    expect($tenant->slug)->toBe('tenant-'.$tenant->id)
+        ->and(app(TenantHostResolver::class)->resolve($tenant->slug.'.blogravel.test')?->is($tenant))->toBeTrue();
+})->with(['admin', 'API', 'www']);
+
 test('slug generation retries after a concurrent database uniqueness collision', function () {
     $inserted = false;
     Event::listen('eloquent.creating: '.Tenant::class, function (Tenant $tenant) use (&$inserted): void {
@@ -175,6 +182,26 @@ test('custom domains are normalized before persistence and uniqueness is case in
         'name' => 'Other Bakery',
         'custom_domain' => 'WWW.ACME.TEST',
     ]))->toThrow(QueryException::class);
+});
+
+test('database rejects case-colliding custom domains from raw inserts', function () {
+    $tenant = Tenant::factory()->create([
+        'name' => 'Raw Domain Tenant',
+        'custom_domain' => 'raw-domain.test',
+    ]);
+
+    expect(fn () => DB::table('tenants')->insert([
+        'id' => (string) Str::uuid(),
+        'domain' => 'raw-domain-other.test',
+        'slug' => 'raw-domain-other',
+        'custom_domain' => 'RAW-DOMAIN.TEST',
+        'name' => 'Raw Collision Tenant',
+        'plan' => 'free',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]))->toThrow(QueryException::class);
+
+    expect($tenant->fresh()->custom_domain)->toBe('raw-domain.test');
 });
 
 test('reserved platform labels are rejected before custom and legacy domain matching', function () {

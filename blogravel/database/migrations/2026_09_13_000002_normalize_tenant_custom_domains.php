@@ -42,13 +42,12 @@ return new class extends Migration
                     ->update(['custom_domain' => $normalizedDomain]);
             });
 
-        Schema::table('tenants', function (Blueprint $table): void {
-            $table->unique('custom_domain');
-        });
+        DB::statement('CREATE UNIQUE INDEX tenants_custom_domain_lower_unique ON tenants (LOWER(custom_domain)) WHERE custom_domain IS NOT NULL');
     }
 
     public function down(): void
     {
-        // Normalization is intentionally irreversible; the unique constraint remains valid.
+        DB::statement('DROP INDEX tenants_custom_domain_lower_unique');
+        DB::statement('CREATE UNIQUE INDEX tenants_custom_domain_unique ON tenants (custom_domain)');
     }
 };

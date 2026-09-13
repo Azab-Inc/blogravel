@@ -26,8 +26,8 @@ class FeedController extends Controller
             $query,
             $tenant->name.' — Posts',
             'Latest published posts from '.$tenant->name,
-            $this->feedUrl($request, 'posts', $format, $tenant),
-            route('home'),
+            $this->feedUrl($request, 'feed.posts', ['resource' => 'posts', 'format' => $format], $tenant),
+            $this->tenantRouteUrl($request, 'theme.home', [], $tenant),
         );
 
         return $this->respond($data, $format, $request);
@@ -49,8 +49,8 @@ class FeedController extends Controller
             $query,
             $tenant->name.' — '.$category->name,
             'Posts in the '.$category->name.' category',
-            $this->feedUrl($request, "categories/{$slug}", $format, $tenant),
-            route('home'),
+            $this->feedUrl($request, 'feed.category', ['slug' => $slug, 'format' => $format], $tenant),
+            $this->tenantRouteUrl($request, 'theme.home', [], $tenant),
         );
 
         return $this->respond($data, $format, $request);
@@ -71,8 +71,8 @@ class FeedController extends Controller
             $query,
             $tenant->name.' — Author',
             'Posts by this author',
-            $this->feedUrl($request, "authors/{$author}", $format, $tenant),
-            route('home'),
+            $this->feedUrl($request, 'feed.author', ['author' => $author, 'format' => $format], $tenant),
+            $this->tenantRouteUrl($request, 'theme.home', [], $tenant),
         );
 
         return $this->respond($data, $format, $request);
@@ -93,7 +93,7 @@ class FeedController extends Controller
                 'feed_url' => $data['url'],
                 'items' => collect($data['posts'])->map(fn (array $post) => [
                     'id' => $post['id'],
-                    'url' => route('home').'#post-'.$post['slug'],
+                    'url' => $this->tenantRouteUrl($request, 'theme.post', ['slug' => $post['slug']], $this->resolveTenant($request)).'#post-'.$post['slug'],
                     'title' => $post['title'],
                     'content_html' => $post['content'],
                     'summary' => $post['excerpt'],
@@ -114,9 +114,14 @@ class FeedController extends Controller
         return $request->getSchemeAndHttpHost();
     }
 
-    private function feedUrl(Request $request, string $path, string $format, Tenant $tenant): string
+    private function feedUrl(Request $request, string $routeName, array $parameters, Tenant $tenant): string
     {
-        return $this->tenantUrl($request)."/feeds/{$path}.{$format}?tenant={$tenant->id}";
+        return $this->tenantRouteUrl($request, $routeName, $parameters, $tenant);
+    }
+
+    private function tenantRouteUrl(Request $request, string $routeName, array $parameters, Tenant $tenant): string
+    {
+        return $this->tenantUrl($request).route($routeName, [...$parameters, 'tenant' => $tenant->id], false);
     }
 
     private function resolveTenant(Request $request): Tenant

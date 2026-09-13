@@ -107,3 +107,70 @@ This commit: `Tests: strengthen tenant subdomain authentication coverage and cor
 ### Fix Concerns
 
 - No production code or new configuration was required for this review fix; the existing cookie-sharing helper is now exercised by a protected tenant route.
+
+## Final Whole-Branch Findings
+
+### Feed URL Hosts
+
+#### Red
+
+Added a Pest regression covering generated tenant, custom, legacy, and local hosts. Before the fix, tenant-host resolution was valid but `home_page_url`, `feed_url`, and item URLs still used `blogravel.com` through `route('home')`; custom, legacy, and local cases failed their host assertions.
+
+#### Green
+
+```text
+php artisan test --compact tests/Feature/FeedsTest.php --filter='uses the current tenant host'
+4 passed (16 assertions)
+```
+
+Feed canonical and item links now use named routes with relative paths joined to the request scheme/host, while retaining the tenant query needed by local compatibility.
+
+### Reserved Slugs
+
+#### Red
+
+Added a Pest regression for `admin`, `API`, and `www`. Before the fix, those names generated reserved slugs directly.
+
+#### Green
+
+```text
+php artisan test --compact tests/Feature/TenantHostResolutionTest.php --filter='reserved tenant names'
+3 passed (6 assertions)
+```
+
+Reserved labels are normalized from configuration and receive deterministic `tenant-{uuid}` fallback slugs.
+
+### Custom-Domain Uniqueness
+
+#### Red
+
+Added a raw-query regression that bypasses the model mutator. Before the fix, SQLite accepted a mixed-case duplicate custom domain.
+
+#### Green
+
+```text
+php artisan test --compact tests/Feature/TenantHostResolutionTest.php --filter='raw inserts'
+1 passed (2 assertions)
+```
+
+The normalization migration now replaces the case-sensitive index with a portable PostgreSQL/SQLite functional partial unique index on `LOWER(custom_domain)`.
+
+## Verification
+
+```text
+php artisan test --compact tests/Feature/FeedsTest.php tests/Feature/TenantHostResolutionTest.php
+49 passed (106 assertions)
+
+npx playwright test tests/e2e/subdomain-routing.spec.ts tests/e2e/theme-pages.spec.ts --project=chromium
+22 passed
+
+vendor/bin/pint --dirty --format agent
+git diff --check
+```
+
+The full Laravel suite ran with `412 passed` and `4 failed` in unrelated existing Filament action/settings coverage. Issue #46 remains `Todo` and was not marked complete because the full suite is not fully green.
+
+## Final Concerns
+
+- Full-suite failures remain in `GenerateAiPostActionTest` and `SettingsTest`; they need separate investigation before closing #46.
+- The focused tenant routing and theme browser suites are fully green.

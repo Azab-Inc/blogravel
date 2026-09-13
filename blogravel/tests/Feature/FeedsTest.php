@@ -49,6 +49,29 @@ it('returns valid JSON Feed for published posts', function () {
     $this->assertArrayHasKey('content_html', $json['items'][0]);
 });
 
+it('uses the current tenant host for JSON feed links', function (string $host, array $tenantAttributes) {
+    $tenant = Tenant::factory()->create($tenantAttributes);
+    $author = User::factory()->create(['tenant_id' => $tenant->id]);
+    Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $author->id,
+        'status' => PostStatus::Published,
+        'published_at' => now(),
+    ]);
+
+    $response = $this->get("http://{$host}/feeds/posts?tenant={$tenant->id}&format=json");
+    $json = $response->assertOk()->json();
+
+    expect(parse_url($json['home_page_url'], PHP_URL_HOST))->toBe($host)
+        ->and(parse_url($json['feed_url'], PHP_URL_HOST))->toBe($host)
+        ->and(parse_url($json['items'][0]['url'], PHP_URL_HOST))->toBe($host);
+})->with([
+    'tenant host' => ['feed-tenant.blogravel.com', ['name' => 'Feed Tenant']],
+    'custom domain' => ['custom-feed.test', ['name' => 'Custom Feed', 'custom_domain' => 'custom-feed.test']],
+    'legacy domain' => ['legacy-feed.test', ['name' => 'Legacy Feed', 'domain' => 'legacy-feed.test']],
+    'local host' => ['localhost', ['name' => 'Local Feed']],
+]);
+
 it('excludes draft posts from feed', function () {
     Post::factory()->create([
         'tenant_id' => $this->tenant->id,

@@ -23,6 +23,9 @@ class Tenant extends BaseModel
             }
 
             $baseSlug = Str::slug($tenant->name) ?: 'tenant-'.$tenant->getKey();
+            if ($tenant->isReservedSlug($baseSlug)) {
+                $baseSlug = 'tenant-'.$tenant->getKey();
+            }
             $slug = $baseSlug;
             $suffix = 2;
 
@@ -70,6 +73,16 @@ class Tenant extends BaseModel
         }
 
         return $baseSlug.'-'.$suffix;
+    }
+
+    private function isReservedSlug(string $slug): bool
+    {
+        $reservedLabels = array_map(
+            static fn (mixed $reservedLabel): string => strtolower(trim((string) $reservedLabel)),
+            config('tenancy.reserved_labels', []),
+        );
+
+        return in_array(strtolower($slug), $reservedLabels, true);
     }
 
     private function isUniqueConstraintViolation(QueryException $exception): bool

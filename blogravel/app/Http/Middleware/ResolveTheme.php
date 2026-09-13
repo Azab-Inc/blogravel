@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class ResolveTheme
@@ -45,7 +46,13 @@ class ResolveTheme
 
         $param = $request->input('tenant') ?? $routeTenant;
         if (is_string($param) && $param !== '') {
-            return Tenant::where('domain', $param)->orWhere('id', $param)->first();
+            $tenantQuery = Tenant::where('domain', $param);
+
+            if (Str::isUuid($param)) {
+                $tenantQuery->orWhere('id', $param);
+            }
+
+            return $tenantQuery->first();
         }
 
         return null;

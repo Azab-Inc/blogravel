@@ -2,7 +2,7 @@
 
 @if($categories->count())
     <aside class="sidebar">
-        <h3>Categories</h3>
+        <h2>Categories</h2>
         <ul>
             @foreach($categories as $cat)
                 <li>

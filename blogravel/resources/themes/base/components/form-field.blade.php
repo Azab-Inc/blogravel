@@ -8,6 +8,7 @@
             name="{{ $name }}"
             {{ $required ? 'required' : '' }}
             placeholder="{{ $placeholder }}"
+            @if($errors->has($name)) aria-invalid="true" aria-describedby="{{ $name }}-error" @endif
         >{{ $value }}</textarea>
     @else
         <input
@@ -17,9 +18,10 @@
             {{ $required ? 'required' : '' }}
             placeholder="{{ $placeholder }}"
             value="{{ $value }}"
+            @if($errors->has($name)) aria-invalid="true" aria-describedby="{{ $name }}-error" @endif
         >
     @endif
     @error($name)
-        <p class="form-error">{{ $message }}</p>
+        <p id="{{ $name }}-error" class="form-error" role="alert">{{ $message }}</p>
     @enderror
 </div>

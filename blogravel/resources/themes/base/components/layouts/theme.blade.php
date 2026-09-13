@@ -17,7 +17,8 @@
         :root {
             --bg: #fff;
             --fg: #1a1a1a;
-            --accent: #2563eb;
+            --accent: #1d4ed8;
+            --button-bg: #1d4ed8;
             --muted: #6b7280;
             --border: #e5e7eb;
             --surface: #f9fafb;
@@ -30,7 +31,8 @@
             :root {
                 --bg: #111827;
                 --fg: #f9fafb;
-                --accent: #60a5fa;
+                --accent: #93c5fd;
+                --button-bg: #2563eb;
                 --muted: #9ca3af;
                 --border: #374151;
                 --surface: #1f2937;
@@ -45,8 +47,30 @@
             font-size: clamp(0.95rem, 0.9rem + 0.25vw, 1rem);
         }
 
-        a { color: var(--accent); text-decoration: none; }
+        a { color: var(--accent); text-decoration: underline; text-underline-offset: 0.15em; }
         a:hover { text-decoration: underline; }
+
+        :focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            transform: translateY(-150%);
+            background: var(--bg);
+            color: var(--fg);
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--accent);
+            border-radius: var(--radius);
+            z-index: 10;
+        }
+
+        .skip-link:focus {
+            transform: translateY(1rem);
+        }
 
         .container {
             width: 100%;
@@ -91,6 +115,8 @@
             align-items: center;
             justify-content: center;
         }
+
+        .nav-toggle[aria-expanded="true"] { background: var(--surface); }
 
         @media (max-width: 639px) {
             .nav-toggle { display: flex; }
@@ -212,7 +238,7 @@
         /* Buttons */
         .btn {
             display: inline-block;
-            background: var(--accent);
+            background: var(--button-bg);
             color: #fff;
             padding: 0.625rem 1.25rem;
             border-radius: var(--radius);
@@ -268,6 +294,10 @@
             margin-top: 0.375rem;
         }
 
+        @media (prefers-color-scheme: dark) {
+            .form-error { color: #fca5a5; }
+        }
+
         /* Pagination */
         .pagination {
             display: flex;
@@ -290,9 +320,9 @@
         }
 
         .pagination .active {
-            background: var(--accent);
+            background: var(--button-bg);
             color: #fff;
-            border-color: var(--accent);
+            border-color: var(--button-bg);
         }
 
         /* Success Alert */
@@ -370,11 +400,12 @@
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <header>
         <div class="container">
             <h1><a href="{{ route('theme.home') }}?tenant={{ $tenant->id }}">{{ $tenant->name ?? 'Blog' }}</a></h1>
-            <button class="nav-toggle" onclick="document.querySelector('header nav').classList.toggle('open')" aria-label="Toggle navigation">☰</button>
-            <nav>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Toggle navigation">☰</button>
+            <nav id="primary-navigation" aria-label="Primary navigation">
                 <a href="{{ route('theme.home') }}?tenant={{ $tenant->id }}">Home</a>
                 <a href="{{ route('theme.subscribe') }}?tenant={{ $tenant->id }}">Subscribe</a>
                 <a href="{{ route('theme.contact') }}?tenant={{ $tenant->id }}">Contact</a>
@@ -382,7 +413,7 @@
         </div>
     </header>
 
-    <main class="container">
+    <main id="main-content" class="container" tabindex="-1">
         {{ $slot }}
     </main>
 
@@ -391,5 +422,23 @@
             Powered by <a href="https://blogravel.com">Blogravel</a>
         </div>
     </footer>
+    <script>
+        const navToggle = document.querySelector('.nav-toggle');
+        const primaryNavigation = document.querySelector('#primary-navigation');
+
+        navToggle?.addEventListener('click', () => {
+            const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
+            navToggle.setAttribute('aria-expanded', String(!isExpanded));
+            primaryNavigation?.classList.toggle('open', !isExpanded);
+        });
+
+        navToggle?.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && navToggle.getAttribute('aria-expanded') === 'true') {
+                navToggle.setAttribute('aria-expanded', 'false');
+                primaryNavigation?.classList.remove('open');
+                navToggle.focus();
+            }
+        });
+    </script>
 </body>
 </html>

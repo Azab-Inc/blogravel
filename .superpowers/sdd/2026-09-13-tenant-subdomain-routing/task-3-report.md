@@ -209,7 +209,7 @@ The full combined focused fileset under PostgreSQL is not clean because the exis
 
 ### Web Host Validation
 
-Added Pest regressions for unknown `/admin` requests and reserved/malformed `/debug/session-check` requests. Web host validation now runs at the shared web middleware boundary, with the Filament panel covered explicitly and duplicate theme/feed route middleware removed. Platform, valid tenant, and established local hosts retain their existing behavior; API and health routes remain outside this boundary.
+Added Pest regressions for unknown `/admin` and `/admin/secret` requests and reserved/malformed `/debug/session-check` requests. Web host validation now runs as a prepended application middleware, before route authentication/controller middleware, while explicitly bypassing API and health requests. Platform, valid tenant, and established local hosts retain their existing behavior; duplicate route and Filament registrations are removed.
 
 ### Authentication Continuity
 
@@ -219,7 +219,7 @@ Removed the Playwright manual cookie rewrite. The setup now asserts that the log
 
 ```text
 php artisan test --compact tests/Feature/FeedsTest.php tests/Feature/TenantHostResolutionTest.php
-54 tests: 53 passed, 1 skipped, 181 assertions
+55 tests: 54 passed, 1 skipped, 182 assertions
 
 npx playwright test tests/e2e/subdomain-routing.spec.ts tests/e2e/theme-pages.spec.ts --project=chromium
 22 passed

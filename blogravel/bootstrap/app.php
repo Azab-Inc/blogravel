@@ -30,7 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'theme.resolve' => ResolveTheme::class,
             'tenant.host' => ResolveTenantHost::class,
         ]);
-        $middleware->web(append: [ResolveTenantHost::class]);
+        $middleware->prepend(ResolveTenantHost::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $rfc9457Types = [

@@ -17,6 +17,10 @@ class ResolveTenantHost
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('api/*') || $request->is('up')) {
+            return $next($request);
+        }
+
         $host = strtolower($request->getHost());
         $platformDomain = strtolower(trim((string) config('tenancy.platform_domain')));
 

@@ -291,6 +291,11 @@ test('unknown hosts cannot reach the admin web surface', function () {
         ->assertNotFound();
 });
 
+test('unknown hosts cannot reach the admin secret route before authentication', function () {
+    $this->get('http://unknown.blogravel.test/admin/secret')
+        ->assertNotFound();
+});
+
 test('reserved and malformed hosts cannot reach the debug web surface', function (string $host) {
     $this->get("http://{$host}/debug/session-check")
         ->assertNotFound();

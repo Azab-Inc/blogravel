@@ -108,6 +108,26 @@ Access the application:
 - **Admin (Filament):** http://localhost:8000/admin
 - **Mailpit (email preview):** http://localhost:8025
 
+### Tenant Domains
+
+Set the platform domain in `blogravel/.env`; a tenant with slug `acme` is then served at `https://acme.example.com` and the root domain is reserved for authentication and administration:
+
+```dotenv
+TENANCY_PLATFORM_DOMAIN=example.com
+SESSION_DOMAIN=.example.com
+```
+
+For production, point both `example.com` and `*.example.com` to the application with DNS. Provision a TLS certificate covering the root and wildcard names (`example.com` and `*.example.com`), and terminate HTTPS before forwarding requests to Laravel. `SESSION_DOMAIN` must use the leading dot so the authenticated session is available on the platform and tenant subdomains.
+
+For local wildcard hosts, use `lvh.me`, which resolves to `127.0.0.1` without a hosts-file entry:
+
+```dotenv
+TENANCY_PLATFORM_DOMAIN=lvh.me
+SESSION_DOMAIN=.lvh.me
+```
+
+Visit `http://acme.lvh.me:8000` for a tenant and `http://lvh.me:8000/admin` for the platform admin. The Docker Compose development setup can continue using `localhost:8000`; the Playwright Chromium configuration maps `blogravel.com` and its wildcard subdomains to `127.0.0.1` when testing host-based routing.
+
 ---
 
 ## Running Tests

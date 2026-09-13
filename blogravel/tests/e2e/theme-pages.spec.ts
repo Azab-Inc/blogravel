@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const ACME_URL = 'http://acmeio.blogravel.com:8000';
 const INVALID_TENANT_URL = 'http://unknown.blogravel.com:8000';
+const LOCAL_PATH_TENANT_URL = 'http://localhost:8000/acmeio';
 
 test.describe('Theme Home Page', () => {
   test('renders the home page with tenant name', async ({ page }) => {
@@ -10,6 +11,13 @@ test.describe('Theme Home Page', () => {
     
     await expect(page.locator('header h1')).toBeVisible();
     await expect(page.locator('main')).toBeVisible();
+  });
+
+  test('renders the local path tenant home page', async ({ page }) => {
+    const response = await page.goto(`${LOCAL_PATH_TENANT_URL}/`);
+
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('header h1')).toContainText('acme.io');
   });
 
   test('displays navigation links', async ({ page }) => {
@@ -98,6 +106,13 @@ test.describe('Theme Subscribe Page', () => {
     await expect(page.locator('button[type="submit"]:has-text("Subscribe")')).toBeVisible();
   });
 
+  test('renders the local path subscribe form', async ({ page }) => {
+    const response = await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('h1:has-text("Subscribe")')).toBeVisible();
+  });
+
   test('subscribe form has proper accessibility', async ({ page }) => {
     await page.goto(`${ACME_URL}/subscribe`);
     
@@ -120,6 +135,13 @@ test.describe('Theme Contact Page', () => {
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('textarea[name="message"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]:has-text("Send Message")')).toBeVisible();
+  });
+
+  test('renders the local path contact form', async ({ page }) => {
+    const response = await page.goto(`${LOCAL_PATH_TENANT_URL}/contact`);
+
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('h1:has-text("Contact")')).toBeVisible();
   });
 
   test('contact form has proper accessibility', async ({ page }) => {

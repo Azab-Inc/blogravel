@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Tenant;
 use App\Services\TenantHostResolver;
 use Closure;
 use Illuminate\Http\Request;
@@ -29,12 +30,26 @@ class ResolveTenantHost
                 abort(404, 'Tenant host not found.');
             }
 
+            $this->rejectTenantPath($request);
+
             return $next($request);
         }
 
-        if ($this->isLocalHost($host)) {
+        if ($this->resolver->isLocalHost($host)) {
+            $tenant = $this->resolver->resolveLocalSubdomain($host)
+                ?? $this->resolveLocalPathTenant($request);
+
+            if ($tenant) {
+                $request->attributes->set('tenant', $tenant);
+                $this->forgetTenantPathParameter($request);
+            } elseif ($this->hasLocalSubdomain($host) || $this->hasTenantPath($request)) {
+                abort(404, 'Tenant host not found.');
+            }
+
             return $next($request);
         }
+
+        $this->rejectTenantPath($request);
 
         $tenant = $this->resolver->resolve($host);
         if ($tenant) {
@@ -51,9 +66,43 @@ class ResolveTenantHost
         abort(404, 'Tenant host not found.');
     }
 
-    private function isLocalHost(string $host): bool
+    private function resolveLocalPathTenant(Request $request): ?Tenant
     {
-        return in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true);
+        $slug = $this->tenantPathSlug($request);
+
+        return is_string($slug) ? $this->resolver->resolveSlug($slug) : null;
+    }
+
+    private function hasLocalSubdomain(string $host): bool
+    {
+        return str_ends_with($host, '.localhost');
+    }
+
+    private function hasTenantPath(Request $request): bool
+    {
+        return $this->tenantPathSlug($request) !== null;
+    }
+
+    private function tenantPathSlug(Request $request): mixed
+    {
+        $route = $request->route();
+
+        return $route instanceof RouteDefinition ? $route->parameter('tenantSlug') : null;
+    }
+
+    private function forgetTenantPathParameter(Request $request): void
+    {
+        $route = $request->route();
+        if ($route instanceof RouteDefinition) {
+            $route->forgetParameter('tenantSlug');
+        }
+    }
+
+    private function rejectTenantPath(Request $request): void
+    {
+        if ($this->hasTenantPath($request)) {
+            abort(404, 'Tenant host not found.');
+        }
     }
 
     private function hasTenantQueryOnPublicRoute(Request $request): bool

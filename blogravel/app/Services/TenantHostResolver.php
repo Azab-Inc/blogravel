@@ -8,8 +8,7 @@ class TenantHostResolver
 {
     public function resolve(string $host): ?Tenant
     {
-        $host = strtolower(trim($host));
-        $host = str_contains($host, ':') ? explode(':', $host, 2)[0] : $host;
+        $host = $this->normalizeHost($host);
 
         $platformDomain = strtolower(trim((string) config('tenancy.platform_domain')));
         $suffix = '.'.$platformDomain;
@@ -44,14 +43,56 @@ class TenantHostResolver
             return null;
         }
 
-        if ($label === '' || str_contains($label, '.') || in_array($label, $reservedLabels, true)) {
+        return $this->resolveSlug($label);
+    }
+
+    public function resolveSlug(?string $slug): ?Tenant
+    {
+        if (! is_string($slug)) {
             return null;
         }
 
-        if (! preg_match('/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/', $label)) {
+        $slug = strtolower(trim($slug));
+        $reservedLabels = array_map(
+            static fn (mixed $reservedLabel): string => strtolower(trim((string) $reservedLabel)),
+            config('tenancy.reserved_labels', []),
+        );
+
+        if ($slug === '' || str_contains($slug, '.') || in_array($slug, $reservedLabels, true)) {
             return null;
         }
 
-        return Tenant::where('slug', $label)->first();
+        if (! preg_match('/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/', $slug)) {
+            return null;
+        }
+
+        return Tenant::where('slug', $slug)->first();
+    }
+
+    public function isLocalHost(string $host): bool
+    {
+        $host = $this->normalizeHost($host);
+
+        return in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true)
+            || str_ends_with($host, '.localhost');
+    }
+
+    public function resolveLocalSubdomain(string $host): ?Tenant
+    {
+        $host = $this->normalizeHost($host);
+        if (! str_ends_with($host, '.localhost')) {
+            return null;
+        }
+
+        $slug = substr($host, 0, -strlen('.localhost'));
+
+        return $this->resolveSlug($slug);
+    }
+
+    private function normalizeHost(string $host): string
+    {
+        $host = strtolower(trim($host));
+
+        return str_contains($host, ':') ? explode(':', $host, 2)[0] : $host;
     }
 }

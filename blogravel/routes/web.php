@@ -21,6 +21,17 @@ Route::middleware('theme.resolve')->group(function () {
     Route::post('/contact/{tenant}', [ThemeController::class, 'contact'])->name('theme.contact.post');
 });
 
+Route::prefix('{tenantSlug}')
+    ->middleware(['tenant.host', 'theme.resolve'])
+    ->where(['tenantSlug' => '[a-z0-9-]+'])
+    ->group(function () {
+        Route::get('/', [ThemeController::class, 'home'])->name('theme.local.home');
+        Route::get('/post/{slug}', [ThemeController::class, 'post'])->name('theme.local.post');
+        Route::get('/category/{slug}', [ThemeController::class, 'category'])->name('theme.local.category');
+        Route::get('/subscribe', [ThemeController::class, 'subscribeForm'])->name('theme.local.subscribe');
+        Route::get('/contact', [ThemeController::class, 'contactForm'])->name('theme.local.contact');
+    });
+
 // Feeds
 Route::get('/feeds/{resource}', [FeedController::class, 'posts'])
     ->whereIn('resource', ['posts'])

@@ -1,7 +1,11 @@
 <?php
 
+use App\Enums\PostStatus;
 use App\Http\Middleware\ResolveTenantHost;
+use App\Models\Category;
+use App\Models\Post;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Services\TenantHostResolver;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -392,4 +396,73 @@ test('host resolution never returns another tenant for a different host', functi
 
     expect($resolvedTenant?->is($tenantA))->toBeTrue()
         ->and($resolvedTenant?->is($tenantB))->toBeFalse();
+});
+
+test('local path routing resolves a tenant by slug', function () {
+    $tenant = Tenant::factory()->create([
+        'slug' => 'acmeio',
+        'name' => 'Acme IO',
+    ]);
+
+    $response = $this->get('http://localhost/acmeio/');
+
+    $response->assertOk()->assertSee($tenant->name);
+});
+
+test('local path routing supports nested theme pages', function (string $path) {
+    Tenant::factory()->create([
+        'slug' => 'acmeio',
+        'name' => 'Acme IO',
+    ]);
+
+    $this->get("http://localhost/acmeio{$path}")->assertOk();
+})->with(['/subscribe', '/contact']);
+
+function createLocalPathTenantContent(): array
+{
+    $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+        'status' => PostStatus::Published,
+        'published_at' => now(),
+    ]);
+    $category = Category::factory()->create(['tenant_id' => $tenant->id]);
+    $post->categories()->attach($category);
+
+    return [$post, $category];
+}
+
+test('local path routing supports posts', function () {
+    [$post] = createLocalPathTenantContent();
+
+    $this->get("http://localhost/acmeio/post/{$post->slug}")->assertOk();
+});
+
+test('local path routing supports categories', function () {
+    [, $category] = createLocalPathTenantContent();
+
+    $this->get("http://localhost/acmeio/category/{$category->slug}")->assertOk();
+});
+
+test('path tenant cannot override a non-local tenant host', function () {
+    $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
+    Tenant::factory()->create(['slug' => 'globex']);
+
+    $this->get('http://acmeio.blogravel.test/globex/')->assertNotFound();
+});
+
+test('unknown and reserved local path tenants return not found', function (string $slug) {
+    Tenant::factory()->create(['slug' => 'acmeio']);
+
+    $this->get("http://localhost/{$slug}/")->assertNotFound();
+})->with(['unknown', 'www']);
+
+test('bare local query tenant routing remains compatible', function () {
+    $tenant = Tenant::factory()->create(['domain' => 'acmeio.test']);
+
+    $this->get("http://localhost/?tenant={$tenant->id}")
+        ->assertOk()
+        ->assertSee($tenant->name);
 });

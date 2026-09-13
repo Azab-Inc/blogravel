@@ -4,6 +4,7 @@ const PLATFORM_HOST = 'blogravel.com';
 const ACME_HOST = 'acmeio.blogravel.com';
 const GLOBEX_HOST = 'globexnet.blogravel.com';
 const INVALID_HOST = 'unknown.blogravel.com';
+const LOCAL_TENANT_HOST = 'acmeio.localhost';
 
 async function gotoHost(page: Page, host: string, path = '/') {
   return page.goto(`http://${host}:8000${path}`);
@@ -46,6 +47,20 @@ test.describe('Tenant subdomain routing', () => {
 
     expect(response?.status()).toBe(404);
     await expect(page.locator('body')).toContainText(/not found|404/i);
+  });
+
+  test('renders a tenant on the local subdomain', async ({ page }) => {
+    const response = await gotoHost(page, LOCAL_TENANT_HOST);
+
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('header h1')).toContainText('acme.io');
+  });
+
+  test('renders a tenant on the local path', async ({ page }) => {
+    const response = await gotoHost(page, 'localhost', '/acmeio/');
+
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('header h1')).toContainText('acme.io');
   });
 
   test('preserves authentication while moving between platform and tenant hosts', async ({ page }) => {

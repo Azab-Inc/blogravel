@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Tenant;
+use App\Services\TenantHostResolver;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
@@ -12,6 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResolveTheme
 {
+    public function __construct(private TenantHostResolver $resolver) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         $tenant = $this->resolveTenant($request);
@@ -37,6 +40,15 @@ class ResolveTheme
         $routeTenant = $request->route('tenant');
         if ($routeTenant instanceof Tenant) {
             return $routeTenant;
+        }
+
+        $pathSlug = $request->route('tenantSlug');
+        if (is_string($pathSlug)) {
+            if (! $this->resolver->isLocalHost($request->getHost())) {
+                abort(404, 'Tenant not found.');
+            }
+
+            return $this->resolver->resolveSlug($pathSlug);
         }
 
         $host = strtolower($request->getHost());

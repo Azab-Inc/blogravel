@@ -115,6 +115,7 @@ Access the application:
 - **Platform root:** http://lvh.me:8000
 - **Admin (Filament):** http://lvh.me:8000/admin
 - **Tenant blog:** http://acme.lvh.me:8000
+- **Local tenant alternatives:** http://acmeio.localhost:8000 or http://localhost:8000/acmeio/
 - **Mailpit (email preview):** http://localhost:8025
 
 ### Tenant Domains
@@ -129,6 +130,8 @@ SESSION_DOMAIN=.example.com
 For production, point both `example.com` and `*.example.com` to the application with DNS. Provision a TLS certificate covering the root and wildcard names (`example.com` and `*.example.com`), and terminate HTTPS before forwarding requests to Laravel. `SESSION_DOMAIN` must use the leading dot so the authenticated session is available on the platform and tenant subdomains.
 
 Visit `http://acme.lvh.me:8000` for a tenant with slug `acme` and `http://lvh.me:8000/admin` for the platform admin. Although Docker Compose publishes the app on port 8000, use these hostnames rather than `localhost:8000` so the request matches the platform or tenant host middleware. The Playwright Chromium configuration separately maps `blogravel.com` and its wildcard subdomains to `127.0.0.1` when testing host-based routing.
+
+For local development, a tenant with slug `acmeio` is also available at `http://acmeio.localhost:8000` or under the bare local host at `http://localhost:8000/acmeio/`. The path form supports `/post/{slug}`, `/category/{slug}`, `/subscribe`, and `/contact`. Existing bare-local query URLs such as `http://localhost:8000/?tenant={tenant-id}` remain supported. Production tenant URLs continue to use `<slug>.<TENANCY_PLATFORM_DOMAIN>`; a path slug cannot override the tenant selected by a non-local host.
 
 ---
 

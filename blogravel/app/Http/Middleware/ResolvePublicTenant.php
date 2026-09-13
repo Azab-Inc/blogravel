@@ -33,7 +33,7 @@ class ResolvePublicTenant
             return $next($request);
         }
 
-        if ($this->isLocalHost($host)) {
+        if ($this->resolver->isLocalHost($host)) {
             $tenant = $this->resolveQueryTenant($request);
 
             if ($tenant) {
@@ -63,10 +63,5 @@ class ResolvePublicTenant
         }
 
         return Tenant::where('id', $identifier)->first();
-    }
-
-    private function isLocalHost(string $host): bool
-    {
-        return in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true);
     }
 }

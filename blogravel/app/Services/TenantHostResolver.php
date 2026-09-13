@@ -16,6 +16,11 @@ class TenantHostResolver
             return $tenant;
         }
 
+        $tenant = Tenant::whereRaw('LOWER(domain) = ?', [$host])->first();
+        if ($tenant) {
+            return $tenant;
+        }
+
         $platformDomain = strtolower(trim((string) config('tenancy.platform_domain')));
         $suffix = '.'.$platformDomain;
 

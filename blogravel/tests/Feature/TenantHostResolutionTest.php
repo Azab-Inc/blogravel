@@ -456,6 +456,35 @@ test('local path theme links preserve the tenant path', function () {
         ->assertSee('href="http://localhost/acmeio/contact"', false);
 });
 
+test('local path post and category back links preserve the tenant path', function () {
+    [$post, $category] = createLocalPathTenantContent();
+
+    $this->get('http://localhost/acmeio/post/'.$post->slug)
+        ->assertOk()
+        ->assertSee('href="http://localhost/acmeio"', false);
+
+    $this->get('http://localhost/acmeio/category/'.$category->slug)
+        ->assertOk()
+        ->assertSee('href="http://localhost/acmeio"', false);
+});
+
+test('local path success links preserve the tenant path', function () {
+    $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
+    Mail::fake();
+
+    $this->post('http://localhost/acmeio/subscribe', [
+        'email' => 'success@example.com',
+    ])->assertOk()->assertSee('href="http://localhost/acmeio"', false);
+
+    $this->post('http://localhost/acmeio/contact', [
+        'name' => 'Success User',
+        'email' => 'success@example.com',
+        'message' => 'Hello',
+    ])->assertOk()->assertSee('href="http://localhost/acmeio"', false);
+
+    expect($tenant->subscribers()->where('email', 'success@example.com')->exists())->toBeTrue();
+});
+
 test('local path subscribe writes only to the path tenant', function () {
     $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
     $otherTenant = Tenant::factory()->create(['slug' => 'globex']);

@@ -13,6 +13,6 @@
     {{ $posts->links() }}
 
     <div class="back-link">
-        <a href="{{ route('theme.home') }}?tenant={{ $tenant->id }}">← Back to all posts</a>
+        <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.home', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.home').'?tenant='.$tenant->id }}">← Back to all posts</a>
     </div>
 </x-theme::layouts.theme>

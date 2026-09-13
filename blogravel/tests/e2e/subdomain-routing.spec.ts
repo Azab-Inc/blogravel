@@ -56,6 +56,24 @@ test.describe('Tenant subdomain routing', () => {
     await expect(page.locator('header h1')).toContainText('acme.io');
   });
 
+  test('renders nested pages on the local tenant subdomain', async ({ page }) => {
+    for (const path of ['/post/omnis-qui-assumenda-nisi-in', '/category/howard-walker', '/subscribe', '/contact']) {
+      const response = await gotoHost(page, LOCAL_TENANT_HOST, path);
+
+      expect(response?.status()).toBe(200);
+      await expect(page).toHaveURL(`http://${LOCAL_TENANT_HOST}:8000${path}`);
+    }
+  });
+
+  test('submits a form on the local tenant subdomain', async ({ page }) => {
+    await gotoHost(page, LOCAL_TENANT_HOST, '/subscribe');
+    await page.locator('input[type="email"]').fill('playwright-subdomain@example.com');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(new RegExp(`^http://${LOCAL_TENANT_HOST}:8000/subscribe/[0-9a-f-]+$`));
+    await expect(page.locator('body')).toContainText(/thank|subscribed|success/i);
+  });
+
   test('renders a tenant on the local path', async ({ page }) => {
     const response = await gotoHost(page, 'localhost', '/acmeio/');
 

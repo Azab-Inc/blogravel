@@ -6,12 +6,15 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\Subscriber;
 use App\Models\Tenant;
+use App\Services\TenantHostResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 
 class ThemeController extends Controller
 {
+    public function __construct(private TenantHostResolver $resolver) {}
+
     public function home(Request $request): Response
     {
         $tenant = $this->resolveTenant($request);
@@ -139,12 +142,7 @@ class ThemeController extends Controller
             return $tenant;
         }
 
-        if ($localFallback instanceof Tenant && in_array(strtolower($request->getHost()), [
-            'localhost',
-            '127.0.0.1',
-            '::1',
-            'lvh.me',
-        ], true)) {
+        if ($localFallback instanceof Tenant && $this->resolver->isLocalHost($request->getHost())) {
             return $localFallback;
         }
 

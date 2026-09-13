@@ -403,12 +403,12 @@
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <header>
         <div class="container">
-            <h1><a href="{{ route('theme.home') }}?tenant={{ $tenant->id }}">{{ $tenant->name ?? 'Blog' }}</a></h1>
+            <h1><a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.home', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.home').'?tenant='.$tenant->id }}">{{ $tenant->name ?? 'Blog' }}</a></h1>
             <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Toggle navigation">☰</button>
             <nav id="primary-navigation" aria-label="Primary navigation">
-                <a href="{{ route('theme.home') }}?tenant={{ $tenant->id }}">Home</a>
-                <a href="{{ route('theme.subscribe') }}?tenant={{ $tenant->id }}">Subscribe</a>
-                <a href="{{ route('theme.contact') }}?tenant={{ $tenant->id }}">Contact</a>
+                <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.home', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.home').'?tenant='.$tenant->id }}">Home</a>
+                <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.subscribe', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.subscribe').'?tenant='.$tenant->id }}">Subscribe</a>
+                <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.contact', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.contact').'?tenant='.$tenant->id }}">Contact</a>
             </nav>
         </div>
     </header>

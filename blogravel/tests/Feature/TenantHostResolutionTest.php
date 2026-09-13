@@ -249,6 +249,20 @@ test('resolver matches a tenant by its exact custom domain', function () {
     expect($resolvedTenant?->is($tenant))->toBeTrue();
 });
 
+test('resolver recognizes normalized local hosts including IPv6 loopback', function (string $host) {
+    expect(app(TenantHostResolver::class)->isLocalHost($host))->toBeTrue();
+})->with([
+    'localhost',
+    'localhost:8000',
+    '127.0.0.1',
+    '127.0.0.1:8000',
+    '::1',
+    '[::1]',
+    '[::1]:8000',
+    'lvh.me',
+    'acmeio.localhost',
+]);
+
 test('custom domains are normalized before persistence and uniqueness is case insensitive', function () {
     $tenant = Tenant::factory()->create([
         'name' => 'Acme Bakery',
@@ -417,6 +431,60 @@ test('local path routing supports nested theme pages', function (string $path) {
 
     $this->get("http://localhost/acmeio{$path}")->assertOk();
 })->with(['/subscribe', '/contact']);
+
+test('local path theme forms post back to the local tenant routes', function () {
+    Tenant::factory()->create(['slug' => 'acmeio', 'name' => 'Acme IO']);
+
+    $this->get('http://localhost/acmeio/subscribe')
+        ->assertOk()
+        ->assertSee('action="http://localhost/acmeio/subscribe/', false);
+
+    $this->get('http://localhost/acmeio/contact')
+        ->assertOk()
+        ->assertSee('action="http://localhost/acmeio/contact/', false);
+});
+
+test('local path theme links preserve the tenant path', function () {
+    [$post, $category] = createLocalPathTenantContent();
+
+    $this->get('http://localhost/acmeio/')
+        ->assertOk()
+        ->assertSee('href="http://localhost/acmeio/post/'.$post->slug.'"', false)
+        ->assertSee('href="http://localhost/acmeio/category/'.$category->slug.'"', false)
+        ->assertSee('href="http://localhost/acmeio/subscribe"', false)
+        ->assertSee('href="http://localhost/acmeio/contact"', false);
+});
+
+test('local path subscribe writes only to the path tenant', function () {
+    $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
+    $otherTenant = Tenant::factory()->create(['slug' => 'globex']);
+
+    $this->post('http://localhost/acmeio/subscribe/'.$otherTenant->id, [
+        'email' => 'local@example.com',
+    ])->assertOk()->assertSee($tenant->name);
+
+    $this->assertDatabaseHas('subscribers', [
+        'email' => 'local@example.com',
+        'tenant_id' => $tenant->id,
+    ]);
+    $this->assertDatabaseMissing('subscribers', [
+        'email' => 'local@example.com',
+        'tenant_id' => $otherTenant->id,
+    ]);
+});
+
+test('local path contact dispatches only for the path tenant', function () {
+    Mail::fake();
+    $tenant = Tenant::factory()->create(['slug' => 'acmeio']);
+    $otherTenant = Tenant::factory()->create(['slug' => 'globex']);
+
+    $this->post('http://localhost/acmeio/contact/'.$otherTenant->id, [
+        'name' => 'Local User',
+        'email' => 'local@example.com',
+        'message' => 'Hello from local path',
+    ])->assertOk()->assertSee($tenant->name);
+
+});
 
 function createLocalPathTenantContent(): array
 {

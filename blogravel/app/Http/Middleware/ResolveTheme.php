@@ -48,7 +48,12 @@ class ResolveTheme
                 abort(404, 'Tenant not found.');
             }
 
-            return $this->resolver->resolveSlug($pathSlug);
+            $tenant = $this->resolver->resolveSlug($pathSlug);
+            if ($tenant) {
+                $request->attributes->set('tenant_path_slug', $pathSlug);
+            }
+
+            return $tenant;
         }
 
         $host = strtolower($request->getHost());

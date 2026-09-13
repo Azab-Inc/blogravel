@@ -81,14 +81,14 @@ class SoroWebhookController extends Controller
 
     private function resolveTenant(Request $request): ?Tenant
     {
-        $host = strtolower($request->getHost());
+        $host = $request->getHost();
         $tenant = $this->resolver->resolve($host);
 
         if ($tenant) {
             return $tenant;
         }
 
-        if (! $this->isLocalHost($host)) {
+        if (! $this->resolver->isLocalHost($host)) {
             return null;
         }
 
@@ -104,10 +104,5 @@ class SoroWebhookController extends Controller
         }
 
         return null;
-    }
-
-    private function isLocalHost(string $host): bool
-    {
-        return in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true);
     }
 }

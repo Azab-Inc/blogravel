@@ -20,6 +20,16 @@ test.describe('Theme Home Page', () => {
     await expect(page.locator('header h1')).toContainText('acme.io');
   });
 
+  test('keeps local path navigation on tenant routes', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/`);
+
+    await page.getByRole('link', { name: 'Subscribe' }).click();
+    await expect(page).toHaveURL(/\/acmeio\/subscribe$/);
+
+    await page.getByRole('link', { name: 'Contact' }).click();
+    await expect(page).toHaveURL(/\/acmeio\/contact$/);
+  });
+
   test('displays navigation links', async ({ page }) => {
     await page.goto(`${ACME_URL}/`);
     
@@ -113,6 +123,15 @@ test.describe('Theme Subscribe Page', () => {
     await expect(page.locator('h1:has-text("Subscribe")')).toBeVisible();
   });
 
+  test('submits the local path subscribe form', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+    await page.locator('input[type="email"]').fill('playwright-local@example.com');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/acmeio\/subscribe$/);
+    await expect(page.locator('body')).toContainText(/thank|subscribed|success/i);
+  });
+
   test('subscribe form has proper accessibility', async ({ page }) => {
     await page.goto(`${ACME_URL}/subscribe`);
     
@@ -142,6 +161,17 @@ test.describe('Theme Contact Page', () => {
 
     expect(response?.status()).toBe(200);
     await expect(page.locator('h1:has-text("Contact")')).toBeVisible();
+  });
+
+  test('submits the local path contact form', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/contact`);
+    await page.locator('input[name="name"]').fill('Playwright Local');
+    await page.locator('input[name="email"]').fill('playwright-local@example.com');
+    await page.locator('textarea[name="message"]').fill('Hello from the local path');
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/\/acmeio\/contact$/);
+    await expect(page.locator('body')).toContainText(/thank|sent|success/i);
   });
 
   test('contact form has proper accessibility', async ({ page }) => {

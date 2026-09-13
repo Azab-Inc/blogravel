@@ -41,6 +41,7 @@ class ResolveTenantHost
 
             if ($tenant) {
                 $request->attributes->set('tenant', $tenant);
+                $request->attributes->set('tenant_path_slug', $this->tenantPathSlug($request));
                 $this->forgetTenantPathParameter($request);
             } elseif ($this->hasLocalSubdomain($host) || $this->hasTenantPath($request)) {
                 abort(404, 'Tenant host not found.');

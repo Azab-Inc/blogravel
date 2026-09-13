@@ -6,7 +6,7 @@
         <ul>
             @foreach($categories as $cat)
                 <li>
-                    <a href="{{ route('theme.category', ['slug' => $cat->slug]) }}?tenant={{ $tenant->id }}">
+                    <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.category', ['tenantSlug' => request()->attributes->get('tenant_path_slug'), 'slug' => $cat->slug]) : route('theme.category', ['slug' => $cat->slug]).'?tenant='.$tenant->id }}">
                         {{ $cat->name }} ({{ $cat->posts_count }})
                     </a>
                 </li>

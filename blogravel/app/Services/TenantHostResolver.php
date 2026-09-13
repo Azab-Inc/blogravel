@@ -93,6 +93,12 @@ class TenantHostResolver
     {
         $host = strtolower(trim($host));
 
-        return str_contains($host, ':') ? explode(':', $host, 2)[0] : $host;
+        if (str_starts_with($host, '[')) {
+            $closingBracket = strpos($host, ']');
+
+            return $closingBracket === false ? $host : substr($host, 1, $closingBracket - 1);
+        }
+
+        return substr_count($host, ':') === 1 ? explode(':', $host, 2)[0] : $host;
     }
 }

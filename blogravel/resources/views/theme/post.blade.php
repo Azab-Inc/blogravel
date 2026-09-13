@@ -5,7 +5,7 @@
             By {{ $post->author->name }} · {{ $post->published_at->format('M j, Y') }}
             @if($post->categories->count())
                 · @foreach($post->categories as $cat)
-                    <a href="{{ route('theme.category', ['slug' => $cat->slug]) }}?tenant={{ $tenant->id }}">{{ $cat->name }}</a>{{ $loop->last ? '' : ', ' }}
+                    <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.category', ['tenantSlug' => request()->attributes->get('tenant_path_slug'), 'slug' => $cat->slug]) : route('theme.category', ['slug' => $cat->slug]).'?tenant='.$tenant->id }}">{{ $cat->name }}</a>{{ $loop->last ? '' : ', ' }}
                 @endforeach
             @endif
         </div>

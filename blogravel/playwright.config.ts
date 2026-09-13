@@ -6,9 +6,12 @@ export default defineConfig({
   expect: { timeout: 10000 },
   workers: 1,
   use: {
-    baseURL: 'http://localhost:8000',
+    baseURL: 'http://blogravel.com:8000',
     headless: true,
     screenshot: 'only-on-failure',
+    launchOptions: {
+      args: ['--host-resolver-rules=MAP blogravel.com 127.0.0.1,MAP *.blogravel.com 127.0.0.1'],
+    },
   },
   projects: [
     { name: 'setup', testMatch: /.*\.setup\.ts/ },

@@ -97,3 +97,12 @@ export async function login(page: Page) {
     }, { timeout: 15000 });
   } catch {}
 }
+
+export async function shareAuthAcrossSubdomains(page: Page) {
+  const cookies = await page.context().cookies('http://blogravel.com:8000');
+  const sharedCookies = cookies
+    .filter(cookie => cookie.name === 'blogravel-session')
+    .map(cookie => ({ ...cookie, domain: '.blogravel.com', path: '/' }));
+
+  await page.context().addCookies(sharedCookies);
+}

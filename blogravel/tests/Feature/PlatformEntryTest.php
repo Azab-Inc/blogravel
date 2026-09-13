@@ -61,6 +61,21 @@ test('tenant hosts resolve before theme rendering', function () {
     }
 });
 
+test('platform root cannot render a tenant post from a query parameter', function () {
+    $tenant = Tenant::factory()->create(['name' => 'Query Bakery']);
+    $author = User::factory()->forTenant($tenant)->create();
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $author->id,
+        'status' => PostStatus::Published,
+        'published_at' => now(),
+    ]);
+
+    $this->get("http://blogravel.com/post/{$post->slug}?tenant={$tenant->id}")
+        ->assertNotFound()
+        ->assertDontSee($post->title);
+});
+
 test('root responses use the configured session cookie domain', function () {
     $response = $this->get('http://blogravel.com/');
 

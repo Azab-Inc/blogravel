@@ -25,6 +25,10 @@ class ResolveTenantHost
         $platformDomain = strtolower(trim((string) config('tenancy.platform_domain')));
 
         if ($host === $platformDomain) {
+            if ($this->hasTenantQueryOnPublicRoute($request)) {
+                abort(404, 'Tenant host not found.');
+            }
+
             return $next($request);
         }
 
@@ -50,5 +54,11 @@ class ResolveTenantHost
     private function isLocalHost(string $host): bool
     {
         return in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true);
+    }
+
+    private function hasTenantQueryOnPublicRoute(Request $request): bool
+    {
+        return $request->query('tenant') !== null
+            && $request->is('post/*', 'category/*', 'subscribe', 'contact');
     }
 }

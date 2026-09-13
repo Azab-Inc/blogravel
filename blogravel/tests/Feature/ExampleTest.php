@@ -1,7 +1,7 @@
 <?php
 
-test('returns a successful response', function () {
+test('guests are redirected from the platform root to admin login', function () {
     $response = $this->get(route('home'));
 
-    $response->assertOk();
+    $response->assertRedirectToRoute('filament.admin.auth.login');
 });

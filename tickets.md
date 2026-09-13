@@ -28,7 +28,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#20](https://github.com/Azab-Inc/blogravel/issues/20) | WordPress import | Done |
 | [#21](https://github.com/Azab-Inc/blogravel/issues/21) | Settings infrastructure | Done |
 | [#22](https://github.com/Azab-Inc/blogravel/issues/22) | Media storage & uploads | Done |
-| [#46](https://github.com/Azab-Inc/blogravel/issues/46) | Tenant subdomain routing & root-domain entrypoint | Done |
+| [#46](https://github.com/Azab-Inc/blogravel/issues/46) | Tenant subdomain routing & root-domain entrypoint | Todo |
 | [#23](https://github.com/Azab-Inc/blogravel/issues/23) | CI/CD pipeline (GitHub Actions) | Todo |
 | [#24](https://github.com/Azab-Inc/blogravel/issues/24) | GDPR subscriber data deletion & privacy controls | Done |
 | [#25](https://github.com/Azab-Inc/blogravel/issues/25) | Automated database backups | Done |

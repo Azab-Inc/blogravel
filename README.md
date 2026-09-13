@@ -104,8 +104,9 @@ docker compose exec laravel.test composer setup
 
 Access the application:
 
-- **App:** http://localhost:8000
-- **Admin (Filament):** http://localhost:8000/admin
+- **Platform root:** http://lvh.me:8000
+- **Admin (Filament):** http://lvh.me:8000/admin
+- **Tenant blog:** http://acme.lvh.me:8000
 - **Mailpit (email preview):** http://localhost:8025
 
 ### Tenant Domains
@@ -126,7 +127,7 @@ TENANCY_PLATFORM_DOMAIN=lvh.me
 SESSION_DOMAIN=.lvh.me
 ```
 
-Visit `http://acme.lvh.me:8000` for a tenant and `http://lvh.me:8000/admin` for the platform admin. The Docker Compose development setup can continue using `localhost:8000`; the Playwright Chromium configuration maps `blogravel.com` and its wildcard subdomains to `127.0.0.1` when testing host-based routing.
+Visit `http://acme.lvh.me:8000` for a tenant and `http://lvh.me:8000/admin` for the platform admin. Although Docker Compose publishes the app on port 8000, use these hostnames rather than `localhost:8000` so the request matches the platform or tenant host middleware. The Playwright Chromium configuration maps `blogravel.com` and its wildcard subdomains to `127.0.0.1` when testing host-based routing.
 
 ---
 

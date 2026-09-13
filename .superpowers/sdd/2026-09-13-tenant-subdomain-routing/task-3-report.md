@@ -203,6 +203,24 @@ git diff --check
 
 Issue #46 remains `Todo` because the full suite still has the unrelated existing Filament failures documented above.
 
+## Final Soro Webhook Isolation Finding
+
+Added Pest regressions for unknown-host query injection and generated/custom tenant-host resolution. Before the fix, an unknown host with a valid HMAC and `?tenant=` created a post, while generated and custom hosts returned `404` without a query tenant.
+
+The webhook now resolves generated, custom, and legacy domains through `TenantHostResolver`; query-based tenant selection is limited to explicit local hosts. Local domain/UUID compatibility is preserved without issuing PostgreSQL UUID comparisons for non-UUID domain values.
+
+### Verification
+
+```text
+SQLite focused Soro/API/tenant/platform/theme matrix: 144 passed, 1 skipped, 426 assertions
+PostgreSQL Soro and tenant resolution tests: 43 passed, 70 assertions
+npx playwright test tests/e2e/subdomain-routing.spec.ts tests/e2e/theme-pages.spec.ts --project=chromium: 22 passed
+vendor/bin/pint --dirty --format agent: passed
+git diff --check: passed
+```
+
+Issue #46 remains `OPEN`; project #17 remains `Todo`; `tickets.md` remains `Todo`.
+
 ## Final Acceptance Verification
 
 - SQLite tenant resolution regression: `33 passed, 1 skipped, 52 assertions`.

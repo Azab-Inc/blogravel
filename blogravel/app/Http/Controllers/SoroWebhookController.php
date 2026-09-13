@@ -7,12 +7,15 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Models\Tenant;
+use App\Services\TenantHostResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class SoroWebhookController extends Controller
 {
+    public function __construct(private TenantHostResolver $resolver) {}
+
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -79,20 +82,32 @@ class SoroWebhookController extends Controller
     private function resolveTenant(Request $request): ?Tenant
     {
         $host = strtolower($request->getHost());
-        if (str_contains($host, ':')) {
-            $host = explode(':', $host, 2)[0];
-        }
+        $tenant = $this->resolver->resolve($host);
 
-        $tenant = Tenant::where('domain', $host)->first();
         if ($tenant) {
             return $tenant;
         }
 
+        if (! $this->isLocalHost($host)) {
+            return null;
+        }
+
         $param = $request->input('tenant');
         if ($param) {
-            return Tenant::where('domain', $param)->orWhere('id', $param)->first();
+            $query = Tenant::where('domain', $param);
+
+            if (Str::isUuid($param)) {
+                $query->orWhere('id', $param);
+            }
+
+            return $query->first();
         }
 
         return null;
+    }
+
+    private function isLocalHost(string $host): bool
+    {
+        return in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true);
     }
 }

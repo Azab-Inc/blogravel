@@ -17,9 +17,29 @@ class Tenant extends BaseModel
 
     protected static function booted(): void
     {
-        static::creating(function (Tenant $tenant): void {
-            if ($tenant->slug && ! $tenant->isReservedSlug($tenant->slug)) {
+        static::saving(function (Tenant $tenant): void {
+            if (! $tenant->isDirty('slug') || $tenant->slug === null) {
                 return;
+            }
+
+            $normalizedSlug = Str::slug((string) $tenant->slug);
+            if ($normalizedSlug !== '' && ! $tenant->isReservedSlug($normalizedSlug)) {
+                $tenant->slug = $normalizedSlug;
+            } elseif ($tenant->exists) {
+                $tenant->slug = 'tenant-'.$tenant->getKey();
+            }
+        });
+
+        static::creating(function (Tenant $tenant): void {
+            if ($tenant->slug !== null) {
+                $normalizedSlug = Str::slug((string) $tenant->slug);
+                if ($normalizedSlug !== '' && ! $tenant->isReservedSlug($normalizedSlug)) {
+                    $tenant->slug = $normalizedSlug;
+
+                    return;
+                }
+
+                $tenant->slug = 'tenant-'.$tenant->getKey();
             }
 
             $baseSlug = $tenant->slug

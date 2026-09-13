@@ -55,6 +55,36 @@ test('explicit reserved slugs receive deterministic fallback slugs', function (s
     expect($tenant->slug)->toBe('tenant-'.$tenant->id);
 })->with(['admin', 'API', 'www']);
 
+test('explicit whitespace slugs receive safe fallbacks on create and update', function () {
+    $tenant = Tenant::factory()->create([
+        'name' => 'Whitespace Tenant',
+        'slug' => '   ',
+    ]);
+
+    expect($tenant->slug)->toBe('tenant-'.$tenant->id);
+
+    $tenant->update(['slug' => "\t\n"]);
+
+    expect($tenant->fresh()->slug)->toBe('tenant-'.$tenant->id);
+});
+
+test('explicit malformed slugs are normalized on create and update', function () {
+    $tenant = Tenant::factory()->create([
+        'name' => 'Malformed Tenant',
+        'slug' => 'Malformed Tenant/One',
+    ]);
+
+    expect($tenant->slug)->toBe('malformed-tenantone');
+
+    $tenant->update(['slug' => 'stable-tenant']);
+
+    expect($tenant->fresh()->slug)->toBe('stable-tenant');
+
+    $tenant->update(['slug' => 'another_malformed slug']);
+
+    expect($tenant->fresh()->slug)->toBe('another-malformed-slug');
+});
+
 test('slug generation retries after a concurrent database uniqueness collision', function () {
     $inserted = false;
     Event::listen('eloquent.creating: '.Tenant::class, function (Tenant $tenant) use (&$inserted): void {

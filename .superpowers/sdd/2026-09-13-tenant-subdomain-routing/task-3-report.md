@@ -270,3 +270,16 @@ GET /api/v1/posts without authentication: 401
 ```
 
 Issue #46 remains `Todo` because the full suite still has the unrelated existing Filament failures.
+
+## Final Verification Update
+
+Fresh verification after the final Soro and platform-root isolation fixes:
+
+```text
+Focused Pest: 112 passed, 1 skipped
+Focused Playwright routing/theme: 22 passed
+Full Pest: 439 passed, 12 failed, 5 skipped
+Full Chromium: 57 passed, 1 failed
+```
+
+The full Pest failures remain in existing Filament AI/settings tests. The full Chromium failure remains the existing generated-password flow in `tests/e2e/user-password.spec.ts`. Feature-specific focused suites pass, so #46 remains `OPEN`/`Todo` rather than being marked complete.

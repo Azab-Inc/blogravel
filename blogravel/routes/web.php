@@ -22,15 +22,17 @@ Route::middleware(['tenant.host', 'theme.resolve'])->group(function () {
 });
 
 // Feeds
-Route::get('/feeds/{resource}', [FeedController::class, 'posts'])
-    ->whereIn('resource', ['posts'])
-    ->name('feed.posts');
+Route::middleware('tenant.host')->group(function () {
+    Route::get('/feeds/{resource}', [FeedController::class, 'posts'])
+        ->whereIn('resource', ['posts'])
+        ->name('feed.posts');
 
-Route::get('/feeds/categories/{slug}', [FeedController::class, 'category'])
-    ->name('feed.category');
+    Route::get('/feeds/categories/{slug}', [FeedController::class, 'category'])
+        ->name('feed.category');
 
-Route::get('/feeds/authors/{author}', [FeedController::class, 'author'])
-    ->name('feed.author');
+    Route::get('/feeds/authors/{author}', [FeedController::class, 'author'])
+        ->name('feed.author');
+});
 
 // Invitations
 Route::get('/invitations/{token}', [InvitationController::class, 'show'])

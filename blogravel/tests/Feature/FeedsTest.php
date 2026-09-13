@@ -85,6 +85,36 @@ it('returns 404 for unknown tenant', function () {
         ->assertNotFound();
 });
 
+it('does not let an unknown host use a tenant parameter to expose a feed', function () {
+    $this->get("http://unknown.blogravel.com/feeds/posts?tenant={$this->tenant->id}")
+        ->assertNotFound();
+});
+
+it('does not let the platform host use a tenant parameter to expose a feed', function () {
+    $this->get("http://blogravel.com/feeds/posts?tenant={$this->tenant->id}")
+        ->assertNotFound();
+});
+
+it('uses the tenant host instead of a different feed tenant parameter', function () {
+    $otherTenant = Tenant::factory()->create(['name' => 'Other Feed Tenant']);
+
+    $response = $this->get("http://{$this->tenant->slug}.blogravel.com/feeds/posts?tenant={$otherTenant->id}&format=json");
+
+    $response->assertOk();
+    expect($response->json('title'))->toContain($this->tenant->name)
+        ->and($response->json('title'))->not->toContain($otherTenant->name);
+});
+
+it('preserves legacy domain feed resolution while ignoring a different tenant parameter', function () {
+    $otherTenant = Tenant::factory()->create(['name' => 'Other Feed Tenant']);
+
+    $response = $this->get("http://feedtest.com/feeds/posts?tenant={$otherTenant->id}&format=json");
+
+    $response->assertOk();
+    expect($response->json('title'))->toContain($this->tenant->name)
+        ->and($response->json('title'))->not->toContain($otherTenant->name);
+});
+
 it('RSS feed contains author name and categories', function () {
     $body = $this->get(route('feed.posts', ['resource' => 'posts', 'format' => 'xml', 'tenant' => $this->tenant->id]))->getContent();
     $this->assertStringContainsString('<dc:creator>'.$this->author->name.'</dc:creator>', $body);
@@ -100,6 +130,6 @@ it('JSON feed contains author and tags', function () {
 it('auto-discovery tags present on welcome page', function () {
     $this->get("http://{$this->tenant->slug}.blogravel.com/")
         ->assertOk()
-        ->assertSee('type="application/rss+xml"')
-        ->assertSee('type="application/atom+xml"');
+        ->assertSeeHtml('type="application/rss+xml"')
+        ->assertSeeHtml('type="application/atom+xml"');
 });

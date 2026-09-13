@@ -3,10 +3,12 @@
 use App\Http\Middleware\ResolveTenantHost;
 use App\Models\Tenant;
 use App\Services\TenantHostResolver;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -29,8 +31,41 @@ test('tenant factory generates unique slugs from tenant names', function () {
         ->and($firstTenant->domain)->toBe('legacy.example');
 });
 
+test('tenant names without slug content receive a deterministic fallback slug', function () {
+    $tenant = Tenant::factory()->create([
+        'name' => '!!!',
+    ]);
+
+    expect($tenant->slug)->toBe('tenant-'.$tenant->id);
+});
+
+test('slug generation retries after a concurrent database uniqueness collision', function () {
+    $inserted = false;
+    Event::listen('eloquent.creating: '.Tenant::class, function (Tenant $tenant) use (&$inserted): void {
+        if ($inserted || $tenant->name !== 'Concurrent Bakery') {
+            return;
+        }
+
+        $inserted = true;
+        DB::table('tenants')->insert([
+            'id' => (string) Str::uuid(),
+            'domain' => 'concurrent.example',
+            'slug' => 'concurrent-bakery',
+            'custom_domain' => null,
+            'name' => 'Concurrent Bakery',
+            'plan' => 'free',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    });
+
+    $tenant = Tenant::factory()->create(['name' => 'Concurrent Bakery']);
+
+    expect($tenant->slug)->toBe('concurrent-bakery-2');
+});
+
 test('tenant migration backfills existing rows before enforcing slug constraints', function () {
-    Artisan::call('migrate:rollback', ['--step' => 1]);
+    Artisan::call('migrate:rollback', ['--step' => 2]);
 
     $firstId = (string) Str::uuid();
     $secondId = (string) Str::uuid();
@@ -79,6 +114,33 @@ test('resolver matches a tenant by its exact custom domain', function () {
     $resolvedTenant = app(TenantHostResolver::class)->resolve('WWW.ACME.TEST');
 
     expect($resolvedTenant?->is($tenant))->toBeTrue();
+});
+
+test('custom domains are normalized before persistence and uniqueness is case insensitive', function () {
+    $tenant = Tenant::factory()->create([
+        'name' => 'Acme Bakery',
+        'custom_domain' => ' WWW.ACME.TEST ',
+    ]);
+
+    expect($tenant->custom_domain)->toBe('www.acme.test');
+
+    expect(fn () => Tenant::factory()->create([
+        'name' => 'Other Bakery',
+        'custom_domain' => 'WWW.ACME.TEST',
+    ]))->toThrow(QueryException::class);
+});
+
+test('reserved platform labels are rejected before custom and legacy domain matching', function () {
+    Tenant::factory()->create([
+        'name' => 'Custom Admin Tenant',
+        'custom_domain' => 'admin.blogravel.test',
+    ]);
+    Tenant::factory()->create([
+        'name' => 'Legacy Admin Tenant',
+        'domain' => 'admin.blogravel.test',
+    ]);
+
+    expect(app(TenantHostResolver::class)->resolve('admin.blogravel.test'))->toBeNull();
 });
 
 test('resolver rejects unknown reserved and malformed hosts', function (string $host) {

@@ -121,21 +121,23 @@ class FeedController extends Controller
 
     private function resolveTenant(Request $request): Tenant
     {
+        $attributeTenant = $request->attributes->get('tenant');
+        if ($attributeTenant instanceof Tenant) {
+            return $attributeTenant;
+        }
+
         $host = strtolower($request->getHost());
         if (str_contains($host, ':')) {
             $host = explode(':', $host, 2)[0];
         }
 
-        $tenant = Tenant::where('domain', $host)->first();
-        if ($tenant) {
-            return $tenant;
-        }
-
-        $param = $request->input('tenant');
-        if ($param) {
-            $tenant = Tenant::where('domain', $param)->orWhere('id', $param)->first();
-            if ($tenant) {
-                return $tenant;
+        if (in_array($host, ['localhost', '127.0.0.1', '::1', 'lvh.me'], true)) {
+            $param = $request->input('tenant');
+            if ($param) {
+                $tenant = Tenant::where('domain', $param)->orWhere('id', $param)->first();
+                if ($tenant) {
+                    return $tenant;
+                }
             }
         }
 

@@ -100,6 +100,6 @@ it('JSON feed contains author and tags', function () {
 it('auto-discovery tags present on welcome page', function () {
     $this->get("http://{$this->tenant->slug}.blogravel.com/")
         ->assertOk()
-        ->assertSeeHtml('type="application/rss+xml"')
-        ->assertSeeHtml('type="application/atom+xml"');
+        ->assertSee('type="application/rss+xml"')
+        ->assertSee('type="application/atom+xml"');
 });

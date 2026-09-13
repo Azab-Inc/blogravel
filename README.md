@@ -90,6 +90,14 @@ Copy the environment file:
 cp blogravel/.env.example blogravel/.env
 ```
 
+Before starting the stack, configure the local wildcard hosts in `blogravel/.env`. `lvh.me` resolves to `127.0.0.1` without a hosts-file entry, and the platform domain must match the host used for the root and admin URLs:
+
+```dotenv
+APP_URL=http://lvh.me:8000
+TENANCY_PLATFORM_DOMAIN=lvh.me
+SESSION_DOMAIN=.lvh.me
+```
+
 Start the stack with Docker Compose (app + PostgreSQL + Redis + queue worker + Mailpit):
 
 ```bash
@@ -120,14 +128,7 @@ SESSION_DOMAIN=.example.com
 
 For production, point both `example.com` and `*.example.com` to the application with DNS. Provision a TLS certificate covering the root and wildcard names (`example.com` and `*.example.com`), and terminate HTTPS before forwarding requests to Laravel. `SESSION_DOMAIN` must use the leading dot so the authenticated session is available on the platform and tenant subdomains.
 
-For local wildcard hosts, use `lvh.me`, which resolves to `127.0.0.1` without a hosts-file entry:
-
-```dotenv
-TENANCY_PLATFORM_DOMAIN=lvh.me
-SESSION_DOMAIN=.lvh.me
-```
-
-Visit `http://acme.lvh.me:8000` for a tenant and `http://lvh.me:8000/admin` for the platform admin. Although Docker Compose publishes the app on port 8000, use these hostnames rather than `localhost:8000` so the request matches the platform or tenant host middleware. The Playwright Chromium configuration maps `blogravel.com` and its wildcard subdomains to `127.0.0.1` when testing host-based routing.
+Visit `http://acme.lvh.me:8000` for a tenant with slug `acme` and `http://lvh.me:8000/admin` for the platform admin. Although Docker Compose publishes the app on port 8000, use these hostnames rather than `localhost:8000` so the request matches the platform or tenant host middleware. The Playwright Chromium configuration separately maps `blogravel.com` and its wildcard subdomains to `127.0.0.1` when testing host-based routing.
 
 ---
 

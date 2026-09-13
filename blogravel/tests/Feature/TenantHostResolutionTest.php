@@ -286,6 +286,19 @@ test('middleware returns a clear not found response for invalid tenant hosts', f
     $middleware->handle($request, fn () => new Response('unexpected'));
 })->throws(NotFoundHttpException::class, 'Tenant host not found.');
 
+test('unknown hosts cannot reach the admin web surface', function () {
+    $this->get('http://unknown.blogravel.test/admin')
+        ->assertNotFound();
+});
+
+test('reserved and malformed hosts cannot reach the debug web surface', function (string $host) {
+    $this->get("http://{$host}/debug/session-check")
+        ->assertNotFound();
+})->with([
+    'admin.blogravel.test',
+    'nested.acme-bakery.blogravel.test',
+]);
+
 test('host resolution never returns another tenant for a different host', function () {
     $tenantA = Tenant::factory()->create(['name' => 'Acme Bakery']);
     $tenantB = Tenant::factory()->create(['name' => 'Beta Bakery']);

@@ -11,7 +11,7 @@ Route::domain((string) config('tenancy.platform_domain'))
     ->name('home');
 
 // Theme frontend routes
-Route::middleware(['tenant.host', 'theme.resolve'])->group(function () {
+Route::middleware('theme.resolve')->group(function () {
     Route::get('/', [ThemeController::class, 'home'])->name('theme.home');
     Route::get('/post/{slug}', [ThemeController::class, 'post'])->name('theme.post');
     Route::get('/category/{slug}', [ThemeController::class, 'category'])->name('theme.category');
@@ -22,17 +22,15 @@ Route::middleware(['tenant.host', 'theme.resolve'])->group(function () {
 });
 
 // Feeds
-Route::middleware('tenant.host')->group(function () {
-    Route::get('/feeds/{resource}', [FeedController::class, 'posts'])
-        ->whereIn('resource', ['posts'])
-        ->name('feed.posts');
+Route::get('/feeds/{resource}', [FeedController::class, 'posts'])
+    ->whereIn('resource', ['posts'])
+    ->name('feed.posts');
 
-    Route::get('/feeds/categories/{slug}', [FeedController::class, 'category'])
-        ->name('feed.category');
+Route::get('/feeds/categories/{slug}', [FeedController::class, 'category'])
+    ->name('feed.category');
 
-    Route::get('/feeds/authors/{author}', [FeedController::class, 'author'])
-        ->name('feed.author');
-});
+Route::get('/feeds/authors/{author}', [FeedController::class, 'author'])
+    ->name('feed.author');
 
 // Invitations
 Route::get('/invitations/{token}', [InvitationController::class, 'show'])

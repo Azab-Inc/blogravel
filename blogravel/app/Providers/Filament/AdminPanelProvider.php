@@ -7,6 +7,7 @@ use App\Filament\Pages\Auth\Register;
 use App\Filament\Widgets\LatestPosts;
 use App\Filament\Widgets\OpenModeWarning;
 use App\Filament\Widgets\StatsOverview;
+use App\Http\Middleware\ResolveTenantHost;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
@@ -57,6 +58,7 @@ class AdminPanelProvider extends PanelProvider
                 OpenModeWarning::class,
             ])
             ->middleware([
+                ResolveTenantHost::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

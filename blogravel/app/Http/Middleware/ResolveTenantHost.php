@@ -24,6 +24,10 @@ class ResolveTenantHost
             return $next($request);
         }
 
+        if ($this->isLocalHost($host)) {
+            return $next($request);
+        }
+
         $tenant = $this->resolver->resolve($host);
         if ($tenant) {
             $request->attributes->set('tenant', $tenant);
@@ -33,10 +37,6 @@ class ResolveTenantHost
                 $route->setParameter('tenant', $tenant);
             }
 
-            return $next($request);
-        }
-
-        if ($this->isLocalHost($host) && ($request->route('tenant') || $request->filled('tenant'))) {
             return $next($request);
         }
 

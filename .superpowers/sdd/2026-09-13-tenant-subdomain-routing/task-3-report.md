@@ -168,7 +168,7 @@ vendor/bin/pint --dirty --format agent
 git diff --check
 ```
 
-The full Laravel suite ran with `412 passed` and `4 failed` in unrelated existing Filament action/settings coverage. Issue #46 remains `Todo` and was not marked complete because the full suite is not fully green.
+The full Laravel suite ran with `416 passed` and `4 failed` in unrelated existing Filament action/settings coverage. Issue #46 remains `Todo` and was not marked complete because the full suite is not fully green.
 
 ## Final Concerns
 
@@ -204,3 +204,31 @@ git diff --check
 Issue #46 remains `Todo` because the full suite still has the unrelated existing Filament failures documented above.
 
 The full combined focused fileset under PostgreSQL is not clean because the existing unknown-tenant feed test passes the non-UUID literal `nonexistent` into a UUID column and returns 500; that failure aborts the test transaction for subsequent tests. The migration backfill, collision, and new PostgreSQL index tests pass when run independently against the PostgreSQL `testing` database.
+
+## Final Whole-Branch Findings
+
+### Web Host Validation
+
+Added Pest regressions for unknown `/admin` requests and reserved/malformed `/debug/session-check` requests. Web host validation now runs at the shared web middleware boundary, with the Filament panel covered explicitly and duplicate theme/feed route middleware removed. Platform, valid tenant, and established local hosts retain their existing behavior; API and health routes remain outside this boundary.
+
+### Authentication Continuity
+
+Removed the Playwright manual cookie rewrite. The setup now asserts that the login response emits the configured `.blogravel.com` session cookie, and the routing spec verifies authenticated access to the protected tenant-host `/admin` route.
+
+### Verification
+
+```text
+php artisan test --compact tests/Feature/FeedsTest.php tests/Feature/TenantHostResolutionTest.php
+54 tests: 53 passed, 1 skipped, 181 assertions
+
+npx playwright test tests/e2e/subdomain-routing.spec.ts tests/e2e/theme-pages.spec.ts --project=chromium
+22 passed
+
+php artisan test --compact
+434 tests: 416 passed, 4 failed (unrelated existing Filament failures)
+
+GET /up: 200
+GET /api/v1/posts without authentication: 401
+```
+
+Issue #46 remains `Todo` because the full suite still has the unrelated existing Filament failures.

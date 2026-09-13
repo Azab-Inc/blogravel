@@ -133,6 +133,8 @@ Visit `http://acme.lvh.me:8000` for a tenant with slug `acme` and `http://lvh.me
 
 For local development, a tenant with slug `acmeio` is also available at `http://acmeio.localhost:8000` or under the bare local host at `http://localhost:8000/acmeio/`. The path form supports `/post/{slug}`, `/category/{slug}`, `/subscribe`, and `/contact`. Existing bare-local query URLs such as `http://localhost:8000/?tenant={tenant-id}` remain supported. Production tenant URLs continue to use `<slug>.<TENANCY_PLATFORM_DOMAIN>`; a path slug cannot override the tenant selected by a non-local host.
 
+The default `.env.example` keeps `SESSION_DOMAIN=.blogravel.com` for hosted platform and tenant subdomain sessions. The application automatically emits host-only session cookies for `localhost` and `*.localhost`, which keeps localhost admin login sessions usable without changing shared process configuration under Octane. Keep the hosted value when testing the mapped `blogravel.com` hosts.
+
 ---
 
 ## Running Tests

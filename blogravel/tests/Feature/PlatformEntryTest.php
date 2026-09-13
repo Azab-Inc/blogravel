@@ -84,6 +84,19 @@ test('root responses use the configured session cookie domain', function () {
         ?->getDomain())->toBe('.blogravel.test');
 });
 
+test('localhost admin login emits a session cookie accepted by the local host', function () {
+    $response = $this->get('http://localhost/admin/login');
+    $cookie = collect($response->headers->getCookies())
+        ->first(fn ($cookie) => $cookie->getName() === config('session.cookie'));
+
+    expect($cookie)->not->toBeNull()
+        ->and($cookie?->getDomain())->toBeNull();
+
+    $this->withCookie(config('session.cookie'), $cookie->getValue())
+        ->get('http://localhost/debug/session-check')
+        ->assertSee('id=');
+});
+
 test('tenant host identity takes precedence over a different query tenant', function () {
     $hostTenant = Tenant::factory()->create(['name' => 'Host Bakery']);
     $queryTenant = Tenant::factory()->create(['name' => 'Query Bakery']);

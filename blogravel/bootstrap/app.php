@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureWithinPlanLimits;
 use App\Http\Middleware\ResolvePublicTenant;
 use App\Http\Middleware\ResolveTenantHost;
 use App\Http\Middleware\ResolveTheme;
+use App\Http\Middleware\UseLocalSessionCookies;
 use App\Http\Middleware\VerifyWebhookSignature;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'public.tenant' => ResolvePublicTenant::class,
         ]);
         $middleware->prepend(ResolveTenantHost::class);
+        $middleware->append(UseLocalSessionCookies::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $rfc9457Types = [

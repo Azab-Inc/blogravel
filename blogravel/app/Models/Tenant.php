@@ -26,7 +26,17 @@ class Tenant extends BaseModel
             if ($normalizedSlug !== '' && ! $tenant->isReservedSlug($normalizedSlug)) {
                 $tenant->slug = $normalizedSlug;
             } elseif ($tenant->exists) {
-                $tenant->slug = 'tenant-'.$tenant->getKey();
+                $baseSlug = 'tenant-'.$tenant->getKey();
+                $tenant->slug = $baseSlug;
+                $suffix = 2;
+
+                while (static::withTrashed()
+                    ->where('slug', $tenant->slug)
+                    ->where('id', '!=', $tenant->getKey())
+                    ->exists()) {
+                    $tenant->slug = $baseSlug.'-'.$suffix;
+                    $suffix++;
+                }
             }
         });
 

@@ -68,6 +68,16 @@ test('explicit whitespace slugs receive safe fallbacks on create and update', fu
     expect($tenant->fresh()->slug)->toBe('tenant-'.$tenant->id);
 });
 
+test('fallback slug updates skip soft-deleted tenant collisions', function () {
+    $tenant = Tenant::factory()->create(['slug' => 'stable-tenant']);
+    $collision = Tenant::factory()->create(['slug' => 'tenant-'.$tenant->id]);
+    $collision->delete();
+
+    $tenant->update(['slug' => 'admin']);
+
+    expect($tenant->fresh()->slug)->toBe('tenant-'.$tenant->id.'-2');
+});
+
 test('explicit malformed slugs are normalized on create and update', function () {
     $tenant = Tenant::factory()->create([
         'name' => 'Malformed Tenant',

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\UserResource\Pages;
 use App\Actions\AuthorizeSuperAdminAssignment;
 use App\Enums\Role;
 use App\Filament\Resources\UserResource;
+use App\Services\AccountLifecycleService;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -30,7 +31,11 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->modalDescription('Removing this user blocks self-recovery. They may only create a new account with the same email.')
+                ->action(function (AccountLifecycleService $lifecycle): void {
+                    $lifecycle->remove(auth()->user(), $this->getRecord());
+                }),
         ];
     }
 }

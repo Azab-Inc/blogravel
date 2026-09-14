@@ -4,8 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Enums\Role;
 use App\Models\Setting;
-use App\Models\User;
 use App\Providers\ThemeServiceProvider;
+use App\Services\AccountLifecycleService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -130,7 +130,7 @@ class Settings extends Page
                                 Placeholder::make('closure_warning')
                                     ->content(function () {
                                         $user = Auth::user();
-                                        if ($this->isLastAdmin($user)) {
+                                        if (app(AccountLifecycleService::class)->isLastAdministrator($user)) {
                                             return 'You are the only administrator. Closing this account will also close your tenant. You have 30 days to recover your account and tenant by contacting support.';
                                         }
 
@@ -142,9 +142,12 @@ class Settings extends Page
                                     ->icon('heroicon-o-trash')
                                     ->requiresConfirmation()
                                     ->modalHeading('Close Account')
-                                    ->modalDescription('Are you sure you want to close your account? This action can be reversed within 30 days by contacting support.')
+                                    ->modalDescription('Are you sure you want to close your account? If you are the last administrator, your tenant will also be closed. This action can be reversed within 30 days by contacting support.')
                                     ->modalSubmitActionLabel('Yes, Close My Account')
-                                    ->action(fn () => $this->closeAccount()),
+                                    ->form(fn (): array => $this->getCloseAccountForm())
+                                    ->action(function (array $data, AccountLifecycleService $lifecycle): void {
+                                        $this->closeAccount($data['tenant_confirmation'] ?? null, $lifecycle);
+                                    }),
                             ]),
                     ]),
 
@@ -200,16 +203,14 @@ class Settings extends Page
             ->send();
     }
 
-    public function closeAccount(): void
+    public function closeAccount(?string $tenantConfirmation = null, ?AccountLifecycleService $lifecycle = null): void
     {
         $user = Auth::user();
-        $isLastAdmin = $this->isLastAdmin($user);
+        $lifecycle ??= app(AccountLifecycleService::class);
+        $isLastAdministrator = $lifecycle->isLastAdministrator($user);
+        $tenantConfirmation ??= $isLastAdministrator ? $user->tenant?->name : null;
 
-        if ($isLastAdmin && $user->tenant_id) {
-            $user->tenant->delete();
-        }
-
-        $user->delete();
+        $lifecycle->close($user, $tenantConfirmation);
 
         Auth::logout();
 
@@ -233,16 +234,21 @@ class Settings extends Page
         return in_array($user->role, [Role::SuperAdmin, Role::Admin]);
     }
 
-    protected function isLastAdmin(User $user): bool
+    protected function getCloseAccountForm(): array
     {
-        if (! in_array($user->role, [Role::SuperAdmin, Role::Admin])) {
-            return false;
+        $user = Auth::user();
+        $tenant = $user->tenant;
+
+        if ($tenant === null || ! app(AccountLifecycleService::class)->isLastAdministrator($user)) {
+            return [];
         }
 
-        return ! User::where('tenant_id', $user->tenant_id)
-            ->where('id', '!=', $user->id)
-            ->whereIn('role', [Role::SuperAdmin, Role::Admin])
-            ->exists();
+        return [
+            TextInput::make('tenant_confirmation')
+                ->label('Type the tenant name or slug to confirm')
+                ->required()
+                ->in(array_values(array_filter([$tenant->name, $tenant->slug]))),
+        ];
     }
 
     protected function getSetting(string $key, ?string $default = null): ?string

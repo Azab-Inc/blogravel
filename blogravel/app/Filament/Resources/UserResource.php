@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\Role;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Services\AccountLifecycleService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
@@ -19,6 +20,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Throwable;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -97,7 +99,20 @@ class UserResource extends Resource
                 EditAction::make(),
             ])
             ->toolbarActions([
-                DeleteBulkAction::make(),
+                DeleteBulkAction::make()
+                    ->authorize(fn (): bool => UserResource::canViewAny())
+                    ->authorizeIndividualRecords('delete')
+                    ->modalDescription('Removing these users blocks self-recovery. They may only create new accounts with the same emails.')
+                    ->using(function (DeleteBulkAction $action, AccountLifecycleService $lifecycle): void {
+                        $action->getIndividuallyAuthorizedSelectedRecords()->each(function (User $record) use ($action, $lifecycle): void {
+                            try {
+                                $lifecycle->remove(auth()->user(), $record);
+                            } catch (Throwable $exception) {
+                                $action->reportBulkProcessingFailure();
+                                report($exception);
+                            }
+                        });
+                    }),
             ]);
     }
 

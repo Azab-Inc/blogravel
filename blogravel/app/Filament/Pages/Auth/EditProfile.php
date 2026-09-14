@@ -2,8 +2,7 @@
 
 namespace App\Filament\Pages\Auth;
 
-use App\Enums\Role;
-use App\Models\User;
+use App\Services\AccountLifecycleService;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Forms\Components\Placeholder;
@@ -45,7 +44,7 @@ class EditProfile extends BaseEditProfile
                         Placeholder::make('closure_warning')
                             ->content(function () {
                                 $user = $this->getUser();
-                                if ($this->isLastAdmin($user)) {
+                                if (app(AccountLifecycleService::class)->isLastAdministrator($user)) {
                                     return 'You are the only administrator. Closing this account will also close your tenant. You have 30 days to recover your account and tenant by contacting support.';
                                 }
 
@@ -80,21 +79,22 @@ class EditProfile extends BaseEditProfile
             ->icon('heroicon-o-trash')
             ->requiresConfirmation()
             ->modalHeading('Close Account')
-            ->modalDescription('Are you sure you want to close your account? This action can be reversed within 30 days by contacting support.')
+            ->modalDescription('Are you sure you want to close your account? If you are the last administrator, your tenant will also be closed. This action can be reversed within 30 days by contacting support.')
             ->modalSubmitActionLabel('Yes, Close My Account')
-            ->action(fn () => $this->closeAccount());
+            ->form(fn (): array => $this->getCloseAccountForm())
+            ->action(function (array $data, AccountLifecycleService $lifecycle): void {
+                $this->closeAccount($data['tenant_confirmation'] ?? null, $lifecycle);
+            });
     }
 
-    public function closeAccount(): void
+    public function closeAccount(?string $tenantConfirmation = null, ?AccountLifecycleService $lifecycle = null): void
     {
         $user = $this->getUser();
-        $isLastAdmin = $this->isLastAdmin($user);
+        $lifecycle ??= app(AccountLifecycleService::class);
+        $isLastAdministrator = $lifecycle->isLastAdministrator($user);
+        $tenantConfirmation ??= $isLastAdministrator ? $user->tenant?->name : null;
 
-        if ($isLastAdmin && $user->tenant_id) {
-            $user->tenant->delete();
-        }
-
-        $user->delete();
+        $lifecycle->close($user, $tenantConfirmation);
 
         Auth::logout();
 
@@ -107,16 +107,21 @@ class EditProfile extends BaseEditProfile
         $this->redirect(route('filament.admin.auth.login'));
     }
 
-    protected function isLastAdmin(User $user): bool
+    protected function getCloseAccountForm(): array
     {
-        if (! in_array($user->role, [Role::SuperAdmin, Role::Admin])) {
-            return false;
+        $user = $this->getUser();
+        $tenant = $user->tenant;
+
+        if ($tenant === null || ! app(AccountLifecycleService::class)->isLastAdministrator($user)) {
+            return [];
         }
 
-        return ! User::where('tenant_id', $user->tenant_id)
-            ->where('id', '!=', $user->id)
-            ->whereIn('role', [Role::SuperAdmin, Role::Admin])
-            ->exists();
+        return [
+            TextInput::make('tenant_confirmation')
+                ->label('Type the tenant name or slug to confirm')
+                ->required()
+                ->in(array_values(array_filter([$tenant->name, $tenant->slug]))),
+        ];
     }
 
     protected function getPasswordConfirmationFormComponent(): Component

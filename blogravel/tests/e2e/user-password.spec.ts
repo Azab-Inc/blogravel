@@ -37,6 +37,7 @@ test.describe('User password generation', () => {
     await page.waitForURL(/\/admin\/users\/.+\/edit/);
 
     await page.goto('/admin/users');
+    await page.getByPlaceholder('Search').fill(uniqueEmail);
     await expect(page.locator('body')).toContainText(uniqueEmail);
   });
 });

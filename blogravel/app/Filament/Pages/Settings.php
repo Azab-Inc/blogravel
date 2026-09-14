@@ -59,13 +59,17 @@ class Settings extends Page
     {
         return $schema
             ->components([
-                Section::make('Site')
+                Section::make('Permissions')
                     ->collapsible()
                     ->schema([
                         Toggle::make('authors_can_view_others_posts')
                             ->label('Allow authors to view other authors\' draft posts')
                             ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
                             ->default(false),
+                    ]),
+                Section::make('Site')
+                    ->collapsible()
+                    ->schema([
                         Toggle::make('theme_enabled')
                             ->label('Enable public theme frontend')
                             ->helperText('When enabled, visitors can view your blog via the public theme. When disabled, only the API is available (headless mode).')

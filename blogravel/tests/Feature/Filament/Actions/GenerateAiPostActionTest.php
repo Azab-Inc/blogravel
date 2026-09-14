@@ -14,7 +14,7 @@ use Filament\Actions\Testing\TestAction;
 use Illuminate\Support\Facades\Queue;
 
 it('renders the generate ai post action on the post create page', function () {
-    $user = User::factory()->create(['has_email_authentication' => true, 'role' => Role::Author]);
+    $user = User::factory()->create(['has_email_authentication' => true, 'role' => Role::Admin]);
 
     $this->actingAs($user);
 
@@ -26,7 +26,7 @@ it('shows the generate ai post action on the post form', function () {
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
 
     $this->actingAs($user);
@@ -40,7 +40,7 @@ it('opens the generation modal with all configuration fields', function () {
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
 
     $this->actingAs($user);
@@ -60,7 +60,7 @@ it('creates a draft post and dispatches the generation job when the action runs 
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
     $provider = AiProvider::factory()->create([
         'tenant_id' => $tenant->id,
@@ -118,7 +118,7 @@ it('reuses the existing record and dispatches the generation job when the action
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
     $provider = AiProvider::factory()->create([
         'tenant_id' => $tenant->id,
@@ -162,7 +162,7 @@ it('rejects a provider from another tenant with a validation error and dispatche
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
     $provider = AiProvider::factory()->create([
         'tenant_id' => $otherTenant->id,
@@ -195,7 +195,7 @@ it('preselects the last used provider over the default provider', function () {
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
     $defaultProvider = AiProvider::factory()->create([
         'tenant_id' => $tenant->id,
@@ -231,7 +231,7 @@ it('falls back to the default provider when no last provider is saved', function
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
     $defaultProvider = AiProvider::factory()->create([
         'tenant_id' => $tenant->id,
@@ -258,7 +258,7 @@ it('defaults output types to the saved tenant setting', function () {
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
 
     Setting::factory()->create([
@@ -281,7 +281,7 @@ it('defaults output types to all types when no setting is saved', function () {
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'has_email_authentication' => true,
-        'role' => Role::Author,
+        'role' => Role::Admin,
     ]);
 
     $this->actingAs($user);

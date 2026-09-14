@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\BelongsToTenant;
+use App\Enums\DeletionReason;
 use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
@@ -35,6 +36,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
+            'deletion_reason' => DeletionReason::class,
             'has_email_authentication' => 'boolean',
             'can_invite' => 'boolean',
         ];

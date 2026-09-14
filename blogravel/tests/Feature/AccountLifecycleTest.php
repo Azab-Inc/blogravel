@@ -51,6 +51,17 @@ it('requires matching tenant confirmation before closing the last administrator'
         ->and(Tenant::find($tenant->id))->not->toBeNull();
 });
 
+it('requires explicit tenant confirmation before closing the last administrator', function () {
+    $tenant = Tenant::factory()->create(['name' => 'Acme']);
+    $admin = User::factory()->forTenant($tenant)->create(['role' => Role::Admin]);
+
+    expect(fn () => app(AccountLifecycleService::class)->close($admin))
+        ->toThrow(ValidationException::class);
+
+    expect(User::find($admin->id))->not->toBeNull()
+        ->and(Tenant::find($tenant->id))->not->toBeNull();
+});
+
 it('records an administrator removal and makes it non-self-recoverable', function () {
     $tenant = Tenant::factory()->create();
     $actor = User::factory()->forTenant($tenant)->create(['role' => Role::Admin]);

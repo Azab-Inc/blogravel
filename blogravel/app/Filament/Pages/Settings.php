@@ -207,8 +207,6 @@ class Settings extends Page
     {
         $user = Auth::user();
         $lifecycle ??= app(AccountLifecycleService::class);
-        $isLastAdministrator = $lifecycle->isLastAdministrator($user);
-        $tenantConfirmation ??= $isLastAdministrator ? $user->tenant?->name : null;
 
         $lifecycle->close($user, $tenantConfirmation);
 

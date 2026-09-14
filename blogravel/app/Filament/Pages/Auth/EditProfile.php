@@ -91,8 +91,6 @@ class EditProfile extends BaseEditProfile
     {
         $user = $this->getUser();
         $lifecycle ??= app(AccountLifecycleService::class);
-        $isLastAdministrator = $lifecycle->isLastAdministrator($user);
-        $tenantConfirmation ??= $isLastAdministrator ? $user->tenant?->name : null;
 
         $lifecycle->close($user, $tenantConfirmation);
 

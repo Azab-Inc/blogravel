@@ -4,6 +4,7 @@ use App\Enums\Role;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Models\Tenant;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
@@ -215,10 +216,48 @@ it('closes tenant when last admin closes account', function () {
     $this->actingAs($user);
 
     Livewire::test(EditProfile::class)
-        ->call('closeAccount');
+        ->callAction(
+            TestAction::make('closeAccount')->schemaComponent(true),
+            ['tenant_confirmation' => $tenant->name],
+        );
 
     $this->assertSoftDeleted('users', ['id' => $user->id]);
     $this->assertSoftDeleted('tenants', ['id' => $tenant->id]);
+});
+
+it('rejects mismatched tenant confirmation through the edit profile action', function () {
+    $tenant = Tenant::factory()->create(['name' => 'Acme']);
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::test(EditProfile::class)
+        ->callAction(
+            TestAction::make('closeAccount')->schemaComponent(true),
+            ['tenant_confirmation' => 'Wrong tenant'],
+        )
+        ->assertHasFormErrors(['tenant_confirmation']);
+
+    expect(User::find($user->id))->not->toBeNull()
+        ->and(Tenant::find($tenant->id))->not->toBeNull();
+});
+
+it('rejects direct edit profile closure without tenant confirmation', function () {
+    $tenant = Tenant::factory()->create(['name' => 'Acme']);
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::test(EditProfile::class)
+        ->call('closeAccount')
+        ->assertHasErrors(['tenant_confirmation']);
+
+    expect(User::find($user->id))->not->toBeNull()
+        ->and(Tenant::find($tenant->id))->not->toBeNull();
 });
 
 it('does not close tenant when non-last admin closes account', function () {

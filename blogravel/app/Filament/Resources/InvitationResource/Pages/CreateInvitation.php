@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\InvitationResource\Pages;
 
+use App\Actions\AuthorizeSuperAdminAssignment;
+use App\Enums\Role;
 use App\Filament\Resources\InvitationResource;
 use App\Jobs\SendInvitationJob;
 use App\Models\Invitation;
@@ -16,6 +18,10 @@ class CreateInvitation extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        if (($data['role'] ?? null) === Role::SuperAdmin->value) {
+            app(AuthorizeSuperAdminAssignment::class)->handle();
+        }
+
         $data['tenant_id'] = auth()->user()->tenant_id;
         $data['token'] = Invitation::generateToken();
         $data['invited_by'] = auth()->id();

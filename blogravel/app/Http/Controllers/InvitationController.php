@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Role;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class InvitationController extends Controller
     {
         $invitation = Invitation::where('token', $token)->firstOrFail();
 
-        if (! $invitation->isValid()) {
+        if (! $invitation->isValid() || $invitation->role === Role::SuperAdmin) {
             return redirect()->route('home')->withErrors([
                 'invitation' => 'This invitation is no longer valid.',
             ]);
@@ -31,7 +32,7 @@ class InvitationController extends Controller
     {
         $invitation = Invitation::where('token', $token)->firstOrFail();
 
-        if (! $invitation->isValid()) {
+        if (! $invitation->isValid() || $invitation->role === Role::SuperAdmin) {
             return redirect()->route('home')->withErrors([
                 'invitation' => 'This invitation is no longer valid.',
             ]);

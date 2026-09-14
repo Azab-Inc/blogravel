@@ -5,6 +5,7 @@ use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Models\Tenant;
 use App\Models\User;
+use Filament\Actions\DeleteAction;
 use Livewire\Livewire;
 
 test('super admin can create a super admin user', function () {
@@ -77,6 +78,30 @@ test('admin cannot assign the super admin role through the user form', function 
         ->toBeFalse();
 });
 
+test('admin cannot promote an existing user to super admin through the edit user form', function () {
+    $tenant = Tenant::factory()->create();
+    $admin = User::factory()->forTenant($tenant)->create([
+        'role' => Role::Admin,
+    ]);
+    $user = User::factory()->forTenant($tenant)->create([
+        'role' => Role::Author,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(EditUser::class, ['record' => $user->getKey()])
+        ->fillForm([
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'role' => Role::SuperAdmin->value,
+        ])
+        ->call('save')
+        ->assertHasFormErrors(['role']);
+
+    expect($user->refresh()->role)->toBe(Role::Author);
+});
+
 test('admin-created users stay in the admins tenant', function () {
     $tenant = Tenant::factory()->create();
     $admin = User::factory()->forTenant($tenant)->create([
@@ -109,6 +134,21 @@ test('admin cannot edit a user from another tenant', function () {
     $otherTenantUser = User::factory()->forTenant($otherTenant)->create();
 
     $this->actingAs($admin)
-        ->get('/admin/users/'.$otherTenantUser->getKey().'/edit')
+        ->get(route('filament.admin.resources.users.edit', ['record' => $otherTenantUser]))
         ->assertNotFound();
+});
+
+test('super admin can delete a user through the edit user resource action', function () {
+    $tenant = Tenant::factory()->create();
+    $superAdmin = User::factory()->forTenant($tenant)->create([
+        'role' => Role::SuperAdmin,
+    ]);
+    $user = User::factory()->forTenant($tenant)->create();
+
+    $this->actingAs($superAdmin);
+
+    Livewire::test(EditUser::class, ['record' => $user->getKey()])
+        ->callAction(DeleteAction::class);
+
+    expect(User::query()->find($user->getKey()))->toBeNull();
 });

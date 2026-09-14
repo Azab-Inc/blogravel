@@ -34,3 +34,15 @@ it('rejects duplicate active emails', function () {
     expect(fn () => User::factory()->create(['email' => 'duplicate@example.com']))
         ->toThrow(QueryException::class);
 });
+
+it('creates the PostgreSQL partial active email index', function () {
+    if (DB::connection()->getDriverName() !== 'pgsql') {
+        $this->markTestSkipped('PostgreSQL is not the active test connection.');
+    }
+
+    $index = DB::selectOne("select indexname, indexdef from pg_indexes where schemaname = current_schema() and tablename = 'users' and indexname = 'users_email_active_unique'");
+
+    expect($index)->not->toBeNull();
+    expect($index->indexname)->toBe('users_email_active_unique');
+    expect($index->indexdef)->toMatch('/where\s+\(deleted_at\s+is\s+null\)/i');
+});

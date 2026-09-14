@@ -42,7 +42,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#33](https://github.com/Azab-Inc/blogravel/issues/33) | Multi-language content support (Future Phase) | Todo |
 | [#34](https://github.com/Azab-Inc/blogravel/issues/34) | Collaborative real-time editing (Future Phase) | Todo |
 | [#35](https://github.com/Azab-Inc/blogravel/issues/35) | Comments: moderation & display | Todo |
-| [#36](https://github.com/Azab-Inc/blogravel/issues/36) | User & role management (admin) | Todo |
+| [#36](https://github.com/Azab-Inc/blogravel/issues/36) | User & role management (admin) | Done |
 | [#37](https://github.com/Azab-Inc/blogravel/issues/37) | API documentation | Todo |
 | [#38](https://github.com/Azab-Inc/blogravel/issues/38) | Admin test email & mail configuration | Todo |
 | [#39](https://github.com/Azab-Inc/blogravel/issues/39) | Tenant management UI (Super Admin) | Todo |

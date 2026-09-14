@@ -162,6 +162,14 @@ it('allows super_admin to manage all users', function () {
         ->and((new UserPolicy)->forceDelete($user, $otherUser))->toBeTrue();
 });
 
+it('allows only super_admin to assign the super_admin role', function () {
+    $superAdmin = User::factory()->create(['role' => 'super_admin']);
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    expect((new UserPolicy)->assignSuperAdmin($superAdmin))->toBeTrue()
+        ->and((new UserPolicy)->assignSuperAdmin($admin))->toBeFalse();
+});
+
 it('allows admin to manage users within their tenant only', function () {
     $tenant = Tenant::factory()->create();
     $otherTenant = Tenant::factory()->create();

@@ -27,6 +27,11 @@ class UserPolicy
         return in_array($user->role, [Role::SuperAdmin, Role::Admin], true);
     }
 
+    public function assignSuperAdmin(User $user): bool
+    {
+        return $user->role === Role::SuperAdmin;
+    }
+
     public function update(User $user, User $model): bool
     {
         return match ($user->role) {

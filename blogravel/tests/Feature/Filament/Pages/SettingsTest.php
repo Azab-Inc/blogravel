@@ -20,6 +20,19 @@ it('settings page renders for admin', function () {
     $response->assertStatus(200);
 });
 
+it('renders the Filament action modal host', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    $this->get('/admin/settings')
+        ->assertSee('class="fi-page"', false)
+        ->assertSee('wire:partial="action-modals"', false);
+});
+
 it('settings page renders for superadmin', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create([

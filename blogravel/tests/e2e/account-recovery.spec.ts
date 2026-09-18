@@ -1,9 +1,18 @@
 import { expect, test } from '@playwright/test';
-import { loginAs, TEST_USERS } from './helpers';
+import {
+  cleanupE2eFixtures,
+  clearRecoveryRateLimiter,
+  createClosedTenantRecoveryFixture,
+  createE2eTenantFixture,
+  createExpiredTenantRecoveryFixture,
+  login,
+  loginAs,
+} from './helpers';
 
 const blankStorage = { cookies: [], origins: [] };
 
 async function recoverAccount(page: Parameters<typeof loginAs>[0], email: string, password: string) {
+  await clearRecoveryRateLimiter();
   await page.goto('/admin/recover-account');
   await page.locator('input[type="email"]').fill(email);
   await page.locator('input[type="password"]').fill(password);
@@ -37,12 +46,14 @@ for (const viewport of [
 
 test.describe('Account recovery outcomes', () => {
   test.use({ storageState: blankStorage, viewport: { width: 1280, height: 900 } });
-  test.describe.configure({ mode: 'serial' });
+
+  test.afterEach(cleanupE2eFixtures);
 
   test('recovers a self-closed tenant administrator', async ({ page }) => {
-    await loginAs(page, 'tenantAdmin');
-    await closeTenantAccount(page, 'acme.io');
-    await recoverAccount(page, TEST_USERS.tenantAdmin.email, TEST_USERS.tenantAdmin.password);
+    const fixture = await createE2eTenantFixture();
+    await login(page, fixture.admin);
+    await closeTenantAccount(page, fixture.tenant.name);
+    await recoverAccount(page, fixture.admin.email, fixture.admin.password);
 
     await expect(page).toHaveURL(/\/admin\/login$/);
     await expect(page.locator('body')).toContainText(/account and tenant have been recovered/i);
@@ -55,40 +66,42 @@ test.describe('Account recovery outcomes', () => {
   });
 
   test('requires the tenant name before closing the last administrator account', async ({ page }) => {
-    await loginAs(page, 'tenantAdmin');
+    const fixture = await createE2eTenantFixture();
+    await login(page, fixture.admin);
     await page.goto('/admin/settings');
     await page.getByRole('button', { name: 'Close Account' }).click();
     await page.getByLabel('Type the tenant name or slug to confirm').fill('wrong-tenant');
     await page.getByRole('button', { name: 'Yes, Close My Account' }).click();
 
-    await expect(page.locator('body')).toContainText('Type the tenant name or slug to confirm closure.');
+    await expect(page.locator('body')).toContainText(/selected.*tenant name.*invalid/i);
     await expect(page).toHaveURL(/\/admin\/settings$/);
   });
 
   test('denies recovery for an administrator-removed account', async ({ page }) => {
-    await loginAs(page, 'superAdmin');
+    const fixture = await createE2eTenantFixture({ author: true, adminRole: 'super_admin' });
+    await login(page, fixture.admin);
     await page.goto('/admin/users');
-    await page.getByRole('searchbox', { name: 'Search' }).fill('author@acme.io');
-    const row = page.getByRole('row', { name: /author@acme\.io/ });
+    await page.getByRole('searchbox', { name: 'Search' }).fill(fixture.author?.email ?? '');
+    const row = page.getByRole('row', { name: new RegExp(fixture.author?.email ?? '') });
     await row.getByRole('checkbox').check();
     await page.getByRole('button', { name: /delete/i }).click();
     await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
     await expect(row).not.toBeVisible();
 
-    await recoverAccount(page, 'author@acme.io', TEST_USERS.tenantAdmin.password);
+    await recoverAccount(page, fixture.author?.email ?? '', fixture.author?.password ?? '');
     await expect(page.locator('body')).toContainText(/removed by an administrator/i);
   });
 
   test('shows the deleted-tenant recovery denial', async ({ page }) => {
-    await loginAs(page, 'otherTenantAdmin');
-    await closeTenantAccount(page, 'globex.net');
-    await recoverAccount(page, 'author@globex.net', TEST_USERS.tenantAdmin.password);
+    const fixture = await createClosedTenantRecoveryFixture();
+    await recoverAccount(page, fixture.author?.email ?? '', fixture.author?.password ?? '');
 
     await expect(page.locator('body')).toContainText(/tenant was closed/i);
   });
 
   test('redirects a recovered administrator to tenant setup', async ({ page }) => {
-    await recoverAccount(page, 'recovery-needs-tenant@example.com', TEST_USERS.tenantAdmin.password);
+    const fixture = await createExpiredTenantRecoveryFixture();
+    await recoverAccount(page, fixture.admin.email, fixture.admin.password);
 
     await expect(page).toHaveURL(/\/admin\/tenant-setup$/);
     await expect(page.getByRole('heading', { name: /tenant setup/i })).toBeVisible();

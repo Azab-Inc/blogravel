@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Enums\AccountRecoveryResult;
+use App\Models\User;
 use App\Services\AccountRecoveryService;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use DanHarrin\LivewireRateLimiting\WithRateLimiting;
@@ -17,6 +18,7 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
 class RecoverAccount extends SimplePage
@@ -80,6 +82,15 @@ class RecoverAccount extends SimplePage
             AccountRecoveryResult::RestoredUserNeedsTenant,
         ], true)) {
             Notification::make()->title($this->message)->success()->send();
+
+            if ($result === AccountRecoveryResult::RestoredUserNeedsTenant) {
+                $user = User::withoutGlobalScopes()->findOrFail(session('recovery.needs_tenant_setup'));
+                Auth::login($user);
+                $this->redirect(route('filament.admin.tenant-setup'));
+
+                return;
+            }
+
             $this->redirect(route('filament.admin.auth.login'));
 
             return;

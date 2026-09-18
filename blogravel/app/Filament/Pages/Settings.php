@@ -18,6 +18,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -61,136 +62,140 @@ class Settings extends Page
     {
         return $schema
             ->components([
-                Section::make('Permissions')
-                    ->collapsible()
-                    ->schema([
-                        Toggle::make('authors_can_view_others_posts')
-                            ->label('Allow authors to view other authors\' draft posts')
-                            ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
-                            ->default(false),
-                    ]),
-                Section::make('Site')
-                    ->collapsible()
-                    ->schema([
-                        Toggle::make('theme_enabled')
-                            ->label('Enable public theme frontend')
-                            ->helperText('When enabled, visitors can view your blog via the public theme. When disabled, only the API is available (headless mode).')
-                            ->default(true),
-                        Select::make('active_theme')
-                            ->label('Active Theme')
-                            ->helperText('Select the theme used for your public blog frontend.')
-                            ->options(fn () => collect(app()->getProvider(ThemeServiceProvider::class)?->getAvailableThemes() ?? [])
-                                ->mapWithKeys(fn ($theme) => [$theme['name'] => $theme['name'].($theme['is_base'] ? ' (base)' : '')])
-                                ->toArray())
-                            ->default(config('theme.default', 'base'))
-                            ->visible(fn (Get $get): bool => $get('theme_enabled')),
-                    ]),
-                Section::make('Account')
-                    ->collapsible()
-                    ->schema([
-                        TextInput::make('first_name')
-                            ->label('First Name')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('last_name')
-                            ->label('Last Name')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('email')
-                            ->label('Email')
-                            ->email()
-                            ->required()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true),
-                        Section::make('Password')
-                            ->description('Leave blank to keep current password.')
-                            ->schema([
-                                TextInput::make('password')
-                                    ->label('New Password')
-                                    ->password()
-                                    ->revealable()
-                                    ->dehydrated(false)
-                                    ->maxLength(255),
-                                TextInput::make('password_confirmation')
-                                    ->label('Confirm New Password')
-                                    ->password()
-                                    ->revealable()
-                                    ->dehydrated(false)
-                                    ->maxLength(255)
-                                    ->visible(true)
-                                    ->required(fn (Get $get): bool => filled($get('password'))),
-                                TextInput::make('current_password')
-                                    ->label('Current Password')
-                                    ->password()
-                                    ->revealable()
-                                    ->dehydrated(false)
-                                    ->visible(fn (Get $get): bool => filled($get('password')) || ($get('email') !== Auth::user()->email)),
-                            ]),
-                        Section::make('Danger Zone')
-                            ->description('Closing your account will soft-delete your profile. You have 30 days to recover it by contacting support.')
-                            ->schema([
-                                Placeholder::make('closure_warning')
-                                    ->content(function () {
-                                        $user = Auth::user();
-                                        if (app(AccountLifecycleService::class)->isLastAdministrator($user)) {
-                                            return 'You are the only administrator. Closing this account will also close your tenant. You have 30 days to recover your account and tenant by contacting support.';
-                                        }
-
-                                        return null;
-                                    }),
-                                Action::make('closeAccount')
-                                    ->label('Close Account')
-                                    ->color('danger')
-                                    ->icon('heroicon-o-trash')
-                                    ->requiresConfirmation()
-                                    ->modalHeading('Close Account')
-                                    ->modalDescription('Are you sure you want to close your account? If you are the last administrator, your tenant will also be closed. This action can be reversed within 30 days by contacting support.')
-                                    ->modalSubmitActionLabel('Yes, Close My Account')
-                                    ->form(fn (): array => $this->getCloseAccountForm())
-                                    ->action(function (array $data, AccountLifecycleService $lifecycle, DataExportService $exports): void {
-                                        $format = $data['export_format'] ?? 'none';
-                                        if ($format !== 'none') {
+                Grid::make(2)->schema([
+                    Section::make('Permissions')
+                        ->columns(1)
+                        ->collapsible()
+                        ->schema([
+                            Toggle::make('authors_can_view_others_posts')
+                                ->label('Allow authors to view other authors\' draft posts')
+                                ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
+                                ->default(false),
+                        ]),
+                    Section::make('Site')
+                        ->columns(1)
+                        ->collapsible()
+                        ->schema([
+                            Toggle::make('theme_enabled')
+                                ->label('Enable public theme frontend')
+                                ->helperText('When enabled, visitors can view your blog via the public theme. When disabled, only the API is available (headless mode).')
+                                ->default(true),
+                            Select::make('active_theme')
+                                ->label('Active Theme')
+                                ->helperText('Select the theme used for your public blog frontend.')
+                                ->options(fn () => collect(app()->getProvider(ThemeServiceProvider::class)?->getAvailableThemes() ?? [])
+                                    ->mapWithKeys(fn ($theme) => [$theme['name'] => $theme['name'].($theme['is_base'] ? ' (base)' : '')])
+                                    ->toArray())
+                                ->default(config('theme.default', 'base'))
+                                ->visible(fn (Get $get): bool => $get('theme_enabled')),
+                        ]),
+                    Section::make('Account')
+                        ->collapsible()
+                        ->schema([
+                            TextInput::make('first_name')
+                                ->label('First Name')
+                                ->required()
+                                ->maxLength(255),
+                            TextInput::make('last_name')
+                                ->label('Last Name')
+                                ->required()
+                                ->maxLength(255),
+                            TextInput::make('email')
+                                ->label('Email')
+                                ->email()
+                                ->required()
+                                ->maxLength(255)
+                                ->unique(ignoreRecord: true),
+                            Section::make('Password')
+                                ->description('Leave blank to keep current password.')
+                                ->schema([
+                                    TextInput::make('password')
+                                        ->label('New Password')
+                                        ->password()
+                                        ->revealable()
+                                        ->dehydrated(false)
+                                        ->maxLength(255),
+                                    TextInput::make('password_confirmation')
+                                        ->label('Confirm New Password')
+                                        ->password()
+                                        ->revealable()
+                                        ->dehydrated(false)
+                                        ->maxLength(255)
+                                        ->visible(true)
+                                        ->required(fn (Get $get): bool => filled($get('password'))),
+                                    TextInput::make('current_password')
+                                        ->label('Current Password')
+                                        ->password()
+                                        ->revealable()
+                                        ->dehydrated(false)
+                                        ->visible(fn (Get $get): bool => filled($get('password')) || ($get('email') !== Auth::user()->email)),
+                                ]),
+                            Section::make('Danger Zone')
+                                ->description('Closing your account will soft-delete your profile. You have 30 days to recover it by contacting support.')
+                                ->schema([
+                                    Placeholder::make('closure_warning')
+                                        ->content(function () {
                                             $user = Auth::user();
-                                            if ($user->tenant !== null) {
-                                                $exports->queue($user->tenant, $user, $format);
+                                            if (app(AccountLifecycleService::class)->isLastAdministrator($user)) {
+                                                return 'You are the only administrator. Closing this account will also close your tenant. You have 30 days to recover your account and tenant by contacting support.';
                                             }
-                                        }
 
-                                        $this->closeAccount($data['tenant_confirmation'] ?? null, $lifecycle);
-                                    }),
-                                Action::make('exportTenantData')
-                                    ->label('Export tenant data')
-                                    ->icon('heroicon-o-arrow-down-tray')
-                                    ->form([
-                                        Select::make('tenant_id')
-                                            ->label('Tenant')
-                                            ->options(fn (): array => $this->getExportableTenants())
-                                            ->default(fn (): ?string => Auth::user()->tenant_id)
-                                            ->required(fn (): bool => Auth::user()->isSuperAdmin())
-                                            ->visible(fn (): bool => Auth::user()->isSuperAdmin()),
-                                        Select::make('format')
-                                            ->label('Format')
-                                            ->options([
-                                                'csv' => 'CSV',
-                                                'xlsx' => 'XLSX',
-                                            ])
-                                            ->default('csv')
-                                            ->required(),
-                                    ])
-                                    ->action(function (array $data, DataExportService $exports): void {
-                                        $user = Auth::user();
-                                        $tenant = $this->tenantForExport($data['tenant_id'] ?? null);
-                                        $identifier = $exports->queue($tenant, $user, $data['format']);
+                                            return null;
+                                        }),
+                                    Action::make('closeAccount')
+                                        ->label('Close Account')
+                                        ->color('danger')
+                                        ->icon('heroicon-o-trash')
+                                        ->requiresConfirmation()
+                                        ->modalHeading('Close Account')
+                                        ->modalDescription('Are you sure you want to close your account? If you are the last administrator, your tenant will also be closed. This action can be reversed within 30 days by contacting support.')
+                                        ->modalSubmitActionLabel('Yes, Close My Account')
+                                        ->form(fn (): array => $this->getCloseAccountForm())
+                                        ->action(function (array $data, AccountLifecycleService $lifecycle, DataExportService $exports): void {
+                                            $format = $data['export_format'] ?? 'none';
+                                            if ($format !== 'none') {
+                                                $user = Auth::user();
+                                                if ($user->tenant !== null) {
+                                                    $exports->queue($user->tenant, $user, $format);
+                                                }
+                                            }
 
-                                        Notification::make()
-                                            ->title('Export queued')
-                                            ->body('Export '.$identifier.' will be available for download for 24 hours.')
-                                            ->success()
-                                            ->send();
-                                    }),
-                            ]),
-                    ]),
+                                            $this->closeAccount($data['tenant_confirmation'] ?? null, $lifecycle);
+                                        }),
+                                    Action::make('exportTenantData')
+                                        ->label('Export tenant data')
+                                        ->icon('heroicon-o-arrow-down-tray')
+                                        ->form([
+                                            Select::make('tenant_id')
+                                                ->label('Tenant')
+                                                ->options(fn (): array => $this->getExportableTenants())
+                                                ->default(fn (): ?string => Auth::user()->tenant_id)
+                                                ->required(fn (): bool => Auth::user()->isSuperAdmin())
+                                                ->visible(fn (): bool => Auth::user()->isSuperAdmin()),
+                                            Select::make('format')
+                                                ->label('Format')
+                                                ->options([
+                                                    'csv' => 'CSV',
+                                                    'xlsx' => 'XLSX',
+                                                ])
+                                                ->default('csv')
+                                                ->required(),
+                                        ])
+                                        ->action(function (array $data, DataExportService $exports): void {
+                                            $user = Auth::user();
+                                            $tenant = $this->tenantForExport($data['tenant_id'] ?? null);
+                                            $identifier = $exports->queue($tenant, $user, $data['format']);
 
+                                            Notification::make()
+                                                ->title('Export queued')
+                                                ->body('Export '.$identifier.' will be available for download for 24 hours.')
+                                                ->success()
+                                                ->send();
+                                        }),
+                                ]),
+                        ]),
+
+                ]),
             ])
             ->statePath('data');
     }

@@ -268,6 +268,29 @@ it('recovers through the public page without calling Auth login', function (): v
     Notification::assertSentTo($user, AccountRecoveredNotification::class);
 });
 
+it('redirects a recovered administrator who needs tenant setup to tenant setup', function (): void {
+    clearRecoveryRateLimiter();
+
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->forTenant($tenant)->create([
+        'email' => 'page-recovery-needs-tenant@example.com',
+        'password' => Hash::make('password'),
+        'role' => Role::Admin,
+        'deletion_reason' => DeletionReason::SelfClosed,
+    ]);
+    $user->delete();
+    $tenant->delete();
+    markDeletedAt($tenant, now()->subDays(31));
+
+    Livewire::test(RecoverAccount::class)
+        ->set('data.email', 'page-recovery-needs-tenant@example.com')
+        ->set('data.password', 'password')
+        ->call('recover')
+        ->assertRedirect(route('filament.admin.tenant-setup'));
+
+    expect(Auth::id())->toBe($user->id);
+});
+
 it('uses the same generic message before valid credentials are supplied', function (): void {
     clearRecoveryRateLimiter();
     $deleted = User::factory()->create([

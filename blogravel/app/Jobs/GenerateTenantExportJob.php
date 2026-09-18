@@ -2,8 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Tenant;
-use App\Models\User;
 use App\Notifications\TenantExportReadyNotification;
 use App\Services\DataExportService;
 use Carbon\CarbonImmutable;
@@ -37,16 +35,14 @@ class GenerateTenantExportJob implements ShouldQueue
             return;
         }
 
-        $tenant = Tenant::withoutGlobalScopes()
-            ->withTrashed()
-            ->findOrFail($this->tenantId);
-        $exports->generate($tenant, $this->format, $this->outputPath);
+        $authorization = $exports->authorizeQueuedExport($this->tenantId, $this->requestedById);
+        if ($authorization === null) {
+            return;
+        }
 
-        $requester = User::withoutGlobalScopes()
-            ->withTrashed()
-            ->findOrFail($this->requestedById);
+        $exports->generate($authorization['tenant'], $this->format, $this->outputPath);
 
-        $requester->notify(new TenantExportReadyNotification(
+        $authorization['requester']->notify(new TenantExportReadyNotification(
             pathinfo($this->outputPath, PATHINFO_FILENAME),
             $this->format,
             $this->expiresAt,

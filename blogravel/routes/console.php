@@ -24,3 +24,8 @@ Schedule::call(function () {
         $rule->update(['next_run_at' => BackupSchedule::nextRunAt($rule->schedule, $now)]);
     }
 })->name('run-scheduled-backups')->everyFifteenMinutes()->withoutOverlapping();
+
+Schedule::command('gdpr:purge-expired')
+    ->daily()
+    ->withoutOverlapping()
+    ->onOneServer();

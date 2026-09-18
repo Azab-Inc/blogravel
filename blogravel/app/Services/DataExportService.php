@@ -52,8 +52,14 @@ class DataExportService
     public function queue(Tenant $tenant, User $requestedBy, string $format): string
     {
         $this->validateFormat($format);
-        $tenant = $this->verifiedTenant($tenant);
-        $this->authorizeTenantExport($tenant, $requestedBy);
+        $authorizedRequester = User::query()->find($requestedBy->getKey());
+        $tenant = $authorizedRequester === null
+            ? null
+            : $this->authorizedTenant((string) $tenant->getKey(), $authorizedRequester);
+
+        if ($tenant === null) {
+            throw new AuthorizationException;
+        }
 
         $identifier = (string) Str::uuid();
         $outputPath = 'exports/'.$identifier.'.zip';
@@ -61,7 +67,7 @@ class DataExportService
 
         $this->writeManifest($identifier, [
             'tenant_id' => $tenant->getKey(),
-            'requested_by' => $requestedBy->getKey(),
+            'requested_by' => $authorizedRequester->getKey(),
             'format' => $format,
             'output_path' => $outputPath,
             'expires_at' => $expiresAt->toIso8601String(),
@@ -69,13 +75,31 @@ class DataExportService
 
         Bus::dispatch(new GenerateTenantExportJob(
             (string) $tenant->getKey(),
-            (string) $requestedBy->getKey(),
+            (string) $authorizedRequester->getKey(),
             $format,
             $outputPath,
             $expiresAt,
         ));
 
         return $identifier;
+    }
+
+    /**
+     * @return array{tenant: Tenant, requester: User}|null
+     */
+    public function authorizeQueuedExport(string $tenantId, string $requestedById): ?array
+    {
+        $requester = User::query()->find($requestedById);
+        if ($requester === null) {
+            return null;
+        }
+
+        $tenant = $this->authorizedTenant($tenantId, $requester);
+        if ($tenant === null) {
+            return null;
+        }
+
+        return compact('tenant', 'requester');
     }
 
     public function generate(Tenant $tenant, string $format, string $outputPath): void
@@ -162,9 +186,7 @@ class DataExportService
         }
 
         if ($user->isSuperAdmin()) {
-            $tenant = Tenant::withoutGlobalScopes()
-                ->withTrashed()
-                ->find($manifest['tenant_id'] ?? null);
+            $tenant = Tenant::withTrashed()->find($manifest['tenant_id'] ?? null);
             if ($tenant === null || ! $this->isWithinRecoveryWindow($tenant)) {
                 throw new AuthorizationException;
             }
@@ -415,21 +437,22 @@ class DataExportService
         return Tenant::withoutGlobalScopes()->withTrashed()->findOrFail($tenant->getKey());
     }
 
-    private function authorizeTenantExport(Tenant $tenant, User $requestedBy): void
+    private function authorizedTenant(string $tenantId, User $requestedBy): ?Tenant
     {
         if ($requestedBy->isSuperAdmin()) {
-            if (! $this->isWithinRecoveryWindow($tenant)) {
-                throw new AuthorizationException;
-            }
+            $tenant = Tenant::withTrashed()->find($tenantId);
 
-            return;
+            return $tenant !== null && $this->isWithinRecoveryWindow($tenant) ? $tenant : null;
         }
 
         if (! $requestedBy->isAdmin()
-            || $requestedBy->tenant_id !== $tenant->getKey()
-            || $tenant->trashed()) {
-            throw new AuthorizationException;
+            || (string) $requestedBy->tenant_id !== $tenantId) {
+            return null;
         }
+
+        $tenant = Tenant::withTrashed()->find($tenantId);
+
+        return $tenant !== null && $this->isWithinRecoveryWindow($tenant) ? $tenant : null;
     }
 
     private function isWithinRecoveryWindow(Tenant $tenant): bool

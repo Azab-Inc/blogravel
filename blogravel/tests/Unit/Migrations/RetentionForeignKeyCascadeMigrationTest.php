@@ -3,6 +3,7 @@
 use App\Models\Post;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -139,6 +140,41 @@ it('quarantines dependents before deleting orphaned parents', function () {
         ->exists())->toBeTrue();
 });
 
+it('quarantines each orphan relationship for a row with multiple missing parents', function () {
+    Artisan::call('migrate:fresh', ['--force' => true]);
+
+    $migration = require database_path('migrations/2026_09_18_000000_add_retention_foreign_key_cascades.php');
+    Schema::withoutForeignKeyConstraints(fn (): mixed => $migration->down());
+
+    $postId = (string) Str::uuid();
+    $orphanTenantId = (string) Str::uuid();
+    $orphanAuthorId = (string) Str::uuid();
+    DB::table('posts')->insert([
+        'id' => $postId,
+        'tenant_id' => $orphanTenantId,
+        'author_id' => $orphanAuthorId,
+        'title' => 'Multi-relationship orphan',
+        'slug' => 'multi-relationship-orphan',
+        'content' => 'Content',
+        'status' => 'draft',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $migration->up();
+
+    expect(DB::table('retention_orphaned_rows')
+        ->where('source_table', 'posts')
+        ->where('source_column', 'tenant_id')
+        ->where('source_key', $postId)
+        ->exists())->toBeTrue();
+    expect(DB::table('retention_orphaned_rows')
+        ->where('source_table', 'posts')
+        ->where('source_column', 'author_id')
+        ->where('source_key', $postId)
+        ->exists())->toBeTrue();
+});
+
 it('does not delete a quarantined row repaired before the delete recheck', function () {
     if (DB::getDriverName() !== 'pgsql') {
         $this->markTestSkipped('This race regression uses a PostgreSQL trigger.');
@@ -179,4 +215,49 @@ it('does not delete a quarantined row repaired before the delete recheck', funct
 
     expect(DB::table('posts')->where('id', $post->id)->exists())->toBeTrue();
     expect(DB::table('tenants')->where('id', $orphanTenantId)->exists())->toBeTrue();
+});
+
+it('serializes PostgreSQL parent repair against orphan deletion', function () {
+    if (DB::getDriverName() !== 'pgsql') {
+        $this->markTestSkipped('This serialization regression uses PostgreSQL locks.');
+    }
+
+    Artisan::call('migrate:fresh', ['--force' => true]);
+
+    $migration = require database_path('migrations/2026_09_18_000000_add_retention_foreign_key_cascades.php');
+    Schema::withoutForeignKeyConstraints(fn (): mixed => $migration->down());
+
+    $user = User::factory()->create();
+    $orphanTenantId = (string) Str::uuid();
+    Post::factory()->create([
+        'tenant_id' => $orphanTenantId,
+        'author_id' => $user->id,
+    ]);
+
+    $connection = config('database.connections.pgsql');
+    $repairConnection = new PDO(
+        sprintf('pgsql:host=%s;port=%s;dbname=%s', $connection['host'], $connection['port'], $connection['database']),
+        $connection['username'],
+        $connection['password'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+    );
+    $repairConnection->exec("SET lock_timeout = '100ms'");
+    $repairWasBlocked = false;
+
+    DB::listen(function (QueryExecuted $query) use (&$repairWasBlocked, $repairConnection, $orphanTenantId): void {
+        if (! str_starts_with(strtoupper(trim($query->sql)), 'LOCK TABLE')) {
+            return;
+        }
+
+        try {
+            $statement = $repairConnection->prepare('INSERT INTO tenants (id, domain, name, plan, slug, custom_domain, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())');
+            $statement->execute([$orphanTenantId, 'blocked-repair.example.test', 'Blocked Repair', 'free', 'blocked-repair', null]);
+        } catch (PDOException) {
+            $repairWasBlocked = true;
+        }
+    });
+
+    $migration->up();
+
+    expect($repairWasBlocked)->toBeTrue();
 });

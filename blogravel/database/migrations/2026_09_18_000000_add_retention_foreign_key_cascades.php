@@ -108,6 +108,7 @@ return new class extends Migration
     private function reconcileOrphans(): void
     {
         DB::transaction(function (): void {
+            $this->lockParentTables();
             $orphanedRows = $this->collectOrphanSnapshots();
 
             foreach ($orphanedRows as $orphanedRow) {
@@ -122,6 +123,28 @@ return new class extends Migration
                 }
             } while ($deletedRows > 0);
         });
+    }
+
+    private function lockParentTables(): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
+        $parentTables = [];
+        foreach ($this->foreignKeys() as $foreignKey) {
+            $parentTables[] = $foreignKey['referencedTable'];
+        }
+
+        $parentTables = array_values(array_unique($parentTables));
+        sort($parentTables);
+
+        $quotedTables = array_map(
+            fn (string $table): string => DB::connection()->getQueryGrammar()->wrapTable($table),
+            $parentTables,
+        );
+
+        DB::statement('LOCK TABLE '.implode(', ', $quotedTables).' IN SHARE ROW EXCLUSIVE MODE');
     }
 
     /**
@@ -157,7 +180,7 @@ return new class extends Migration
 
                 foreach ($rows as $row) {
                     $sourceKey = $this->sourceKey($row, $foreignKey['keyColumns']);
-                    $rowKey = $foreignKey['table'].'|'.$sourceKey;
+                    $rowKey = $foreignKey['table'].'|'.$foreignKey['column'].'|'.$sourceKey;
 
                     if (isset($seenRows[$rowKey])) {
                         continue;

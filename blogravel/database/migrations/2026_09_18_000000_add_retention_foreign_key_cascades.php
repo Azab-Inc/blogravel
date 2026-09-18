@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -106,40 +107,149 @@ return new class extends Migration
 
     private function reconcileOrphans(): void
     {
-        foreach ($this->foreignKeys() as $foreignKey) {
-            $orphanedRows = DB::table($foreignKey['table'].' as child')
-                ->select('child.*')
-                ->whereNotNull('child.'.$foreignKey['column'])
-                ->whereNotExists(function ($query) use ($foreignKey): void {
-                    $query->selectRaw('1')
-                        ->from($foreignKey['referencedTable'].' as parent')
-                        ->whereColumn('parent.id', 'child.'.$foreignKey['column']);
-                })
-                ->get();
+        DB::transaction(function (): void {
+            $orphanedRows = $this->collectOrphanSnapshots();
 
-            foreach ($orphanedRows as $row) {
-                $sourceKey = $this->sourceKey($row, $foreignKey['keyColumns']);
-                $quarantineQuery = DB::table(self::ORPHAN_TABLE)
-                    ->where('source_table', $foreignKey['table'])
-                    ->where('source_column', $foreignKey['column'])
-                    ->where('source_key', $sourceKey);
+            foreach ($orphanedRows as $orphanedRow) {
+                $this->quarantineSnapshot($orphanedRow);
+            }
 
-                if (! $quarantineQuery->exists()) {
-                    DB::table(self::ORPHAN_TABLE)->insert([
-                        'source_table' => $foreignKey['table'],
-                        'source_column' => $foreignKey['column'],
-                        'source_key' => $sourceKey,
-                        'row_data' => json_encode((array) $row, JSON_THROW_ON_ERROR),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+            do {
+                $deletedRows = 0;
+
+                foreach ($orphanedRows as $orphanedRow) {
+                    $deletedRows += $this->deleteOrphanSnapshot($orphanedRow);
                 }
+            } while ($deletedRows > 0);
+        });
+    }
 
-                $deleteQuery = DB::table($foreignKey['table']);
-                foreach ($foreignKey['keyColumns'] as $keyColumn) {
-                    $deleteQuery->where($keyColumn, $row->{$keyColumn});
+    /**
+     * @return list<array{foreignKey: array{table: string, column: string, referencedTable: string, action: string, keyColumns: list<string>}, row: object, sourceKey: string, snapshot: string}>
+     */
+    private function collectOrphanSnapshots(): array
+    {
+        $orphanedRows = [];
+        $seenRows = [];
+        $scheduledParentIds = [];
+
+        do {
+            $newRows = 0;
+
+            foreach ($this->foreignKeys() as $foreignKey) {
+                $parentIds = $scheduledParentIds[$foreignKey['referencedTable']] ?? [];
+                $rows = DB::table($foreignKey['table'].' as child')
+                    ->select('child.*')
+                    ->whereNotNull('child.'.$foreignKey['column'])
+                    ->where(function (QueryBuilder $query) use ($foreignKey, $parentIds): void {
+                        $query->whereNotExists(function (QueryBuilder $query) use ($foreignKey): void {
+                            $query->selectRaw('1')
+                                ->from($foreignKey['referencedTable'].' as parent')
+                                ->whereColumn('parent.id', 'child.'.$foreignKey['column']);
+                        });
+
+                        if ($parentIds !== []) {
+                            $query->orWhereIn('child.'.$foreignKey['column'], $parentIds);
+                        }
+                    })
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($rows as $row) {
+                    $sourceKey = $this->sourceKey($row, $foreignKey['keyColumns']);
+                    $rowKey = $foreignKey['table'].'|'.$sourceKey;
+
+                    if (isset($seenRows[$rowKey])) {
+                        continue;
+                    }
+
+                    $seenRows[$rowKey] = true;
+                    $orphanedRows[] = [
+                        'foreignKey' => $foreignKey,
+                        'row' => $row,
+                        'sourceKey' => $sourceKey,
+                        'snapshot' => json_encode((array) $row, JSON_THROW_ON_ERROR),
+                    ];
+                    $newRows++;
+
+                    if ($foreignKey['keyColumns'] === ['id']) {
+                        $scheduledParentIds[$foreignKey['table']][] = $row->id;
+                    }
                 }
-                $deleteQuery->delete();
+            }
+        } while ($newRows > 0);
+
+        return $orphanedRows;
+    }
+
+    /**
+     * @param  array{foreignKey: array{table: string, column: string, referencedTable: string, action: string, keyColumns: list<string>}, row: object, sourceKey: string, snapshot: string}  $orphanedRow
+     */
+    private function quarantineSnapshot(array $orphanedRow): void
+    {
+        $foreignKey = $orphanedRow['foreignKey'];
+        $quarantineQuery = DB::table(self::ORPHAN_TABLE)
+            ->where('source_table', $foreignKey['table'])
+            ->where('source_column', $foreignKey['column'])
+            ->where('source_key', $orphanedRow['sourceKey']);
+
+        $existingSnapshot = $quarantineQuery->value('row_data');
+
+        if ($existingSnapshot !== null) {
+            if ($existingSnapshot !== $orphanedRow['snapshot']) {
+                throw new RuntimeException("Retention quarantine snapshot conflict for {$foreignKey['table']}.{$foreignKey['column']} {$orphanedRow['sourceKey']}.");
+            }
+
+            return;
+        }
+
+        DB::table(self::ORPHAN_TABLE)->insert([
+            'source_table' => $foreignKey['table'],
+            'source_column' => $foreignKey['column'],
+            'source_key' => $orphanedRow['sourceKey'],
+            'row_data' => $orphanedRow['snapshot'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    /**
+     * @param  array{foreignKey: array{table: string, column: string, referencedTable: string, action: string, keyColumns: list<string>}, row: object, sourceKey: string, snapshot: string}  $orphanedRow
+     */
+    private function deleteOrphanSnapshot(array $orphanedRow): int
+    {
+        $foreignKey = $orphanedRow['foreignKey'];
+        $row = $orphanedRow['row'];
+        $deleteQuery = DB::table($foreignKey['table']);
+        $this->whereSnapshot($deleteQuery, $foreignKey['table'], $row);
+
+        return $deleteQuery
+            ->whereNotNull($foreignKey['column'])
+            ->whereNotExists(function (QueryBuilder $query) use ($foreignKey): void {
+                $query->selectRaw('1')
+                    ->from($foreignKey['referencedTable'].' as parent')
+                    ->whereColumn('parent.id', $foreignKey['table'].'.'.$foreignKey['column']);
+            })
+            ->delete();
+    }
+
+    private function whereSnapshot(QueryBuilder $query, string $table, object $row): void
+    {
+        foreach ((array) $row as $column => $value) {
+            if ($value === null) {
+                $query->whereNull($column);
+            } elseif (in_array(Schema::getColumnType($table, $column), ['json', 'jsonb'], true)) {
+                $wrappedColumn = $query->getGrammar()->wrap($column);
+
+                if (DB::getDriverName() === 'pgsql') {
+                    $query->whereRaw($wrappedColumn.'::text = ?', [$value]);
+                } elseif (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+                    $query->whereRaw("JSON_EXTRACT({$wrappedColumn}, '$') = JSON_EXTRACT(?, '$')", [$value]);
+                } else {
+                    $query->where($column, $value);
+                }
+            } else {
+                $query->where($column, $value);
             }
         }
     }

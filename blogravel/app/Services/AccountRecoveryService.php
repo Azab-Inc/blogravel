@@ -67,6 +67,14 @@ class AccountRecoveryService
                 : null;
 
             if ($user->tenant_id !== null && $tenant === null) {
+                if ($user->role === Role::Admin) {
+                    $user->forceFill(['tenant_id' => null])->saveQuietly();
+                    $user->restore();
+                    session()->put('recovery.needs_tenant_setup', $user->getKey());
+
+                    return [AccountRecoveryResult::RestoredUserNeedsTenant, $user];
+                }
+
                 return [AccountRecoveryResult::TenantClosureBlocked, null];
             }
 

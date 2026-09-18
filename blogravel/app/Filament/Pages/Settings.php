@@ -23,7 +23,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class Settings extends Page
 {
@@ -66,7 +65,7 @@ class Settings extends Page
                     'default' => 1,
                     'md' => 2,
                 ])->schema([
-                    Section::make('Permissions')
+                    Section::make('Site')
                         ->columns(1)
                         ->collapsible()
                         ->schema([
@@ -74,11 +73,6 @@ class Settings extends Page
                                 ->label('Allow authors to view other authors\' draft posts')
                                 ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
                                 ->default(false),
-                        ]),
-                    Section::make('Site')
-                        ->columns(1)
-                        ->collapsible()
-                        ->schema([
                             Toggle::make('theme_enabled')
                                 ->label('Enable public theme frontend')
                                 ->helperText('When enabled, visitors can view your blog via the public theme. When disabled, only the API is available (headless mode).')
@@ -91,9 +85,14 @@ class Settings extends Page
                                     ->toArray())
                                 ->default(config('theme.default', 'base'))
                                 ->visible(fn (Get $get): bool => $get('theme_enabled')),
+                            Action::make('saveSite')
+                                ->label('Save Site')
+                                ->action(function (): void {
+                                    $this->saveSite();
+                                }),
                         ]),
                     Section::make('Account')
-                        ->columnSpanFull()
+                        ->columns(1)
                         ->collapsible()
                         ->schema([
                             TextInput::make('first_name')
@@ -197,6 +196,11 @@ class Settings extends Page
                                                 ->send();
                                         }),
                                 ]),
+                            Action::make('saveAccount')
+                                ->label('Save Account')
+                                ->action(function (): void {
+                                    $this->saveAccount();
+                                }),
                         ]),
 
                 ]),
@@ -204,32 +208,9 @@ class Settings extends Page
             ->statePath('data');
     }
 
-    public function save(): void
+    public function saveSite(): void
     {
-        $user = Auth::user();
         $data = $this->data;
-
-        $this->validate([
-            'data.first_name' => ['required', 'string', 'max:255'],
-            'data.last_name' => ['required', 'string', 'max:255'],
-            'data.email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
-        ]);
-
-        $user->update([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
-        ]);
-
-        if (! empty($data['password'])) {
-            if (! empty($data['current_password']) && Hash::check($data['current_password'], $user->password)) {
-                $user->update(['password' => $data['password']]);
-                $this->data['current_password'] = null;
-                $this->data['password'] = null;
-                $this->data['password_confirmation'] = null;
-            }
-        }
-
         $tenantId = auth()->user()->tenant_id;
         Setting::updateOrCreate(
             ['tenant_id' => $tenantId, 'key' => 'authors_can_view_others_posts'],
@@ -247,7 +228,40 @@ class Settings extends Page
         );
 
         Notification::make()
-            ->title('Settings saved')
+            ->title('Site settings saved')
+            ->success()
+            ->send();
+    }
+
+    public function saveAccount(): void
+    {
+        $user = Auth::user();
+        $data = $this->data;
+
+        $this->validate([
+            'data.first_name' => ['required', 'string', 'max:255'],
+            'data.last_name' => ['required', 'string', 'max:255'],
+            'data.email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'data.password' => ['nullable', 'string', 'max:255'],
+            'data.password_confirmation' => ['required_with:data.password', 'same:data.password'],
+            'data.current_password' => ['required_with:data.password', 'current_password:web'],
+        ]);
+
+        $user->update([
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+        ]);
+
+        if (! empty($data['password'])) {
+            $user->update(['password' => $data['password']]);
+            $this->data['current_password'] = null;
+            $this->data['password'] = null;
+            $this->data['password_confirmation'] = null;
+        }
+
+        Notification::make()
+            ->title('Account settings saved')
             ->success()
             ->send();
     }

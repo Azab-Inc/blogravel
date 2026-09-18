@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
 it('settings page renders for admin', function () {
@@ -79,7 +80,7 @@ it('shows permissions section with toggle', function () {
 
     $response = $this->get('/admin/settings');
     $response->assertStatus(200)
-        ->assertSee('Permissions')
+        ->assertSee('Site')
         ->assertSee('authors_can_view_others_posts');
 });
 
@@ -93,7 +94,7 @@ it('saves the authors_can_view_others_posts toggle', function () {
 
     Livewire::test(Settings::class)
         ->set('data.authors_can_view_others_posts', true)
-        ->call('save')
+        ->call('saveSite')
         ->assertHasNoErrors();
 
     $setting = Setting::where('tenant_id', $tenant->id)
@@ -102,6 +103,45 @@ it('saves the authors_can_view_others_posts toggle', function () {
 
     expect($setting)->not->toBeNull();
     expect($setting->value)->toBe('true');
+});
+
+it('saves a password change from Settings', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::test(Settings::class)
+        ->set('data.password', 'new-password-123')
+        ->set('data.password_confirmation', 'new-password-123')
+        ->set('data.current_password', 'password')
+        ->call('saveAccount')
+        ->assertHasNoErrors();
+
+    expect(Hash::check('new-password-123', $user->refresh()->password))->toBeTrue();
+});
+
+it('saves site settings without requiring account fields', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::test(Settings::class)
+        ->set('data.authors_can_view_others_posts', true)
+        ->set('data.theme_enabled', false)
+        ->call('saveSite')
+        ->assertHasNoErrors();
+
+    expect(Setting::where('tenant_id', $tenant->id)->pluck('value', 'key')->all())
+        ->toMatchArray([
+            'authors_can_view_others_posts' => 'true',
+            'theme_enabled' => 'false',
+        ]);
 });
 
 it('defaults authors_can_view_others_posts to false', function () {
@@ -169,7 +209,7 @@ it('toggling off saves false', function () {
 
     Livewire::test(Settings::class)
         ->set('data.authors_can_view_others_posts', false)
-        ->call('save')
+        ->call('saveSite')
         ->assertHasNoErrors();
 
     $setting = Setting::where('tenant_id', $tenant->id)

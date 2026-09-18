@@ -10,8 +10,11 @@ use App\Filament\Pages\TenantSetup;
 use App\Filament\Widgets\LatestPosts;
 use App\Filament\Widgets\OpenModeWarning;
 use App\Filament\Widgets\StatsOverview;
+use App\Models\User;
+use App\Services\DataExportService;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -26,6 +29,7 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -46,6 +50,13 @@ class AdminPanelProvider extends PanelProvider
             ->authenticatedRoutes(function (): void {
                 Route::get('/tenant-setup', TenantSetup::class)
                     ->name('tenant-setup');
+                Route::get('/tenant-exports/{identifier}', function (string $identifier, DataExportService $exports) {
+                    $user = Filament::auth()->user();
+                    abort_unless($user instanceof User, 403);
+                    $path = $exports->authorizeDownload($user, $identifier);
+
+                    return Storage::disk('local')->download($path, 'tenant-export-'.$identifier.'.zip');
+                })->name('tenant-export.download');
             })
             ->colors([
                 'primary' => Color::Amber,

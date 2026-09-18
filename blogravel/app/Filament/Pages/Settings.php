@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Enums\Role;
 use App\Models\Setting;
+use App\Models\Tenant;
 use App\Providers\ThemeServiceProvider;
 use App\Services\AccountLifecycleService;
+use App\Services\DataExportService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -145,8 +147,46 @@ class Settings extends Page
                                     ->modalDescription('Are you sure you want to close your account? If you are the last administrator, your tenant will also be closed. This action can be reversed within 30 days by contacting support.')
                                     ->modalSubmitActionLabel('Yes, Close My Account')
                                     ->form(fn (): array => $this->getCloseAccountForm())
-                                    ->action(function (array $data, AccountLifecycleService $lifecycle): void {
+                                    ->action(function (array $data, AccountLifecycleService $lifecycle, DataExportService $exports): void {
+                                        $format = $data['export_format'] ?? 'none';
+                                        if ($format !== 'none') {
+                                            $user = Auth::user();
+                                            if ($user->tenant !== null) {
+                                                $exports->queue($user->tenant, $user, $format);
+                                            }
+                                        }
+
                                         $this->closeAccount($data['tenant_confirmation'] ?? null, $lifecycle);
+                                    }),
+                                Action::make('exportTenantData')
+                                    ->label('Export tenant data')
+                                    ->icon('heroicon-o-arrow-down-tray')
+                                    ->form([
+                                        Select::make('tenant_id')
+                                            ->label('Tenant')
+                                            ->options(fn (): array => $this->getExportableTenants())
+                                            ->default(fn (): ?string => Auth::user()->tenant_id)
+                                            ->required(fn (): bool => Auth::user()->isSuperAdmin())
+                                            ->visible(fn (): bool => Auth::user()->isSuperAdmin()),
+                                        Select::make('format')
+                                            ->label('Format')
+                                            ->options([
+                                                'csv' => 'CSV',
+                                                'xlsx' => 'XLSX',
+                                            ])
+                                            ->default('csv')
+                                            ->required(),
+                                    ])
+                                    ->action(function (array $data, DataExportService $exports): void {
+                                        $user = Auth::user();
+                                        $tenant = $this->tenantForExport($data['tenant_id'] ?? null);
+                                        $identifier = $exports->queue($tenant, $user, $data['format']);
+
+                                        Notification::make()
+                                            ->title('Export queued')
+                                            ->body('Export '.$identifier.' will be available for download for 24 hours.')
+                                            ->success()
+                                            ->send();
                                     }),
                             ]),
                     ]),
@@ -237,16 +277,30 @@ class Settings extends Page
         $user = Auth::user();
         $tenant = $user->tenant;
 
-        if ($tenant === null || ! app(AccountLifecycleService::class)->isLastAdministrator($user)) {
+        if ($tenant === null) {
             return [];
         }
 
-        return [
-            TextInput::make('tenant_confirmation')
+        $form = [
+            Select::make('export_format')
+                ->label('Export a copy before closing')
+                ->options([
+                    'none' => 'No export',
+                    'csv' => 'CSV',
+                    'xlsx' => 'XLSX',
+                ])
+                ->default('none')
+                ->required(),
+        ];
+
+        if (app(AccountLifecycleService::class)->isLastAdministrator($user)) {
+            $form[] = TextInput::make('tenant_confirmation')
                 ->label('Type the tenant name or slug to confirm')
                 ->required()
-                ->in(array_values(array_filter([$tenant->name, $tenant->slug]))),
-        ];
+                ->in(array_values(array_filter([$tenant->name, $tenant->slug])));
+        }
+
+        return $form;
     }
 
     protected function getSetting(string $key, ?string $default = null): ?string
@@ -256,5 +310,37 @@ class Settings extends Page
         return Setting::where('tenant_id', $tenantId)
             ->where('key', $key)
             ->value('value') ?? $default;
+    }
+
+    /** @return array<string, string> */
+    protected function getExportableTenants(): array
+    {
+        $user = Auth::user();
+        if (! $user->isSuperAdmin()) {
+            return $user->tenant_id === null
+                ? []
+                : Tenant::whereKey($user->tenant_id)->pluck('name', 'id')->all();
+        }
+
+        return Tenant::withoutGlobalScopes()
+            ->withTrashed()
+            ->get()
+            ->filter(fn (Tenant $tenant): bool => $tenant->deleted_at === null || ! $tenant->deleted_at->isBefore(now()->subDays(30)))
+            ->sortBy('name')
+            ->mapWithKeys(fn (Tenant $tenant): array => [
+                $tenant->getKey() => $tenant->name.($tenant->trashed() ? ' (recoverable)' : ''),
+            ])
+            ->all();
+    }
+
+    protected function tenantForExport(?string $tenantId): Tenant
+    {
+        $user = Auth::user();
+
+        if ($user->isSuperAdmin() && $tenantId !== null) {
+            return Tenant::withoutGlobalScopes()->withTrashed()->findOrFail($tenantId);
+        }
+
+        return Tenant::findOrFail($user->tenant_id);
     }
 }

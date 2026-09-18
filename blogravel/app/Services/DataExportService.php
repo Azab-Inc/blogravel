@@ -220,6 +220,32 @@ class DataExportService
         }
     }
 
+    public function purgeTenantExports(string $tenantId): void
+    {
+        $disk = Storage::disk('local');
+
+        foreach ($disk->files('exports') as $manifestPath) {
+            if (! str_ends_with($manifestPath, '.json')) {
+                continue;
+            }
+
+            $manifest = json_decode($disk->get($manifestPath), true);
+            if (! is_array($manifest)) {
+                throw new RuntimeException("Unable to decode tenant export manifest [{$manifestPath}].");
+            }
+
+            if (! isset($manifest['tenant_id']) || ! is_string($manifest['tenant_id'])) {
+                throw new RuntimeException("Tenant export manifest [{$manifestPath}] has no tenant identifier.");
+            }
+
+            if ((string) $manifest['tenant_id'] !== $tenantId) {
+                continue;
+            }
+
+            $this->deleteManifestAndArchive($manifestPath, $manifest, true);
+        }
+    }
+
     /**
      * @return list<array{name: string, headers: list<string>, rows: iterable<array<int, mixed>>}>
      */
@@ -505,14 +531,19 @@ class DataExportService
     }
 
     /** @param array<string, mixed> $manifest */
-    private function deleteManifestAndArchive(string $manifestPath, array $manifest): void
+    private function deleteManifestAndArchive(string $manifestPath, array $manifest, bool $requireSafeOutputPath = false): void
     {
         $disk = Storage::disk('local');
-        $disk->delete($manifestPath);
-
         $outputPath = $manifest['output_path'] ?? null;
+
+        if ($requireSafeOutputPath && (! is_string($outputPath) || $this->safePath($outputPath) !== $outputPath)) {
+            throw new RuntimeException("Tenant export manifest [{$manifestPath}] has no safe output path.");
+        }
+
         if (is_string($outputPath) && $this->safePath($outputPath) === $outputPath) {
             $disk->delete($outputPath);
         }
+
+        $disk->delete($manifestPath);
     }
 }

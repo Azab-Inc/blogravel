@@ -4,6 +4,7 @@ use App\Enums\DeletionReason;
 use App\Enums\Role;
 use App\Models\Backup;
 use App\Models\Media;
+use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tenant;
 use App\Models\User;
@@ -110,6 +111,48 @@ it('does not purge a tenant before its retention deadline', function () {
 
     expect(app(RetentionPurgeService::class)->purgeDueTenants(now()))->toBe(0);
     expect(Tenant::withTrashed()->find($tenant->id))->not->toBeNull();
+});
+
+it('keeps a tenant pending when a matching export manifest has no safe output path', function () {
+    Storage::fake('local');
+
+    $tenant = Tenant::factory()->create();
+    $tenant->forceFill(['deleted_at' => now()->subDays(30)])->saveQuietly();
+    Storage::disk('local')->put('exports/pending.zip', 'export');
+    Storage::disk('local')->put('exports/pending.json', json_encode([
+        'tenant_id' => $tenant->id,
+    ], JSON_THROW_ON_ERROR));
+
+    expect(fn () => app(RetentionPurgeService::class)->purgeDueTenants(now()))
+        ->toThrow(RuntimeException::class);
+    expect(Tenant::withTrashed()->find($tenant->id))->not->toBeNull();
+    Storage::disk('local')->assertExists('exports/pending.zip');
+
+    Storage::disk('local')->put('exports/pending.json', json_encode([
+        'tenant_id' => $tenant->id,
+        'output_path' => 'exports/pending.zip',
+    ], JSON_THROW_ON_ERROR));
+
+    expect(app(RetentionPurgeService::class)->purgeDueTenants(now()))->toBe(1);
+    expect(Tenant::withTrashed()->find($tenant->id))->toBeNull();
+    Storage::disk('local')->assertMissing('exports/pending.zip');
+});
+
+it('keeps a tenant pending when a matching export manifest has an unsafe output path', function () {
+    Storage::fake('local');
+
+    $tenant = Tenant::factory()->create();
+    $tenant->forceFill(['deleted_at' => now()->subDays(30)])->saveQuietly();
+    Storage::disk('local')->put('exports/pending.zip', 'export');
+    Storage::disk('local')->put('exports/pending.json', json_encode([
+        'tenant_id' => $tenant->id,
+        'output_path' => '../pending.zip',
+    ], JSON_THROW_ON_ERROR));
+
+    expect(fn () => app(RetentionPurgeService::class)->purgeDueTenants(now()))
+        ->toThrow(InvalidArgumentException::class);
+    expect(Tenant::withTrashed()->find($tenant->id))->not->toBeNull();
+    Storage::disk('local')->assertExists('exports/pending.zip');
 });
 
 it('does not force-delete a user before its own deadline', function () {
@@ -256,10 +299,102 @@ it('retries a tenant after a file cleanup failure without losing the tenant', fu
     expect($realDisk->exists($media->file_path))->toBeFalse();
 });
 
+it('retries user purge after a user-reference cleanup failure', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->forTenant($tenant)->create();
+    $user->forceFill([
+        'deleted_at' => now()->subDays(30),
+        'deletion_reason' => DeletionReason::SelfClosed,
+    ])->saveQuietly();
+
+    DB::table('personal_access_tokens')->insert([
+        'tokenable_type' => User::class,
+        'tokenable_id' => $user->id,
+        'name' => 'retry-token',
+        'token' => hash('sha256', 'retry-token'),
+        'abilities' => '["*"]',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    if (DB::getDriverName() === 'sqlite') {
+        DB::statement('CREATE TRIGGER fail_user_reference_delete BEFORE DELETE ON personal_access_tokens BEGIN SELECT RAISE(IGNORE); END');
+    } elseif (DB::getDriverName() === 'pgsql') {
+        DB::statement('CREATE FUNCTION fail_user_reference_delete() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NULL; END; $$');
+        DB::statement('CREATE TRIGGER fail_user_reference_delete BEFORE DELETE ON personal_access_tokens FOR EACH ROW EXECUTE FUNCTION fail_user_reference_delete()');
+    } else {
+        test()->markTestSkipped('The active database cannot create the reference-failure trigger.');
+    }
+
+    try {
+        expect(fn () => app(RetentionPurgeService::class)->purgeDueUsers(now()))
+            ->toThrow(RuntimeException::class, 'user personal access tokens');
+    } finally {
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('DROP TRIGGER fail_user_reference_delete');
+        } else {
+            DB::statement('DROP TRIGGER fail_user_reference_delete ON personal_access_tokens');
+            DB::statement('DROP FUNCTION fail_user_reference_delete()');
+        }
+    }
+
+    expect(User::withoutGlobalScopes()->withTrashed()->find($user->id))->not->toBeNull();
+    expect(Tenant::withTrashed()->find($tenant->id))->not->toBeNull();
+
+    expect(app(RetentionPurgeService::class)->purgeDueUsers(now()))->toBe(1);
+    expect(User::withoutGlobalScopes()->withTrashed()->find($user->id))->toBeNull();
+    expect(Tenant::withTrashed()->find($tenant->id))->not->toBeNull();
+});
+
+it('uses PostgreSQL cascades for tenant content', function () {
+    if (DB::getDriverName() !== 'pgsql') {
+        test()->markTestSkipped('PostgreSQL is not the active test database.');
+    }
+
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->forTenant($tenant)->create();
+    $page = Page::factory()->create(['tenant_id' => $tenant->id]);
+    $media = Media::factory()->create(['tenant_id' => $tenant->id]);
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+    ]);
+    $tenant->forceFill(['deleted_at' => now()->subDays(30)])->saveQuietly();
+
+    expect(app(RetentionPurgeService::class)->purgeDueTenants(now()))->toBe(1);
+    expect(Tenant::withTrashed()->find($tenant->id))->toBeNull()
+        ->and(Page::withoutGlobalScopes()->find($page->id))->toBeNull()
+        ->and(Media::withoutGlobalScopes()->find($media->id))->toBeNull()
+        ->and(Post::withoutGlobalScopes()->find($post->id))->toBeNull();
+})->group('postgres');
+
+it('uses PostgreSQL cascades for authored posts during user purge', function () {
+    if (DB::getDriverName() !== 'pgsql') {
+        test()->markTestSkipped('PostgreSQL is not the active test database.');
+    }
+
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->forTenant($tenant)->create();
+    $post = Post::factory()->create([
+        'tenant_id' => $tenant->id,
+        'author_id' => $user->id,
+    ]);
+    $user->forceFill([
+        'deleted_at' => now()->subDays(30),
+        'deletion_reason' => DeletionReason::SelfClosed,
+    ])->saveQuietly();
+
+    expect(app(RetentionPurgeService::class)->purgeDueUsers(now()))->toBe(1);
+    expect(User::withoutGlobalScopes()->withTrashed()->find($user->id))->toBeNull()
+        ->and(Post::withoutGlobalScopes()->find($post->id))->toBeNull();
+})->group('postgres');
+
 it('registers one daily non-overlapping GDPR cleanup schedule', function () {
     $events = collect(app(Schedule::class)->events())
         ->filter(fn ($event): bool => str_contains((string) $event->command, 'gdpr:purge-expired'));
 
     expect($events)->toHaveCount(1)
-        ->and($events->first()->getExpression())->toBe('0 0 * * *');
+        ->and($events->first()->getExpression())->toBe('0 0 * * *')
+        ->and($events->first()->withoutOverlapping)->toBeTrue()
+        ->and($events->first()->onOneServer)->toBeTrue();
 });

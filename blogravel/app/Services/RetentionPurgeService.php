@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,8 @@ use RuntimeException;
 class RetentionPurgeService
 {
     private const RETENTION_DAYS = 30;
+
+    public function __construct(private readonly DataExportService $exports) {}
 
     public function purgeDueTenants(CarbonImmutable $now): int
     {
@@ -74,7 +77,7 @@ class RetentionPurgeService
         $userIds = $users->modelKeys();
         $this->deleteMediaFiles($media);
         $this->deleteBackupFiles($backups);
-        $this->deleteTenantExports((string) $tenant->getKey());
+        $this->exports->purgeTenantExports((string) $tenant->getKey());
         $this->deleteTenantReferences((string) $tenant->getKey(), $userIds);
 
         DB::transaction(function () use ($tenant, $users): void {
@@ -146,29 +149,6 @@ class RetentionPurgeService
         }
     }
 
-    private function deleteTenantExports(string $tenantId): void
-    {
-        $disk = Storage::disk('local');
-
-        foreach ($disk->files('exports') as $manifestPath) {
-            if (! str_ends_with($manifestPath, '.json')) {
-                continue;
-            }
-
-            $manifest = json_decode($disk->get($manifestPath), true);
-            if (! is_array($manifest) || (string) ($manifest['tenant_id'] ?? '') !== $tenantId) {
-                continue;
-            }
-
-            $outputPath = $manifest['output_path'] ?? null;
-            if (is_string($outputPath)) {
-                $this->deleteFile($disk, $outputPath);
-            }
-
-            $this->deleteFile($disk, $manifestPath);
-        }
-    }
-
     /**
      * @param  list<string>  $userIds
      */
@@ -177,28 +157,35 @@ class RetentionPurgeService
         $this->deleteQueuedReferences([$tenantId, ...$userIds]);
 
         if (Schema::hasTable('personal_access_tokens') && $userIds !== []) {
-            DB::table('personal_access_tokens')
-                ->where('tokenable_type', User::class)
-                ->whereIn('tokenable_id', $userIds)
-                ->delete();
+            $this->deleteReferences(
+                DB::table('personal_access_tokens')
+                    ->where('tokenable_type', User::class)
+                    ->whereIn('tokenable_id', $userIds),
+                'tenant personal access tokens',
+            );
         }
 
         if (Schema::hasTable('sessions') && $userIds !== []) {
-            DB::table('sessions')->whereIn('user_id', $userIds)->delete();
+            $this->deleteReferences(
+                DB::table('sessions')->whereIn('user_id', $userIds),
+                'tenant sessions',
+            );
         }
 
         if (Schema::hasTable('notifications')) {
-            DB::table('notifications')
-                ->where(function ($query) use ($tenantId, $userIds): void {
-                    $query->where(function ($query) use ($userIds): void {
-                        $query->where('notifiable_type', User::class)
-                            ->whereIn('notifiable_id', $userIds);
-                    })->orWhere(function ($query) use ($tenantId): void {
-                        $query->where('notifiable_type', Tenant::class)
-                            ->where('notifiable_id', $tenantId);
-                    });
-                })
-                ->delete();
+            $this->deleteReferences(
+                DB::table('notifications')
+                    ->where(function ($query) use ($tenantId, $userIds): void {
+                        $query->where(function ($query) use ($userIds): void {
+                            $query->where('notifiable_type', User::class)
+                                ->whereIn('notifiable_id', $userIds);
+                        })->orWhere(function ($query) use ($tenantId): void {
+                            $query->where('notifiable_type', Tenant::class)
+                                ->where('notifiable_id', $tenantId);
+                        });
+                    }),
+                'tenant notifications',
+            );
         }
     }
 
@@ -208,29 +195,51 @@ class RetentionPurgeService
         $this->deleteQueuedReferences([$userId]);
 
         if (Schema::hasTable('personal_access_tokens')) {
-            DB::table('personal_access_tokens')
-                ->where('tokenable_type', User::class)
-                ->where('tokenable_id', $userId)
-                ->delete();
+            $this->deleteReferences(
+                DB::table('personal_access_tokens')
+                    ->where('tokenable_type', User::class)
+                    ->where('tokenable_id', $userId),
+                'user personal access tokens',
+            );
         }
 
         if (Schema::hasTable('sessions')) {
-            DB::table('sessions')->where('user_id', $userId)->delete();
+            $this->deleteReferences(
+                DB::table('sessions')->where('user_id', $userId),
+                'user sessions',
+            );
         }
 
         if (Schema::hasTable('notifications')) {
-            DB::table('notifications')
-                ->where('notifiable_type', User::class)
-                ->where('notifiable_id', $userId)
-                ->delete();
+            $this->deleteReferences(
+                DB::table('notifications')
+                    ->where('notifiable_type', User::class)
+                    ->where('notifiable_id', $userId),
+                'user notifications',
+            );
         }
 
         if (Schema::hasTable('password_reset_tokens')) {
-            DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+            $this->deleteReferences(
+                DB::table('password_reset_tokens')->where('email', $user->email),
+                'user password reset tokens',
+            );
         }
 
         if (Schema::hasTable('passkeys')) {
-            DB::table('passkeys')->where('user_id', $userId)->delete();
+            $this->deleteReferences(
+                DB::table('passkeys')->where('user_id', $userId),
+                'user passkeys',
+            );
+        }
+    }
+
+    private function deleteReferences(Builder $query, string $description): void
+    {
+        $expected = $query->count();
+
+        if ($expected > 0 && $query->delete() !== $expected) {
+            throw new RuntimeException("Unable to delete {$description}.");
         }
     }
 
@@ -249,13 +258,14 @@ class RetentionPurgeService
                 continue;
             }
 
-            DB::table($table)
+            $query = DB::table($table)
                 ->where(function ($query) use ($column, $identifiers): void {
                     foreach ($identifiers as $identifier) {
                         $query->orWhere($column, 'like', '%'.$identifier.'%');
                     }
-                })
-                ->delete();
+                });
+
+            $this->deleteReferences($query, "queued references from {$table}");
         }
     }
 }

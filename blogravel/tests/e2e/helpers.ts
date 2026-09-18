@@ -3,6 +3,14 @@ import { type Page } from '@playwright/test';
 export const TEST_EMAIL = 'contact@azaber.com';
 export const TEST_PASSWORD = 'password';
 
+export const TEST_USERS = {
+  superAdmin: { email: TEST_EMAIL, password: TEST_PASSWORD },
+  tenantAdmin: { email: 'admin@acme.io', password: 'password' },
+  otherTenantAdmin: { email: 'admin@globex.net', password: 'password' },
+} as const;
+
+export type TestUserRole = keyof typeof TEST_USERS;
+
 async function clearMailpit() {
   try {
     await fetch('http://localhost:8025/api/v1/messages', { method: 'DELETE' });
@@ -70,14 +78,14 @@ async function handleMfaChallenge(page: Page) {
   }
 }
 
-export async function login(page: Page) {
+export async function login(page: Page, credentials = TEST_USERS.superAdmin) {
   await clearMailpit();
   await page.goto('/admin/login');
 
   await page.locator('input[type="email"]').click();
-  await page.locator('input[type="email"]').pressSequentially(TEST_EMAIL, { delay: 10 });
+  await page.locator('input[type="email"]').pressSequentially(credentials.email, { delay: 10 });
   await page.locator('input[type="password"]').click();
-  await page.locator('input[type="password"]').pressSequentially(TEST_PASSWORD, { delay: 10 });
+  await page.locator('input[type="password"]').pressSequentially(credentials.password, { delay: 10 });
 
   await Promise.all([
     page.waitForNavigation({ timeout: 15000 }).catch(() => {}),
@@ -96,4 +104,8 @@ export async function login(page: Page) {
       return path === '/admin' || path === '/admin/';
     }, { timeout: 15000 });
   } catch {}
+}
+
+export async function loginAs(page: Page, role: TestUserRole) {
+  await login(page, TEST_USERS[role]);
 }

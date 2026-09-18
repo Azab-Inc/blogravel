@@ -235,8 +235,10 @@ it('dispatches to a bounded pool queue derived from the tenant id', function () 
 
 it('dispatches different tenants into the valid pool range', function () {
     $provider = AiProvider::factory()->create();
+    $tenants = Tenant::factory()->count(2)->create();
 
-    foreach (['tenant-a', 'tenant-b'] as $tenantId) {
+    foreach ($tenants as $tenant) {
+        $tenantId = $tenant->id;
         $post = Post::factory()->create([
             'tenant_id' => $tenantId,
             'author_id' => User::factory()->create(['tenant_id' => $tenantId])->id,

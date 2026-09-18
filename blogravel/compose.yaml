@@ -118,6 +118,23 @@ services:
         restart: unless-stopped
         command: >
             /bin/bash -c "php artisan queue:work redis --sleep=3 --tries=3 --timeout=0 --verbose"
+    scheduler:
+        image: 'sail-8.5/app'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        restart: unless-stopped
+        command: >
+            /bin/bash -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
 networks:
     sail:
         driver: bridge

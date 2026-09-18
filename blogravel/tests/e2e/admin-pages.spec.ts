@@ -24,4 +24,20 @@ test.describe('Admin Pages Smoke Tests', () => {
       await expect(page.locator('body')).toContainText(pageData.contains);
     });
   }
+
+  test('lays out settings sections in columns below the large breakpoint', async ({ page }) => {
+    await page.setViewportSize({ width: 945, height: 917 });
+    await page.goto('/admin/settings');
+
+    const sections = page.locator('.fi-sc-section > .fi-section');
+    const permissions = await sections.nth(0).boundingBox();
+    const site = await sections.nth(1).boundingBox();
+    const account = await sections.nth(2).boundingBox();
+
+    expect(permissions).not.toBeNull();
+    expect(site).not.toBeNull();
+    expect(account).not.toBeNull();
+    expect(Math.abs((permissions?.x ?? 0) - (site?.x ?? 0))).toBeGreaterThan(100);
+    expect(account?.width ?? 0).toBeGreaterThan((permissions?.width ?? 0) * 1.8);
+  });
 });

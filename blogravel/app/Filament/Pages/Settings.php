@@ -62,7 +62,10 @@ class Settings extends Page
     {
         return $schema
             ->components([
-                Grid::make(2)->schema([
+                Grid::make([
+                    'default' => 1,
+                    'md' => 2,
+                ])->schema([
                     Section::make('Permissions')
                         ->columns(1)
                         ->collapsible()
@@ -90,6 +93,7 @@ class Settings extends Page
                                 ->visible(fn (Get $get): bool => $get('theme_enabled')),
                         ]),
                     Section::make('Account')
+                        ->columnSpanFull()
                         ->collapsible()
                         ->schema([
                             TextInput::make('first_name')

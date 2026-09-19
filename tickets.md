@@ -29,7 +29,6 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#21](https://github.com/Azab-Inc/blogravel/issues/21) | Settings infrastructure | Done |
 | [#22](https://github.com/Azab-Inc/blogravel/issues/22) | Media storage & uploads | Done |
 | [#46](https://github.com/Azab-Inc/blogravel/issues/46) | Tenant subdomain routing & root-domain entrypoint | Done |
-| [#23](https://github.com/Azab-Inc/blogravel/issues/23) | CI/CD pipeline (GitHub Actions) | Todo |
 | [#24](https://github.com/Azab-Inc/blogravel/issues/24) | GDPR subscriber data deletion & privacy controls | Done |
 | [#25](https://github.com/Azab-Inc/blogravel/issues/25) | Automated database backups | Done |
 | [#26](https://github.com/Azab-Inc/blogravel/issues/26) | Starter theme accessibility (WCAG 2.1 AA) | Done |
@@ -53,3 +52,4 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#44](https://github.com/Azab-Inc/blogravel/issues/44) | Feature: Soft Delete Support for Users and Tenants | Done |
 | [#45](https://github.com/Azab-Inc/blogravel/issues/45) | Filament admin panel custom theme (Vite + Tailwind) | Todo |
 | [#47](https://github.com/Azab-Inc/blogravel/issues/47) | Public base theme light mode and dark mode toggle | Todo |
+| [#48](https://github.com/Azab-Inc/blogravel/issues/48) | CI/CD pipeline (GitHub Actions) | Todo |

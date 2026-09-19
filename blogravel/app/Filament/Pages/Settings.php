@@ -109,198 +109,206 @@ class Settings extends Page
             ->components([
                 Grid::make([
                     'default' => 1,
-                    'md' => 1,
+                    'md' => 2,
                 ])->schema([
-                    Section::make('Site')
-                        ->columns(1)
-                        ->collapsible()
-                        ->schema([
-                            Toggle::make('authors_can_view_others_posts')
-                                ->label('Allow authors to view other authors\' draft posts')
-                                ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
-                                ->default(false),
-                            Toggle::make('theme_enabled')
-                                ->label('Enable public theme frontend')
-                                ->helperText('When enabled, visitors can view your blog via the public theme. When disabled, only the API is available (headless mode).')
-                                ->default(true),
-                            Select::make('active_theme')
-                                ->label('Active Theme')
-                                ->helperText('Select the theme used for your public blog frontend.')
-                                ->options(fn () => collect(app()->getProvider(ThemeServiceProvider::class)?->getAvailableThemes() ?? [])
-                                    ->mapWithKeys(fn ($theme) => [$theme['name'] => $theme['name'].($theme['is_base'] ? ' (base)' : '')])
-                                    ->toArray())
-                                ->default(config('theme.default', 'base'))
-                                ->visible(fn (Get $get): bool => $get('theme_enabled')),
-                            Action::make('saveSite')
-                                ->label('Save Site')
-                                ->action(function (): void {
-                                    $this->saveSite();
-                                }),
-                        ]),
-                    Section::make('AI')
-                        ->collapsible()
-                        ->schema([
-                            Section::make('Providers')
-                                ->schema([
-                                    Placeholder::make('provider_count')
-                                        ->label('Configured Providers')
-                                        ->content(fn (): string => (string) $this->providerCount),
-                                    Repeater::make('providers')
-                                        ->label('')
-                                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                                        ->addActionLabel('Add Provider')
-                                        ->columns(2)
-                                        ->schema([
-                                            Hidden::make('id'),
-                                            TextInput::make('name')->label('Name')->required()->maxLength(255),
-                                            Select::make('type')
-                                                ->label('Type')
-                                                ->options(collect(AiProviderType::cases())->mapWithKeys(fn (AiProviderType $type): array => [$type->value => $type->label()])->all())
-                                                ->required()->live()->default(AiProviderType::OpenAi->value),
-                                            TextInput::make('base_url')
-                                                ->label('Base URL')->nullable()->url()->columnSpan(2)
-                                                ->placeholder(fn (Get $get): ?string => match ($get('type')) {
-                                                    AiProviderType::Ollama->value => 'http://localhost:11434',
-                                                    AiProviderType::Custom->value => 'https://api.example.com',
-                                                    default => 'https://api.openai.com/v1',
-                                                }),
-                                            TextInput::make('api_key')->label('API Key')->password()->revealable()->nullable()->helperText('Leave blank to keep the current API key.')->columnSpan(2),
-                                            TextInput::make('model')->label('Model')->required()->placeholder('e.g. gpt-4o, llama3'),
-                                            TextInput::make('temperature')->label('Temperature')->numeric()->minValue(0)->maxValue(2)->default(0.7)->step(0.1),
-                                            TextInput::make('max_tokens')->label('Max Tokens')->numeric()->minValue(1)->default(2048),
-                                            Toggle::make('enabled')->label('Enabled'),
-                                            Textarea::make('custom_template')->label('Custom Template')->nullable()->rows(6)->visible(fn (Get $get): bool => $get('type') === AiProviderType::Custom->value)->required(fn (Get $get): bool => $get('type') === AiProviderType::Custom->value)->columnSpan(2),
-                                        ]),
-                                ]),
-                            Section::make('Defaults')
-                                ->schema([
-                                    Select::make('defaultProvider')->label('Default Provider')->options(fn (): array => AiProvider::where('tenant_id', Auth::user()->tenant_id)->where('enabled', true)->pluck('name', 'id')->toArray())->nullable(),
-                                    CheckboxList::make('defaultOutputTypes')->label('Default Output Types')->options([
-                                        'title' => 'Title', 'content' => 'Content', 'excerpt' => 'Excerpt', 'categories' => 'Categories', 'tags' => 'Tags',
-                                    ])->columns(3),
-                                ]),
-                            Section::make('Media Generation')
-                                ->schema([
-                                    Placeholder::make('coming_soon')->label('Coming Soon')->content('Media generation is coming soon. AI-powered image and video creation will be available in a future update.'),
-                                ]),
-                            Action::make('saveAiSettings')
-                                ->label('Save AI Settings')
-                                ->action(function (): void {
-                                    $this->saveAiSettings();
-                                }),
-                        ]),
-                    Section::make('Account')
-                        ->columns(1)
-                        ->collapsible()
-                        ->schema([
-                            TextInput::make('first_name')
-                                ->label('First Name')
-                                ->required()
-                                ->maxLength(255),
-                            TextInput::make('last_name')
-                                ->label('Last Name')
-                                ->required()
-                                ->maxLength(255),
-                            TextInput::make('email')
-                                ->label('Email')
-                                ->email()
-                                ->required()
-                                ->maxLength(255)
-                                ->unique(ignoreRecord: true),
-                            Section::make('Password')
-                                ->description('Leave blank to keep current password.')
-                                ->schema([
-                                    TextInput::make('password')
-                                        ->label('New Password')
-                                        ->password()
-                                        ->revealable()
-                                        ->dehydrated(false)
-                                        ->maxLength(255),
-                                    TextInput::make('password_confirmation')
-                                        ->label('Confirm New Password')
-                                        ->password()
-                                        ->revealable()
-                                        ->dehydrated(false)
-                                        ->maxLength(255)
-                                        ->visible(true)
-                                        ->required(fn (Get $get): bool => filled($get('password'))),
-                                    TextInput::make('current_password')
-                                        ->label('Current Password')
-                                        ->password()
-                                        ->revealable()
-                                        ->dehydrated(false)
-                                        ->visible(fn (Get $get): bool => filled($get('password')) || ($get('email') !== Auth::user()->email)),
-                                ]),
-                            Section::make('Danger Zone')
-                                ->description('Closing your account will soft-delete your profile. You have 30 days to recover it by contacting support.')
-                                ->schema([
-                                    Placeholder::make('closure_warning')
-                                        ->content(function () {
-                                            $user = Auth::user();
-                                            if (app(AccountLifecycleService::class)->isLastAdministrator($user)) {
-                                                return 'You are the only administrator. Closing this account will also close your tenant. You have 30 days to recover your account and tenant by contacting support.';
-                                            }
-
-                                            return null;
-                                        }),
-                                    Action::make('closeAccount')
-                                        ->label('Close Account')
-                                        ->color('danger')
-                                        ->icon('heroicon-o-trash')
-                                        ->requiresConfirmation()
-                                        ->modalHeading('Close Account')
-                                        ->modalDescription('Are you sure you want to close your account? If you are the last administrator, your tenant will also be closed. This action can be reversed within 30 days by contacting support.')
-                                        ->modalSubmitActionLabel('Yes, Close My Account')
-                                        ->form(fn (): array => $this->getCloseAccountForm())
-                                        ->action(function (array $data, AccountLifecycleService $lifecycle, DataExportService $exports): void {
-                                            $format = $data['export_format'] ?? 'none';
-                                            if ($format !== 'none') {
+                    Grid::make([
+                        'default' => 1,
+                    ])->schema([
+                        Section::make('Site')
+                            ->columns(1)
+                            ->collapsible()
+                            ->schema([
+                                Toggle::make('authors_can_view_others_posts')
+                                    ->label('Allow authors to view other authors\' draft posts')
+                                    ->helperText('When enabled, authors can see draft and pending posts from other authors in the same tenant. When disabled, authors can only see their own drafts and all published posts.')
+                                    ->default(false),
+                                Toggle::make('theme_enabled')
+                                    ->label('Enable public theme frontend')
+                                    ->helperText('When enabled, visitors can view your blog via the public theme. When disabled, only the API is available (headless mode).')
+                                    ->default(true),
+                                Select::make('active_theme')
+                                    ->label('Active Theme')
+                                    ->helperText('Select the theme used for your public blog frontend.')
+                                    ->options(fn () => collect(app()->getProvider(ThemeServiceProvider::class)?->getAvailableThemes() ?? [])
+                                        ->mapWithKeys(fn ($theme) => [$theme['name'] => $theme['name'].($theme['is_base'] ? ' (base)' : '')])
+                                        ->toArray())
+                                    ->default(config('theme.default', 'base'))
+                                    ->visible(fn (Get $get): bool => $get('theme_enabled')),
+                                Action::make('saveSite')
+                                    ->label('Save Site')
+                                    ->action(function (): void {
+                                        $this->saveSite();
+                                    }),
+                            ]),
+                        Section::make('Account')
+                            ->columns(1)
+                            ->collapsible()
+                            ->schema([
+                                TextInput::make('first_name')
+                                    ->label('First Name')
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('last_name')
+                                    ->label('Last Name')
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('email')
+                                    ->label('Email')
+                                    ->email()
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->unique(ignoreRecord: true),
+                                Section::make('Password')
+                                    ->description('Leave blank to keep current password.')
+                                    ->schema([
+                                        TextInput::make('password')
+                                            ->label('New Password')
+                                            ->password()
+                                            ->revealable()
+                                            ->dehydrated(false)
+                                            ->maxLength(255),
+                                        TextInput::make('password_confirmation')
+                                            ->label('Confirm New Password')
+                                            ->password()
+                                            ->revealable()
+                                            ->dehydrated(false)
+                                            ->maxLength(255)
+                                            ->visible(true)
+                                            ->required(fn (Get $get): bool => filled($get('password'))),
+                                        TextInput::make('current_password')
+                                            ->label('Current Password')
+                                            ->password()
+                                            ->revealable()
+                                            ->dehydrated(false)
+                                            ->visible(fn (Get $get): bool => filled($get('password')) || ($get('email') !== Auth::user()->email)),
+                                    ]),
+                                Section::make('Danger Zone')
+                                    ->description('Closing your account will soft-delete your profile. You have 30 days to recover it by contacting support.')
+                                    ->schema([
+                                        Placeholder::make('closure_warning')
+                                            ->content(function () {
                                                 $user = Auth::user();
-                                                if ($user->tenant !== null) {
-                                                    $exports->queue($user->tenant, $user, $format);
+                                                if (app(AccountLifecycleService::class)->isLastAdministrator($user)) {
+                                                    return 'You are the only administrator. Closing this account will also close your tenant. You have 30 days to recover your account and tenant by contacting support.';
                                                 }
-                                            }
 
-                                            $this->closeAccount($data['tenant_confirmation'] ?? null, $lifecycle);
-                                        }),
-                                    Action::make('exportTenantData')
-                                        ->label('Export tenant data')
-                                        ->icon('heroicon-o-arrow-down-tray')
-                                        ->form([
-                                            Select::make('tenant_id')
-                                                ->label('Tenant')
-                                                ->options(fn (): array => $this->getExportableTenants())
-                                                ->default(fn (): ?string => Auth::user()->tenant_id)
-                                                ->required(fn (): bool => Auth::user()->isSuperAdmin())
-                                                ->visible(fn (): bool => Auth::user()->isSuperAdmin()),
-                                            Select::make('format')
-                                                ->label('Format')
-                                                ->options([
-                                                    'csv' => 'CSV',
-                                                    'xlsx' => 'XLSX',
-                                                ])
-                                                ->default('csv')
-                                                ->required(),
-                                        ])
-                                        ->action(function (array $data, DataExportService $exports): void {
-                                            $user = Auth::user();
-                                            $tenant = $this->tenantForExport($data['tenant_id'] ?? null);
-                                            $identifier = $exports->queue($tenant, $user, $data['format']);
+                                                return null;
+                                            }),
+                                        Action::make('closeAccount')
+                                            ->label('Close Account')
+                                            ->color('danger')
+                                            ->icon('heroicon-o-trash')
+                                            ->requiresConfirmation()
+                                            ->modalHeading('Close Account')
+                                            ->modalDescription('Are you sure you want to close your account? If you are the last administrator, your tenant will also be closed. This action can be reversed within 30 days by contacting support.')
+                                            ->modalSubmitActionLabel('Yes, Close My Account')
+                                            ->form(fn (): array => $this->getCloseAccountForm())
+                                            ->action(function (array $data, AccountLifecycleService $lifecycle, DataExportService $exports): void {
+                                                $format = $data['export_format'] ?? 'none';
+                                                if ($format !== 'none') {
+                                                    $user = Auth::user();
+                                                    if ($user->tenant !== null) {
+                                                        $exports->queue($user->tenant, $user, $format);
+                                                    }
+                                                }
 
-                                            Notification::make()
-                                                ->title('Export queued')
-                                                ->body('Export '.$identifier.' will be available for download for 24 hours.')
-                                                ->success()
-                                                ->send();
-                                        }),
-                                ]),
-                            Action::make('saveAccount')
-                                ->label('Save Account')
-                                ->action(function (): void {
-                                    $this->saveAccount();
-                                }),
-                        ]),
+                                                $this->closeAccount($data['tenant_confirmation'] ?? null, $lifecycle);
+                                            }),
+                                        Action::make('exportTenantData')
+                                            ->label('Export tenant data')
+                                            ->icon('heroicon-o-arrow-down-tray')
+                                            ->form([
+                                                Select::make('tenant_id')
+                                                    ->label('Tenant')
+                                                    ->options(fn (): array => $this->getExportableTenants())
+                                                    ->default(fn (): ?string => Auth::user()->tenant_id)
+                                                    ->required(fn (): bool => Auth::user()->isSuperAdmin())
+                                                    ->visible(fn (): bool => Auth::user()->isSuperAdmin()),
+                                                Select::make('format')
+                                                    ->label('Format')
+                                                    ->options([
+                                                        'csv' => 'CSV',
+                                                        'xlsx' => 'XLSX',
+                                                    ])
+                                                    ->default('csv')
+                                                    ->required(),
+                                            ])
+                                            ->action(function (array $data, DataExportService $exports): void {
+                                                $user = Auth::user();
+                                                $tenant = $this->tenantForExport($data['tenant_id'] ?? null);
+                                                $identifier = $exports->queue($tenant, $user, $data['format']);
 
+                                                Notification::make()
+                                                    ->title('Export queued')
+                                                    ->body('Export '.$identifier.' will be available for download for 24 hours.')
+                                                    ->success()
+                                                    ->send();
+                                            }),
+                                    ]),
+                                Action::make('saveAccount')
+                                    ->label('Save Account')
+                                    ->action(function (): void {
+                                        $this->saveAccount();
+                                    }),
+                            ]),
+                    ]),
+                    Grid::make([
+                        'default' => 1,
+                    ])->schema([
+                        Section::make('AI')
+                            ->collapsible()
+                            ->schema([
+                                Section::make('Providers')
+                                    ->schema([
+                                        Placeholder::make('provider_count')
+                                            ->label('Configured Providers')
+                                            ->content(fn (): string => (string) $this->providerCount),
+                                        Repeater::make('providers')
+                                            ->label('')
+                                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                                            ->addActionLabel('Add Provider')
+                                            ->columns(2)
+                                            ->schema([
+                                                Hidden::make('id'),
+                                                TextInput::make('name')->label('Name')->required()->maxLength(255),
+                                                Select::make('type')
+                                                    ->label('Type')
+                                                    ->options(collect(AiProviderType::cases())->mapWithKeys(fn (AiProviderType $type): array => [$type->value => $type->label()])->all())
+                                                    ->required()->live()->default(AiProviderType::OpenAi->value),
+                                                TextInput::make('base_url')
+                                                    ->label('Base URL')->nullable()->url()->columnSpan(2)
+                                                    ->placeholder(fn (Get $get): ?string => match ($get('type')) {
+                                                        AiProviderType::Ollama->value => 'http://localhost:11434',
+                                                        AiProviderType::Custom->value => 'https://api.example.com',
+                                                        default => 'https://api.openai.com/v1',
+                                                    }),
+                                                TextInput::make('api_key')->label('API Key')->password()->revealable()->nullable()->helperText('Leave blank to keep the current API key.')->columnSpan(2),
+                                                TextInput::make('model')->label('Model')->required()->placeholder('e.g. gpt-4o, llama3'),
+                                                TextInput::make('temperature')->label('Temperature')->numeric()->minValue(0)->maxValue(2)->default(0.7)->step(0.1),
+                                                TextInput::make('max_tokens')->label('Max Tokens')->numeric()->minValue(1)->default(2048),
+                                                Toggle::make('enabled')->label('Enabled'),
+                                                Textarea::make('custom_template')->label('Custom Template')->nullable()->rows(6)->visible(fn (Get $get): bool => $get('type') === AiProviderType::Custom->value)->required(fn (Get $get): bool => $get('type') === AiProviderType::Custom->value)->columnSpan(2),
+                                            ]),
+                                    ]),
+                                Section::make('Defaults')
+                                    ->schema([
+                                        Select::make('defaultProvider')->label('Default Provider')->options(fn (): array => AiProvider::where('tenant_id', Auth::user()->tenant_id)->where('enabled', true)->pluck('name', 'id')->toArray())->nullable(),
+                                        CheckboxList::make('defaultOutputTypes')->label('Default Output Types')->options([
+                                            'title' => 'Title', 'content' => 'Content', 'excerpt' => 'Excerpt', 'categories' => 'Categories', 'tags' => 'Tags',
+                                        ])->columns(3),
+                                    ]),
+                                Section::make('Media Generation')
+                                    ->schema([
+                                        Placeholder::make('coming_soon')->label('Coming Soon')->content('Media generation is coming soon. AI-powered image and video creation will be available in a future update.'),
+                                    ]),
+                                Action::make('saveAiSettings')
+                                    ->label('Save AI Settings')
+                                    ->action(function (): void {
+                                        $this->saveAiSettings();
+                                    }),
+                            ]),
+
+                    ]),
                 ]),
             ])
             ->statePath('data');

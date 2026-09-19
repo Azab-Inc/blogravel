@@ -49,7 +49,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#40](https://github.com/Azab-Inc/blogravel/issues/40) | [DX] Add pgAdmin to compose.yaml for local Postgres inspection | Done |
 | [#41](https://github.com/Azab-Inc/blogravel/issues/41) | Database seeders: Dev + User seeder | Done *(not in project)* |
 | [#42](https://github.com/Azab-Inc/blogravel/issues/42) | Fix: Post create fails with author_id null | Done *(not in project)* |
-| [#43](https://github.com/Azab-Inc/blogravel/issues/43) | Feature: User Profile Settings Page in Filament | Todo *(not in project)* |
+| [#43](https://github.com/Azab-Inc/blogravel/issues/43) | Feature: User Profile Settings Page in Filament | Done |
 | [#44](https://github.com/Azab-Inc/blogravel/issues/44) | Feature: Soft Delete Support for Users and Tenants | Done |
 | [#45](https://github.com/Azab-Inc/blogravel/issues/45) | Filament admin panel custom theme (Vite + Tailwind) | Todo |
 | [#47](https://github.com/Azab-Inc/blogravel/issues/47) | Public base theme light mode and dark mode toggle | Todo |

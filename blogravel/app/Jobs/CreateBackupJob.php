@@ -7,6 +7,7 @@ use App\Models\Backup;
 use App\Models\BackupRule;
 use App\Models\Tenant;
 use App\Notifications\BackupReadyNotification;
+use App\Services\DatabaseDumper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -46,7 +47,8 @@ class CreateBackupJob implements ShouldQueue
             // Encrypt with tenant key
             $encryptionKey = $this->getTenantKey($tenant);
             $encryptedPath = $archivePath.'.enc';
-            $plainContent = Storage::disk('local')->get($archivePath);
+            $disk = Storage::disk(config('backups.disk', 'local'));
+            $plainContent = $disk->get($archivePath);
             $encryptedContent = openssl_encrypt(
                 $plainContent,
                 'aes-256-cbc',
@@ -54,15 +56,15 @@ class CreateBackupJob implements ShouldQueue
                 0,
                 substr(md5($tenant->id), 0, 16)
             );
-            Storage::disk('local')->put($encryptedPath, $encryptedContent);
-            Storage::disk('local')->delete($archivePath);
+            $disk->put($encryptedPath, $encryptedContent);
+            $disk->delete($archivePath);
 
-            $size = Storage::disk('local')->size($encryptedPath);
+            $size = $disk->size($encryptedPath);
 
             // Check size limit
             $maxSizeMb = $tenant->plan->limit('backup_max_size_mb');
             if ($maxSizeMb && ($size / 1024 / 1024) > $maxSizeMb) {
-                Storage::disk('local')->delete($encryptedPath);
+                $disk->delete($encryptedPath);
                 throw new \RuntimeException("Backup exceeds plan size limit of {$maxSizeMb}MB");
             }
 
@@ -108,7 +110,7 @@ class CreateBackupJob implements ShouldQueue
 
         // Database dump
         if (in_array($rule->backup_content->value, ['database', 'both'])) {
-            $this->dumpDatabase($tenant, $tempDir);
+            app(DatabaseDumper::class)->dump($tempDir);
         }
 
         // Media files
@@ -119,8 +121,8 @@ class CreateBackupJob implements ShouldQueue
             }
         }
 
-        $archivePath = 'backups/'.$backup->filename;
-        $fullArchivePath = storage_path('app/private/'.$archivePath);
+        $archivePath = trim(config('backups.path', 'backups'), '/').'/'.$backup->filename;
+        $fullArchivePath = Storage::disk(config('backups.disk', 'local'))->path($archivePath);
         app('files')->makeDirectory(dirname($fullArchivePath), 0755, true, true);
 
         // Create tar.gz
@@ -139,30 +141,6 @@ class CreateBackupJob implements ShouldQueue
         }
 
         return $archivePath;
-    }
-
-    private function dumpDatabase(Tenant $tenant, string $tempDir): string
-    {
-        $dbConfig = config('database.connections.'.config('database.default'));
-        $dumpFile = $tempDir.'/database.sql';
-
-        $command = sprintf(
-            'PGPASSWORD=%s pg_dump -h %s -p %s -U %s -d %s --no-owner --no-acl -f %s 2>&1',
-            escapeshellarg($dbConfig['password'] ?? ''),
-            escapeshellarg($dbConfig['host'] ?? 'localhost'),
-            escapeshellarg($dbConfig['port'] ?? 5432),
-            escapeshellarg($dbConfig['username'] ?? 'postgres'),
-            escapeshellarg($dbConfig['database'] ?? 'blogravel'),
-            escapeshellarg($dumpFile)
-        );
-
-        exec($command, $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            throw new \RuntimeException('Database dump failed: '.implode("\n", $output));
-        }
-
-        return $dumpFile;
     }
 
     private function getTenantKey(Tenant $tenant): string

@@ -11,6 +11,7 @@ use App\Models\BackupRule;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\BackupReadyNotification;
+use App\Services\DatabaseDumper;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 
@@ -127,6 +128,35 @@ it('completes a files backup archive', function () {
         'backup_rule_id' => $rule->id,
         'status' => BackupStatus::Completed->value,
     ]);
+});
+
+it('uses the configured backup storage path and database dumper', function () {
+    config(['backups.disk' => 'local', 'backups.path' => 'tenant-backups']);
+
+    $rule = BackupRule::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'backup_content' => BackupContent::Database,
+        'destination' => BackupDestination::Email,
+        'email_recipient' => $this->user->email,
+    ]);
+
+    app()->bind(DatabaseDumper::class, fn () => new class implements DatabaseDumper
+    {
+        public function dump(string $directory): string
+        {
+            $path = $directory.'/database.sql';
+            file_put_contents($path, 'CREATE TABLE test (id integer);');
+
+            return $path;
+        }
+    });
+
+    (new CreateBackupJob($rule->id))->handle();
+
+    $backup = Backup::query()->where('backup_rule_id', $rule->id)->latest()->firstOrFail();
+
+    expect($backup->status)->toBe(BackupStatus::Completed)
+        ->and($backup->path)->toStartWith('tenant-backups/');
 });
 
 it('lists backups in Filament resource', function () {

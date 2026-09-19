@@ -39,6 +39,26 @@
             }
         }
 
+        html[data-theme="light"] {
+            --bg: #fff;
+            --fg: #1a1a1a;
+            --accent: #1d4ed8;
+            --button-bg: #1d4ed8;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --surface: #f9fafb;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #111827;
+            --fg: #f9fafb;
+            --accent: #93c5fd;
+            --button-bg: #2563eb;
+            --muted: #9ca3af;
+            --border: #374151;
+            --surface: #1f2937;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg);
@@ -117,6 +137,19 @@
         }
 
         .nav-toggle[aria-expanded="true"] { background: var(--surface); }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            color: var(--fg);
+            font-size: 0.875rem;
+            min-height: 44px;
+        }
+
+        .theme-toggle:hover { background: var(--surface); }
 
         @media (max-width: 639px) {
             .nav-toggle { display: flex; }
@@ -295,7 +328,8 @@
         }
 
         @media (prefers-color-scheme: dark) {
-            .form-error { color: #fca5a5; }
+            html:not([data-theme]) .form-error,
+            html[data-theme="dark"] .form-error { color: #fca5a5; }
         }
 
         /* Pagination */
@@ -335,7 +369,8 @@
         }
 
         @media (prefers-color-scheme: dark) {
-            .success {
+            html:not([data-theme]) .success,
+            html[data-theme="dark"] .success {
                 background: #064e3b;
                 color: #a7f3d0;
             }
@@ -405,6 +440,7 @@
         <div class="container">
             <h1><a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.home', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.home').'?tenant='.$tenant->id }}">{{ $tenant->name ?? 'Blog' }}</a></h1>
             <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Toggle navigation">☰</button>
+            <button class="theme-toggle" type="button" aria-label="Switch to dark mode">Dark mode</button>
             <nav id="primary-navigation" aria-label="Primary navigation">
                 <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.home', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.home').'?tenant='.$tenant->id }}">Home</a>
                 <a href="{{ request()->attributes->get('tenant_path_slug') ? route('theme.local.subscribe', ['tenantSlug' => request()->attributes->get('tenant_path_slug')]) : route('theme.subscribe').'?tenant='.$tenant->id }}">Subscribe</a>
@@ -423,6 +459,35 @@
         </div>
     </footer>
     <script>
+        const themeToggle = document.querySelector('.theme-toggle');
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+            document.documentElement.dataset.theme = savedTheme;
+        }
+
+        const updateThemeToggle = () => {
+            const activeTheme = document.documentElement.dataset.theme || (systemPrefersDark ? 'dark' : 'light');
+            const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
+
+            themeToggle?.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+            if (themeToggle) {
+                themeToggle.textContent = `${nextTheme.charAt(0).toUpperCase()}${nextTheme.slice(1)} mode`;
+            }
+        };
+
+        themeToggle?.addEventListener('click', () => {
+            const activeTheme = document.documentElement.dataset.theme || (systemPrefersDark ? 'dark' : 'light');
+            const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.dataset.theme = nextTheme;
+            localStorage.setItem('theme', nextTheme);
+            updateThemeToggle();
+        });
+
+        updateThemeToggle();
+
         const navToggle = document.querySelector('.nav-toggle');
         const primaryNavigation = document.querySelector('#primary-navigation');
 

@@ -259,3 +259,48 @@ test.describe('Theme Layout', () => {
     await expect(page).toHaveTitle(/.+/);
   });
 });
+
+test.describe('Theme Color Scheme', () => {
+  test('provides an accessible color scheme toggle', async ({ page }) => {
+    await page.goto(`${ACME_URL}/`);
+
+    const themeToggle = page.getByRole('button', { name: 'Switch to dark mode' });
+
+    await expect(themeToggle).toBeVisible();
+    await expect(themeToggle).toHaveAttribute('aria-label', 'Switch to dark mode');
+
+    await themeToggle.click();
+
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.getByRole('button', { name: 'Switch to light mode' })).toBeVisible();
+  });
+
+  test('persists the selected color scheme across page loads', async ({ page }) => {
+    await page.goto(`${ACME_URL}/`);
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+
+    await page.reload();
+
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.getByRole('button', { name: 'Switch to light mode' })).toBeVisible();
+    await expect(page.evaluate(() => localStorage.getItem('theme'))).resolves.toBe('dark');
+  });
+
+  test('uses the operating system color scheme without an explicit choice', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto(`${ACME_URL}/`);
+
+    await expect(page.locator('html')).not.toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(17, 24, 39)');
+  });
+
+  test('an explicit choice overrides the operating system color scheme', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto(`${ACME_URL}/`);
+
+    await page.getByRole('button', { name: 'Switch to light mode' }).click();
+
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  });
+});

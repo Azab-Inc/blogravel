@@ -109,7 +109,7 @@ class Settings extends Page
             ->components([
                 Grid::make([
                     'default' => 1,
-                    'md' => 2,
+                    'md' => 1,
                 ])->schema([
                     Section::make('Site')
                         ->columns(1)

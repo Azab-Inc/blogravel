@@ -33,6 +33,10 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#25](https://github.com/Azab-Inc/blogravel/issues/25) | Automated database backups | Done |
 | [#26](https://github.com/Azab-Inc/blogravel/issues/26) | Starter theme accessibility (WCAG 2.1 AA) | Done |
 | [#27](https://github.com/Azab-Inc/blogravel/issues/27) | Self-hosted deployment packaging & docs | Todo |
+| [#49](https://github.com/Azab-Inc/blogravel/issues/49) | Production Docker Compose hardening | Todo |
+| [#50](https://github.com/Azab-Inc/blogravel/issues/50) | Self-hosted environment configuration | Todo |
+| [#51](https://github.com/Azab-Inc/blogravel/issues/51) | Self-hosted deployment and operations documentation | Todo |
+| [#52](https://github.com/Azab-Inc/blogravel/issues/52) | Self-hosted release packaging and versioning process | Todo |
 | [#28](https://github.com/Azab-Inc/blogravel/issues/28) | UI feedback & toast notifications | Todo |
 | [#29](https://github.com/Azab-Inc/blogravel/issues/29) | Blogravel Cloud hosted deployment (Future Phase) | Todo |
 | [#30](https://github.com/Azab-Inc/blogravel/issues/30) | Frontend template ecosystem (Future Phase) | Todo |

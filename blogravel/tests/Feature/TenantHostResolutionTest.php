@@ -126,7 +126,7 @@ test('slug generation retries after a concurrent database uniqueness collision',
 });
 
 test('tenant migration backfills existing rows before enforcing slug constraints', function () {
-    Artisan::call('migrate:rollback', ['--step' => 2]);
+    Artisan::call('migrate:rollback', ['--step' => 4]);
 
     $firstId = (string) Str::uuid();
     $secondId = (string) Str::uuid();
@@ -159,7 +159,7 @@ test('tenant migration backfills existing rows before enforcing slug constraints
 });
 
 test('tenant migration avoids reserved labels while backfilling existing rows', function () {
-    Artisan::call('migrate:rollback', ['--step' => 2]);
+    Artisan::call('migrate:rollback', ['--step' => 4]);
 
     $tenants = collect(['Admin', 'API', 'WWW'])->mapWithKeys(function (string $name): array {
         $id = (string) Str::uuid();
@@ -185,7 +185,7 @@ test('tenant migration avoids reserved labels while backfilling existing rows', 
 });
 
 test('tenant migration keeps the lowest id custom domain and clears normalized collisions', function () {
-    Artisan::call('migrate:rollback', ['--step' => 1]);
+    Artisan::call('migrate:rollback', ['--step' => 3]);
 
     $canonicalId = '00000000-0000-0000-0000-000000000001';
     $conflictingId = '00000000-0000-0000-0000-000000000002';

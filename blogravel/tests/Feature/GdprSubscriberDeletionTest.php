@@ -1,10 +1,14 @@
 <?php
 
+use App\Enums\Role;
 use App\Enums\SubscriberStatus;
+use App\Filament\Resources\SubscriberResource\Pages\ListSubscribers;
 use App\Models\Category;
 use App\Models\Subscriber;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create(['domain' => 'gdprtest.com']);
@@ -80,4 +84,19 @@ it('preserves unsubscribe_token after confirmation', function () {
     $subscriber->refresh();
     $this->assertNull($subscriber->confirmation_token);
     $this->assertNotNull($subscriber->unsubscribe_token);
+});
+
+it('allows an authenticated admin to permanently delete a subscriber from Filament', function () {
+    $admin = User::factory()->forTenant($this->tenant)->create([
+        'role' => Role::SuperAdmin,
+    ]);
+    $subscriber = Subscriber::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(ListSubscribers::class)
+        ->callTableAction('delete', $subscriber)
+        ->assertHasNoTableActionErrors();
+
+    $this->assertDatabaseMissing('subscribers', ['id' => $subscriber->id]);
 });

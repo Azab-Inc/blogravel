@@ -11,7 +11,7 @@ services:
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
-            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --server=frankenphp --host=0.0.0.0 --admin-port=2019 --port=80" 
+            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --server=${OCTANE_SERVER:-frankenphp} --host=0.0.0.0 --admin-port=2019 --port=80"
             XDG_CONFIG_HOME:  /var/www/html/config 
             XDG_DATA_HOME:  /var/www/html/data 
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
@@ -40,10 +40,10 @@ services:
     pgsql:
         image: 'postgres:18-alpine'
         environment:
-            PGPASSWORD: '${DB_PASSWORD:-secret}'
+            PGPASSWORD: '${DB_PASSWORD:?DB_PASSWORD must be set}'
             POSTGRES_DB: '${DB_DATABASE}'
             POSTGRES_USER: '${DB_USERNAME}'
-            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:?DB_PASSWORD must be set}'
         volumes:
             - 'sail-pgsql:/var/lib/postgresql'
             - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
@@ -62,6 +62,7 @@ services:
             timeout: 5s
             start_period: 10s
         restart: unless-stopped
+    # Development-only database inspector; never enable this profile in production.
     pgadmin:
         image: 'dpage/pgadmin4'
         profiles:
@@ -70,7 +71,7 @@ services:
             - '${FORWARD_PGADMIN_PORT:-5050}:80'
         environment:
             PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL:-admin@blogravel.dev}'
-            PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD:-secret}'
+            PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD:-local-development-only-password}'
             PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
         volumes:
             - 'sail-pgadmin:/var/lib/pgadmin'

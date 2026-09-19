@@ -2,7 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\AiProviderType;
+use App\Enums\NavGroup;
 use App\Enums\Role;
+use App\Models\AiProvider;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Providers\ThemeServiceProvider;
@@ -11,8 +14,12 @@ use App\Services\DataExportService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -23,6 +30,9 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use UnitEnum;
 
 class Settings extends Page
 {
@@ -30,11 +40,21 @@ class Settings extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
+    protected static UnitEnum|string|null $navigationGroup = NavGroup::Administration->value;
+
     protected static ?string $navigationLabel = 'Settings';
 
     protected static ?string $title = 'Settings';
 
     public ?array $data = [];
+
+    public int $providerCount = 0;
+
+    public ?string $defaultProvider = null;
+
+    public ?array $defaultOutputTypes = [];
+
+    public ?array $providers = [];
 
     public static function getSlug(?Panel $panel = null): string
     {
@@ -45,6 +65,29 @@ class Settings extends Page
     {
         $user = Auth::user();
 
+        $tenantId = $user->tenant_id;
+
+        $this->providerCount = AiProvider::where('tenant_id', $tenantId)->count();
+        $this->defaultProvider = $this->getSetting('ai_default_provider');
+        $this->defaultOutputTypes = json_decode($this->getSetting('ai_default_output_types', '[]') ?? '[]', true);
+        $this->providers = AiProvider::where('tenant_id', $tenantId)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (AiProvider $provider): array => [
+                'id' => $provider->id,
+                'name' => $provider->name,
+                'type' => $provider->type->value,
+                'base_url' => $provider->base_url,
+                'api_key' => '',
+                'model' => $provider->model,
+                'temperature' => $provider->temperature,
+                'max_tokens' => $provider->max_tokens,
+                'custom_template' => $provider->custom_template,
+                'enabled' => $provider->enabled,
+            ])
+            ->values()
+            ->toArray();
+
         $this->fill([
             'data' => [
                 'first_name' => $user->first_name,
@@ -53,6 +96,9 @@ class Settings extends Page
                 'authors_can_view_others_posts' => $this->getSetting('authors_can_view_others_posts', 'false') === 'true',
                 'theme_enabled' => $this->getSetting('theme_enabled', 'true') === 'true',
                 'active_theme' => $this->getSetting('active_theme', config('theme.default', 'base')),
+                'defaultProvider' => $this->defaultProvider,
+                'defaultOutputTypes' => $this->defaultOutputTypes,
+                'providers' => $this->providers,
             ],
         ]);
     }
@@ -89,6 +135,58 @@ class Settings extends Page
                                 ->label('Save Site')
                                 ->action(function (): void {
                                     $this->saveSite();
+                                }),
+                        ]),
+                    Section::make('AI')
+                        ->collapsible()
+                        ->schema([
+                            Section::make('Providers')
+                                ->schema([
+                                    Placeholder::make('provider_count')
+                                        ->label('Configured Providers')
+                                        ->content(fn (): string => (string) $this->providerCount),
+                                    Repeater::make('providers')
+                                        ->label('')
+                                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                                        ->addActionLabel('Add Provider')
+                                        ->columns(2)
+                                        ->schema([
+                                            Hidden::make('id'),
+                                            TextInput::make('name')->label('Name')->required()->maxLength(255),
+                                            Select::make('type')
+                                                ->label('Type')
+                                                ->options(collect(AiProviderType::cases())->mapWithKeys(fn (AiProviderType $type): array => [$type->value => $type->label()])->all())
+                                                ->required()->live()->default(AiProviderType::OpenAi->value),
+                                            TextInput::make('base_url')
+                                                ->label('Base URL')->nullable()->url()->columnSpan(2)
+                                                ->placeholder(fn (Get $get): ?string => match ($get('type')) {
+                                                    AiProviderType::Ollama->value => 'http://localhost:11434',
+                                                    AiProviderType::Custom->value => 'https://api.example.com',
+                                                    default => 'https://api.openai.com/v1',
+                                                }),
+                                            TextInput::make('api_key')->label('API Key')->password()->revealable()->nullable()->helperText('Leave blank to keep the current API key.')->columnSpan(2),
+                                            TextInput::make('model')->label('Model')->required()->placeholder('e.g. gpt-4o, llama3'),
+                                            TextInput::make('temperature')->label('Temperature')->numeric()->minValue(0)->maxValue(2)->default(0.7)->step(0.1),
+                                            TextInput::make('max_tokens')->label('Max Tokens')->numeric()->minValue(1)->default(2048),
+                                            Toggle::make('enabled')->label('Enabled'),
+                                            Textarea::make('custom_template')->label('Custom Template')->nullable()->rows(6)->visible(fn (Get $get): bool => $get('type') === AiProviderType::Custom->value)->required(fn (Get $get): bool => $get('type') === AiProviderType::Custom->value)->columnSpan(2),
+                                        ]),
+                                ]),
+                            Section::make('Defaults')
+                                ->schema([
+                                    Select::make('defaultProvider')->label('Default Provider')->options(fn (): array => AiProvider::where('tenant_id', Auth::user()->tenant_id)->where('enabled', true)->pluck('name', 'id')->toArray())->nullable(),
+                                    CheckboxList::make('defaultOutputTypes')->label('Default Output Types')->options([
+                                        'title' => 'Title', 'content' => 'Content', 'excerpt' => 'Excerpt', 'categories' => 'Categories', 'tags' => 'Tags',
+                                    ])->columns(3),
+                                ]),
+                            Section::make('Media Generation')
+                                ->schema([
+                                    Placeholder::make('coming_soon')->label('Coming Soon')->content('Media generation is coming soon. AI-powered image and video creation will be available in a future update.'),
+                                ]),
+                            Action::make('saveAiSettings')
+                                ->label('Save AI Settings')
+                                ->action(function (): void {
+                                    $this->saveAiSettings();
                                 }),
                         ]),
                     Section::make('Account')
@@ -231,6 +329,78 @@ class Settings extends Page
             ->title('Site settings saved')
             ->success()
             ->send();
+    }
+
+    public function saveAiSettings(): void
+    {
+        $this->defaultProvider = $this->data['defaultProvider'] ?? null;
+        $this->defaultOutputTypes = $this->data['defaultOutputTypes'] ?? [];
+        $this->providers = $this->data['providers'] ?? [];
+        $tenantId = Auth::user()->tenant_id;
+
+        $this->validate([
+            'defaultProvider' => ['nullable', 'string'],
+            'defaultOutputTypes' => ['nullable', 'array'],
+            'defaultOutputTypes.*' => ['string', 'in:title,content,excerpt,categories,tags'],
+            'providers' => ['present', 'array'],
+            'providers.*.name' => ['required', 'string', 'max:255'],
+            'providers.*.type' => ['required', 'string', 'in:'.implode(',', array_map(fn (AiProviderType $type) => $type->value, AiProviderType::cases()))],
+            'providers.*.base_url' => ['nullable', 'url'],
+            'providers.*.api_key' => ['nullable', 'string'],
+            'providers.*.model' => ['required', 'string', 'max:255'],
+            'providers.*.temperature' => ['required', 'numeric', 'min:0', 'max:2'],
+            'providers.*.max_tokens' => ['required', 'integer', 'min:1'],
+            'providers.*.custom_template' => ['nullable', 'string'],
+        ]);
+
+        foreach ($this->providers ?? [] as $key => $item) {
+            if (($item['type'] ?? null) === AiProviderType::Custom->value && blank($item['custom_template'] ?? null)) {
+                throw ValidationException::withMessages([
+                    "providers.{$key}.custom_template" => 'The custom template is required for custom providers.',
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($tenantId): void {
+            $submittedIds = [];
+
+            foreach ($this->providers ?? [] as $item) {
+                $attributes = [
+                    'tenant_id' => $tenantId,
+                    'name' => $item['name'],
+                    'type' => $item['type'],
+                    'base_url' => $item['base_url'] ?? null,
+                    'model' => $item['model'],
+                    'temperature' => $item['temperature'] ?? 0.7,
+                    'max_tokens' => $item['max_tokens'] ?? 2048,
+                    'custom_template' => $item['type'] === AiProviderType::Custom->value ? ($item['custom_template'] ?? null) : null,
+                    'enabled' => (bool) ($item['enabled'] ?? false),
+                ];
+
+                if (! empty($item['api_key'] ?? '')) {
+                    $attributes['api_key'] = $item['api_key'];
+                }
+
+                if (! empty($item['id'])) {
+                    $provider = AiProvider::where('tenant_id', $tenantId)->where('id', $item['id'])->first();
+                    if ($provider) {
+                        $provider->update($attributes);
+                        $submittedIds[] = $provider->id;
+                    }
+                } else {
+                    $attributes['api_key'] = $attributes['api_key'] ?? '';
+                    $submittedIds[] = AiProvider::create($attributes)->id;
+                }
+            }
+
+            AiProvider::where('tenant_id', $tenantId)->whereNotIn('id', $submittedIds)->delete();
+        });
+
+        Setting::updateOrCreate(['tenant_id' => $tenantId, 'key' => 'ai_default_provider'], ['value' => $this->defaultProvider]);
+        Setting::updateOrCreate(['tenant_id' => $tenantId, 'key' => 'ai_default_output_types'], ['value' => json_encode($this->defaultOutputTypes)]);
+        $this->providerCount = AiProvider::where('tenant_id', $tenantId)->count();
+
+        Notification::make()->title('AI settings saved')->success()->send();
     }
 
     public function saveAccount(): void

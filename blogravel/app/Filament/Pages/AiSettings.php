@@ -27,6 +27,8 @@ use UnitEnum;
 
 class AiSettings extends Page
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected string $view = 'filament.pages.ai-settings';
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cpu-chip';

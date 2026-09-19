@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\AiProviderType;
 use App\Enums\Role;
 use App\Filament\Pages\Settings;
+use App\Models\AiProvider;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
@@ -82,6 +84,56 @@ it('shows permissions section with toggle', function () {
     $response->assertStatus(200)
         ->assertSee('Site')
         ->assertSee('authors_can_view_others_posts');
+});
+
+it('shows AI settings inside the Settings page', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    AiProvider::factory()->create([
+        'tenant_id' => $tenant->id,
+        'name' => 'Primary OpenAI',
+        'type' => AiProviderType::OpenAi,
+    ]);
+
+    $this->get('/admin/settings')
+        ->assertStatus(200)
+        ->assertSee('AI')
+        ->assertSee('Configured Providers')
+        ->assertSee('Default Provider')
+        ->assertSee('Primary OpenAI');
+});
+
+it('saves AI settings from the Settings page', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::test(Settings::class)
+        ->set('data.defaultOutputTypes', ['title', 'content'])
+        ->set('data.providers', [[
+            'id' => null,
+            'name' => 'New OpenAI',
+            'type' => AiProviderType::OpenAi->value,
+            'base_url' => 'https://api.openai.com/v1',
+            'api_key' => 'sk-new-key',
+            'model' => 'gpt-4o',
+            'temperature' => '0.7',
+            'max_tokens' => '2048',
+            'custom_template' => null,
+            'enabled' => true,
+        ]])
+        ->call('saveAiSettings')
+        ->assertHasNoErrors();
+
+    expect(AiProvider::where('tenant_id', $tenant->id)->value('name'))->toBe('New OpenAI');
 });
 
 it('saves the authors_can_view_others_posts toggle', function () {

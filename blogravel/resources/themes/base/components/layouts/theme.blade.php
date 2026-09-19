@@ -6,6 +6,16 @@
     <title>{{ $tenant->name ?? config('app.name') }}</title>
     <meta name="description" content="{{ $tenant->name ?? config('app.name') }} — A Blogravel blog">
 
+    @php
+        $themeAssets = app(\App\Providers\ThemeServiceProvider::class)->getThemeAssets(
+            request()->attributes->get('active_theme', config('theme.default', 'base')),
+        );
+    @endphp
+
+    @foreach ($themeAssets['styles'] as $style)
+        <link rel="stylesheet" href="{{ $style }}">
+    @endforeach
+
     {{-- RSS/Atom auto-discovery --}}
     <link rel="alternate" type="application/rss+xml" title="{{ $tenant->name ?? 'Blog' }} — RSS" href="{{ route('feed.posts', ['posts']) }}?tenant={{ $tenant->id }}">
     <link rel="alternate" type="application/atom+xml" title="{{ $tenant->name ?? 'Blog' }} — Atom" href="{{ route('feed.posts', ['posts']) }}?format=atom&tenant={{ $tenant->id }}">
@@ -505,5 +515,8 @@
             }
         });
     </script>
+    @foreach ($themeAssets['scripts'] as $script)
+        <script src="{{ $script }}"></script>
+    @endforeach
 </body>
 </html>

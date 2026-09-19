@@ -90,3 +90,25 @@ it('uses base theme by default when no active_theme setting', function () {
     $response->assertOk()
         ->assertSee($post->title);
 });
+
+it('registers custom theme assets from theme.json', function () {
+    $customDir = $this->themesDir.'/custom-test';
+    File::makeDirectory($customDir.'/components', 0755, true);
+    file_put_contents($customDir.'/theme.json', json_encode([
+        'name' => 'Custom Test',
+        'styles' => ['custom.css'],
+        'scripts' => ['custom.js'],
+    ]));
+
+    Setting::create([
+        'tenant_id' => $this->tenant->id,
+        'key' => 'active_theme',
+        'value' => 'custom-test',
+    ]);
+
+    $response = $this->get("/?tenant={$this->tenant->id}");
+
+    $response->assertOk()
+        ->assertSee('/themes/custom-test/custom.css', escape: false)
+        ->assertSee('/themes/custom-test/custom.js', escape: false);
+});

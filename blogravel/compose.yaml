@@ -8,11 +8,6 @@ services:
         image: 'sail-8.5/app'
         extra_hosts:
             - 'host.docker.internal:host-gateway'
-        ports:
-            - '${APP_PORT:-80}:80'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
-            - '443:443' 
-            - '443:443/udp' 
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
@@ -24,6 +19,8 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
             - '.:/var/www/html'
+        ports:
+            - '${APP_PORT:-8080}:80'
         networks:
             - sail
         depends_on:
@@ -31,10 +28,17 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_healthy
+        restart: unless-stopped
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - "php -r 'exit(@fsockopen(\"127.0.0.1\", 80) ? 0 : 1);'"
+            interval: 10s
+            timeout: 5s
+            retries: 6
+            start_period: 30s
     pgsql:
         image: 'postgres:18-alpine'
-        ports:
-            - '${FORWARD_DB_PORT:-5432}:5432'
         environment:
             PGPASSWORD: '${DB_PASSWORD:-secret}'
             POSTGRES_DB: '${DB_DATABASE}'
@@ -56,8 +60,12 @@ services:
                 - '${DB_USERNAME}'
             retries: 3
             timeout: 5s
+            start_period: 10s
+        restart: unless-stopped
     pgadmin:
         image: 'dpage/pgadmin4'
+        profiles:
+            - development
         ports:
             - '${FORWARD_PGADMIN_PORT:-5050}:80'
         environment:
@@ -74,8 +82,6 @@ services:
                 condition: service_healthy
     redis:
         image: 'redis:alpine'
-        ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
         volumes:
             - 'sail-redis:/data'
         networks:
@@ -87,8 +93,12 @@ services:
                 - ping
             retries: 3
             timeout: 5s
+            start_period: 5s
+        restart: unless-stopped
     mailpit:
         image: 'axllent/mailpit:latest'
+        profiles:
+            - development
         ports:
             - '${FORWARD_MAILPIT_PORT:-1025}:1025'
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
@@ -108,6 +118,8 @@ services:
         networks:
             - sail
         depends_on:
+            laravel.test:
+                condition: service_healthy
             pgsql:
                 condition: service_healthy
             redis:
@@ -118,6 +130,14 @@ services:
         restart: unless-stopped
         command: >
             /bin/bash -c "php artisan queue:work redis --sleep=3 --tries=3 --timeout=0 --verbose"
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - pgrep -f 'artisan queue:work' >/dev/null
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
     scheduler:
         image: 'sail-8.5/app'
         volumes:
@@ -125,6 +145,8 @@ services:
         networks:
             - sail
         depends_on:
+            laravel.test:
+                condition: service_healthy
             pgsql:
                 condition: service_healthy
             redis:
@@ -133,8 +155,15 @@ services:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
         restart: unless-stopped
-        command: >
-            /bin/bash -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+        command: php artisan schedule:work --no-interaction
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - pgrep -f 'artisan schedule:work' >/dev/null
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
 networks:
     sail:
         driver: bridge

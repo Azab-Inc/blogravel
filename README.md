@@ -135,7 +135,7 @@ For local development, a tenant with slug `acmeio` is also available at `http://
 
 The default `.env.example` keeps `SESSION_DOMAIN=.blogravel.com` for hosted platform and tenant subdomain sessions. The application automatically emits host-only session cookies for `localhost` and `*.localhost`, which keeps localhost admin login sessions usable without changing shared process configuration under Octane. Keep the hosted value when testing the mapped `blogravel.com` hosts.
 
-See [Self-Hosted Deployment](docs/self-hosted-deployment.md) for production environment setup, HTTPS, operations, backups, and upgrades.
+See [Self-Hosted Deployment](docs/self-hosted-deployment.md) for production environment setup, HTTPS, operations, backups, and upgrades. See the [Self-Hosted Release Process](docs/self-hosted-release-process.md) for version tags, release contents, validation, and rollback guidance.
 
 ---
 

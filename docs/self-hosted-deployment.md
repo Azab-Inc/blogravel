@@ -4,6 +4,10 @@ This runbook deploys Blogravel with the repository's Docker Compose stack. It
 assumes a Linux host with Docker Compose v2, a DNS name, and a reverse proxy or
 TLS terminator in front of the application.
 
+Release owners should follow the [Self-Hosted Release Process](self-hosted-release-process.md)
+to create and validate tagged releases. This runbook covers installation and
+operation of an already-published release.
+
 ## Before You Start
 
 The host should have:

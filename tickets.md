@@ -56,4 +56,4 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#44](https://github.com/Azab-Inc/blogravel/issues/44) | Feature: Soft Delete Support for Users and Tenants | Done |
 | [#45](https://github.com/Azab-Inc/blogravel/issues/45) | Filament admin panel custom theme (Vite + Tailwind) | Todo |
 | [#47](https://github.com/Azab-Inc/blogravel/issues/47) | Public base theme light mode and dark mode toggle | Todo |
-| [#48](https://github.com/Azab-Inc/blogravel/issues/48) | CI/CD pipeline (GitHub Actions) | Todo |
+| [#48](https://github.com/Azab-Inc/blogravel/issues/48) | CI/CD pipeline (Jenkins) | Todo |

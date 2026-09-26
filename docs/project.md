@@ -15,7 +15,7 @@ A free, self-hosted, open-source blogging platform built as a lightweight, priva
 
 ## Tech Stack
 
-**Backend:** PHP 8.3+ (targets 8.5) with Laravel 13, Filament PHP (admin panel), Laravel Sanctum (API auth)
+**Backend:** PHP 8.5 with Laravel 13, Filament PHP (admin panel), Laravel Sanctum (API auth)
 
 **Frontend (Starter Theme):** Laravel Blade with Tailwind CSS v4, Vite v8
 
@@ -29,7 +29,7 @@ A free, self-hosted, open-source blogging platform built as a lightweight, priva
 
 **Container Runtime:** Docker Compose (Laravel Sail + FrankenPHP) — app, PostgreSQL, Redis, queue worker, Mailpit
 
-**CI/CD:** GitHub Actions (PHP 8.3/8.4/8.5 matrix)
+**CI/CD:** Jenkins (PHP 8.5 quality checks)
 
 **Testing:** Pest PHP v4 + PHPUnit v12
 

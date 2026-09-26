@@ -13,7 +13,7 @@ Based on the [Project Requirements Document](./requirements.md), broken into pha
 ### Deliverables
 
 #### 1.1 Project Bootstrap
-- Initialize Laravel project with PHP 8.3+
+- Initialize Laravel project with PHP 8.5
 - Configure PostgreSQL connection and Redis driver
 - Set up Docker Compose with three services: Laravel app, PostgreSQL, Redis
 - Create `example.env` with all required variables (database, mail, app key, etc.)
@@ -287,8 +287,8 @@ Build admin CRUD interfaces for:
 - **Pest browser tests** for starter theme smoke coverage
 
 #### 8.2 CI Pipeline
-- GitHub Actions workflow (see [point 8.2](requirements.md#point-8-2)):
-  - Run `pest` on PHP 8.3, 8.4, 8.5 matrix
+- Jenkins pipeline (see [point 8.2](requirements.md#point-8-2)):
+  - Run `pest` on PHP 8.5
   - Run `./vendor/bin/pint --test` for code style
   - Block merge on failure
 

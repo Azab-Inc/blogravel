@@ -42,7 +42,7 @@ Blogravel solves the friction of leaving WordPress by giving you a free, self-ho
 
 ## Tech Stack
 
-**Backend:** PHP 8.3+ (targets 8.5) with Laravel 13, Filament PHP (admin panel), Laravel Sanctum (API auth)
+**Backend:** PHP 8.5 with Laravel 13, Filament PHP (admin panel), Laravel Sanctum (API auth)
 
 **Frontend (Starter Theme):** Laravel Blade with Tailwind CSS v4, Vite v8
 
@@ -56,7 +56,7 @@ Blogravel solves the friction of leaving WordPress by giving you a free, self-ho
 
 **Container Runtime:** Docker Compose (Laravel Sail + FrankenPHP) — app, PostgreSQL, Redis, queue worker, Mailpit
 
-**CI/CD:** GitHub Actions (PHP 8.3/8.4/8.5 matrix)
+**CI/CD:** Jenkins (PHP 8.5 quality checks)
 
 **Testing:** Pest PHP v4 + PHPUnit v12
 
@@ -68,7 +68,7 @@ Blogravel solves the friction of leaving WordPress by giving you a free, self-ho
 
 ## Requirements
 
-- PHP 8.3 or higher
+- PHP 8.5
 - Docker / Docker Compose
 - PostgreSQL 18 (provided via Docker Compose)
 - Redis (provided via Docker Compose)

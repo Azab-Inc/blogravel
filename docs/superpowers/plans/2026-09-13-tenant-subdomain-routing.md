@@ -6,7 +6,7 @@
 
 **Architecture:** Add tenant identity fields without removing the legacy `domain` field. Centralize host classification and tenant lookup in a request middleware/service boundary, then use a root entrypoint controller for auth-aware redirects and keep the existing theme middleware focused on theme setup. Configure platform/session behavior through environment-backed config.
 
-**Tech Stack:** Laravel 13, PHP 8.4, Eloquent migrations/models, Pest 4, Playwright CLI.
+**Tech Stack:** Laravel 13, PHP 8.5, Eloquent migrations/models, Pest 4, Playwright CLI.
 
 **Spec:** `docs/superpowers/specs/2026-09-13-tenant-subdomain-routing-design.md`
 

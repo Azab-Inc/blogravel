@@ -360,7 +360,7 @@
 - _**API Docs Link:**_ _To be published on the public Blogravel landing/docs site ([blogravel.azaber.com](https://blogravel.azaber.com))_
 
 ### 7.2 Tech Stack
-- **Backend:** PHP 8.3+ (targets 8.5) with Laravel 13
+- **Backend:** PHP 8.5 with Laravel 13
   - **Packages (first-party Laravel):** Filament PHP (admin panel), Livewire (reactive UI within Filament), Laravel Sanctum (API token auth), Laravel Queue (async jobs via Redis driver), Laravel Cashier (Stripe billing, feature-flagged), Laravel Fortify (auth scaffolding)
   - **Dev packages:** Pest PHP v4 (testing), Laravel Pint (code style), Laravel Sail (Docker dev environment), Laravel Octane + FrankenPHP (HTTP server), Laravel Boost (MCP agent tooling), Collision (error display), Mockery (test mocking), Faker (test data generation)
   - **No third-party packages** — all dependencies are first-party Laravel or standard Laravel dev tooling
@@ -393,12 +393,12 @@
 - _**Blogravel Cloud:**_ _Managed via Laravel Cloud. Multi-tenant deployment with subdomain routing. See [point 8.1](#point-8-1)._
 
 ### 8.2 CI/CD Pipeline & DevOps
-- **CI/CD Platform:** GitHub Actions — automated checks on pull requests and merges to the main branches.
+- **CI/CD Platform:** Jenkins — automated checks on pull requests and merges to the main branches using PHP 8.5.
 - **Pipelines (v1):**
 
   | Pipeline | Platform | Purpose |
   | -------- | -------- | ------- |
-  | Quality checks | GitHub Actions | Run tests, static analysis, and other checks before changes are merged |
+  | Quality checks | Jenkins | Run tests, static analysis, frontend builds, and Compose validation before changes are merged |
 
 - **Deployment Process (v1):** Users pull or build from a release tag and run `docker compose up` (or equivalent) on their server. Repository docs will cover env setup, migrations, and queue workers. Hosted platform deploys via Laravel Cloud.
 - _**Blogravel Cloud deploy pipeline:**_ _Managed via Laravel Cloud. See [point 8.1](#point-8-1)._
@@ -464,7 +464,7 @@
 - **Performance & Load Testing:** No formal load targets for v1 (see [point 5.1](#point-5-1)). Sanity-check that publish, subscribe, and import endpoints return without blocking on queue/mail work. Optional Lighthouse run on the starter theme home page before release — no hard score gate.
 - **Responsiveness Verification:** Manual pass on starter theme pages across Chrome, Firefox, Safari, and Edge at mobile, tablet, and desktop widths (see [point 5.4](#point-5-4)).
 - **Accessibility Check:** Manual WCAG 2.1 AA spot-check on the starter theme — keyboard navigation, focus order, colour contrast, and screen reader labels on forms (subscribe, contact). Filament inherits its own accessibility baseline.
-- **CI Enforcement:** GitHub Actions runs the test suite (PHP 8.3–8.5 matrix) and Pint on pull requests and merges to `main` / `develop` (see [point 8.2](#point-8-2)). Changes must pass CI before merge.
+- **CI Enforcement:** Jenkins runs the test suite, Pint, frontend build, and Compose validation on PHP 8.5 for pull requests and merges to `main` / `develop` (see [point 8.2](#point-8-2)). Changes must pass CI before merge.
 
 ## 10. Project Milestones & Timeline
 ### 10.1 Key Milestones
@@ -490,7 +490,7 @@
 - **Docker Compose:** Tool for defining and running multi-container Docker applications; used for Blogravel's self-hosted deployment stack (Laravel app, PostgreSQL, Redis, queue worker).
 - **Double opt-in:** Email verification process requiring the subscriber to click a confirmation link before their subscription is activated.
 - **Filament PHP:** Admin panel framework for Laravel used as Blogravel's admin interface.
-- **GitHub Actions:** CI/CD platform for running automated tests and quality checks on pull requests and merges.
+- **Jenkins:** CI/CD platform for running automated tests and quality checks on pull requests and merges.
 - **HMAC:** Hash-based Message Authentication Code — used to verify webhook signatures for secure content delivery.
 - **Idempotent:** Property where repeated operations produce the same result; WordPress imports are idempotent by slug.
 - **Laravel:** PHP web application framework powering Blogravel's backend, admin panel, and API.
@@ -538,7 +538,7 @@
   - [Docker Compose](https://docs.docker.com/compose/)
   - [PostgreSQL](https://www.postgresql.org/)
   - [Redis](https://redis.io/)
-  - [GitHub Actions](https://github.com/features/actions)
+  - [Jenkins](https://www.jenkins.io/)
   - [Laravel Cloud](https://cloud.laravel.com/)
   - [Ollama](https://ollama.ai/)
 

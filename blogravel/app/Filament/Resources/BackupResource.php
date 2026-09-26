@@ -40,14 +40,14 @@ class BackupResource extends Resource
                     ->label('Rule'),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn(BackupStatus $state) => $state->color()),
+                    ->color(fn (BackupStatus $state) => $state->color()),
                 TextColumn::make('size_bytes')
                     ->label('Size')
-                    ->formatStateUsing(fn($state) => (new Backup(['size_bytes' => $state]))->sizeFormatted()),
+                    ->formatStateUsing(fn ($state) => (new Backup(['size_bytes' => $state]))->sizeFormatted()),
                 IconColumn::make('encrypted')
                     ->boolean(),
                 TextColumn::make('delivered_via')
-                    ->formatStateUsing(fn($state) => is_array($state) ? implode(', ', $state) : '-'),
+                    ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : '-'),
                 TextColumn::make('created_at')
                     ->dateTime(),
                 TextColumn::make('completed_at')

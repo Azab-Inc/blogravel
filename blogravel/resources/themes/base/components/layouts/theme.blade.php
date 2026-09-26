@@ -7,7 +7,7 @@
     <meta name="description" content="{{ $tenant->name ?? config('app.name') }} — A Blogravel blog">
 
     @php
-        $themeAssets = app(\App\Providers\ThemeServiceProvider::class)->getThemeAssets(
+        $themeAssets = app()->getProvider(\App\Providers\ThemeServiceProvider::class)->getThemeAssets(
             request()->attributes->get('active_theme', config('theme.default', 'base')),
         );
     @endphp

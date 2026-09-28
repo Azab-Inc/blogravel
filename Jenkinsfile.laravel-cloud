@@ -1,0 +1,44 @@
+pipeline {
+    agent {
+        label 'php85'
+    }
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
+    parameters {
+        string(name: 'RELEASE_TAG', trim: true)
+        string(name: 'LARAVEL_CLOUD_DEPLOY_HOOK_CREDENTIALS_ID', trim: true)
+    }
+
+    environment {
+        RELEASE_TAG = "${params.RELEASE_TAG}"
+    }
+
+    stages {
+        stage('Validate release') {
+            steps {
+                sh './ci/validate-release.sh'
+                script {
+                    env.RELEASE_COMMIT = sh(
+                        script: 'git rev-parse "${RELEASE_TAG}^{commit}"',
+                        returnStdout: true,
+                    ).trim()
+                }
+            }
+        }
+
+        stage('Deploy to Laravel Cloud') {
+            steps {
+                withCredentials([string(
+                    credentialsId: params.LARAVEL_CLOUD_DEPLOY_HOOK_CREDENTIALS_ID,
+                    variable: 'LARAVEL_CLOUD_DEPLOY_HOOK',
+                )]) {
+                    sh 'curl --fail --silent --show-error --request POST "${LARAVEL_CLOUD_DEPLOY_HOOK}?commit_hash=${RELEASE_COMMIT}"'
+                }
+            }
+        }
+    }
+}

@@ -41,7 +41,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, *
 | [#54](https://github.com/Azab-Inc/blogravel/issues/54) | Hostinger VPS tagged deployment | To Verify |
 | [#55](https://github.com/Azab-Inc/blogravel/issues/55) | Laravel Cloud tagged deployment | To Verify |
 | [#56](https://github.com/Azab-Inc/blogravel/issues/56) | GCP Cloud Run tagged deployment | To Verify |
-| [#28](https://github.com/Azab-Inc/blogravel/issues/28) | UI feedback & toast notifications | Done |
+| [#28](https://github.com/Azab-Inc/blogravel/issues/28) | UI feedback & toast notifications | In Progress |
 | [#29](https://github.com/Azab-Inc/blogravel/issues/29) | Blogravel Cloud hosted deployment (Future Phase) | Todo |
 | [#30](https://github.com/Azab-Inc/blogravel/issues/30) | Frontend template ecosystem (Future Phase) | Todo |
 | [#31](https://github.com/Azab-Inc/blogravel/issues/31) | GraphQL API endpoint (Future Phase) | Todo |

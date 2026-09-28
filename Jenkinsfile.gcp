@@ -1,0 +1,124 @@
+pipeline {
+    agent {
+        label 'php85'
+    }
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
+    parameters {
+        string(name: 'RELEASE_TAG', trim: true)
+        string(name: 'GCP_PROJECT_ID', trim: true)
+        string(name: 'GCP_ENVIRONMENT', defaultValue: 'production', trim: true)
+        string(name: 'GCP_REGION', defaultValue: 'us-central1', trim: true)
+        string(name: 'GCP_ARTIFACT_REPOSITORY', defaultValue: 'blogravel', trim: true)
+        string(name: 'GCP_TERRAFORM_STATE_BUCKET', trim: true)
+        string(name: 'GCP_DOMAIN', trim: true)
+        string(name: 'GCP_STORAGE_BUCKET', trim: true)
+        string(name: 'GCP_APP_KEY_SECRET_ID', defaultValue: 'blogravel-app-key', trim: true)
+        string(name: 'GCP_DB_PASSWORD_SECRET_ID', defaultValue: 'blogravel-db-password', trim: true)
+        string(name: 'GCP_STORAGE_ACCESS_KEY_SECRET_ID', defaultValue: 'blogravel-storage-access-key', trim: true)
+        string(name: 'GCP_STORAGE_SECRET_KEY_SECRET_ID', defaultValue: 'blogravel-storage-secret-key', trim: true)
+        string(name: 'GCP_SERVICE_ACCOUNT_CREDENTIALS_ID', trim: true)
+    }
+
+    environment {
+        RELEASE_TAG = "${params.RELEASE_TAG}"
+        GCP_PROJECT_ID = "${params.GCP_PROJECT_ID}"
+        GCP_ENVIRONMENT = "${params.GCP_ENVIRONMENT}"
+        GCP_REGION = "${params.GCP_REGION}"
+        GCP_ARTIFACT_REPOSITORY = "${params.GCP_ARTIFACT_REPOSITORY}"
+        GCP_TERRAFORM_STATE_BUCKET = "${params.GCP_TERRAFORM_STATE_BUCKET}"
+    }
+
+    stages {
+        stage('Validate release') {
+            steps {
+                sh './ci/validate-release.sh'
+                script {
+                    env.RELEASE_COMMIT = sh(
+                        script: 'git rev-parse "${RELEASE_TAG}^{commit}"',
+                        returnStdout: true,
+                    ).trim()
+                }
+            }
+        }
+
+        stage('Build and push image') {
+            steps {
+                withCredentials([file(
+                    credentialsId: params.GCP_SERVICE_ACCOUNT_CREDENTIALS_ID,
+                    variable: 'GCP_CREDENTIALS_FILE',
+                )]) {
+                    sh '''
+                        set -eu
+                        gcloud auth activate-service-account --key-file="$GCP_CREDENTIALS_FILE" --project="$GCP_PROJECT_ID"
+                        gcloud auth configure-docker "$GCP_REGION-docker.pkg.dev" --quiet
+                        IMAGE_URI="$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_ARTIFACT_REPOSITORY/blogravel:$RELEASE_COMMIT"
+                        docker build --file blogravel/docker/production/Dockerfile --tag "$IMAGE_URI" blogravel
+                        docker push "$IMAGE_URI"
+                        IMAGE_DIGEST=$(gcloud artifacts docker images describe "$IMAGE_URI" --format='value(image_summary.digest)')
+                        test -n "$IMAGE_DIGEST"
+                        printf '%s\n' "$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_ARTIFACT_REPOSITORY/blogravel@$IMAGE_DIGEST" > .gcp-image-digest
+                    '''
+                }
+            }
+        }
+
+        stage('Apply infrastructure') {
+            steps {
+                withCredentials([file(
+                    credentialsId: params.GCP_SERVICE_ACCOUNT_CREDENTIALS_ID,
+                    variable: 'GCP_CREDENTIALS_FILE',
+                )]) {
+                    sh '''
+                        set -eu
+                        export GOOGLE_APPLICATION_CREDENTIALS="$GCP_CREDENTIALS_FILE"
+                        IMAGE_DIGEST=$(tr -d '\\n' < .gcp-image-digest)
+                        terraform -chdir=infrastructure/gcp/app init \\
+                            -backend-config="bucket=$GCP_TERRAFORM_STATE_BUCKET" \\
+                            -backend-config="prefix=blogravel/$GCP_ENVIRONMENT"
+                        terraform -chdir=infrastructure/gcp/app plan \\
+                            -var="project_id=$GCP_PROJECT_ID" \\
+                            -var="environment=$GCP_ENVIRONMENT" \\
+                            -var="region=$GCP_REGION" \\
+                            -var="image_digest=$IMAGE_DIGEST" \\
+                            -var="domain=$GCP_DOMAIN" \\
+                            -var="storage_bucket_name=$GCP_STORAGE_BUCKET" \\
+                            -var="app_key_secret_id=$GCP_APP_KEY_SECRET_ID" \\
+                            -var="db_password_secret_id=$GCP_DB_PASSWORD_SECRET_ID" \\
+                            -var="aws_access_key_secret_id=$GCP_STORAGE_ACCESS_KEY_SECRET_ID" \\
+                            -var="aws_secret_access_key_secret_id=$GCP_STORAGE_SECRET_KEY_SECRET_ID" \\
+                            -out=tfplan
+                        terraform -chdir=infrastructure/gcp/app apply -auto-approve tfplan
+                    '''
+                }
+            }
+        }
+
+        stage('Run migrations and smoke test') {
+            steps {
+                withCredentials([file(
+                    credentialsId: params.GCP_SERVICE_ACCOUNT_CREDENTIALS_ID,
+                    variable: 'GCP_CREDENTIALS_FILE',
+                )]) {
+                    sh '''
+                        set -eu
+                        export GOOGLE_APPLICATION_CREDENTIALS="$GCP_CREDENTIALS_FILE"
+                        gcloud run jobs execute "blogravel-$GCP_ENVIRONMENT-migrate" --region="$GCP_REGION" --project="$GCP_PROJECT_ID" --wait
+                        WEB_URL=$(terraform -chdir=infrastructure/gcp/app output -raw web_url)
+                        curl --fail --silent --show-error "$WEB_URL/up"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'rm -f .gcp-image-digest infrastructure/gcp/app/tfplan'
+        }
+    }
+}

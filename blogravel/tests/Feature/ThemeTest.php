@@ -26,6 +26,16 @@ it('renders home page with posts', function () {
         ->assertSee($this->tenant->name);
 });
 
+it('initializes the public theme in light mode and uses semantic button colors', function () {
+    $response = $this->get("/?tenant={$this->tenant->id}");
+
+    $response->assertOk()
+        ->assertSee("document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';", escape: false)
+        ->assertSee('.pagination .active {', escape: false)
+        ->assertSee('color: var(--button-fg);', escape: false)
+        ->assertDontSee('color: #fff;', escape: false);
+});
+
 it('renders single post page', function () {
     $post = Post::factory()->create([
         'tenant_id' => $this->tenant->id,

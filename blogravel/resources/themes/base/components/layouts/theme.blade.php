@@ -357,7 +357,7 @@
 
         .pagination .active {
             background: var(--button-bg);
-            color: #fff;
+            color: var(--button-fg);
             border-color: var(--button-bg);
         }
 

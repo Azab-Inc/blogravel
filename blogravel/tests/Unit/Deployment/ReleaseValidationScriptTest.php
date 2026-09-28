@@ -97,6 +97,26 @@ it('rejects a lightweight release tag before validation succeeds', function (): 
         ->and($this->releaseValidationRepositoryPath.'/release-validation-succeeded')->not->toBeFile();
 });
 
+it('rejects an unknown release tag before validation succeeds', function (): void {
+    $this->releaseValidationRepositoryPath = temporaryReleaseRepository();
+
+    $process = releaseValidationProcess($this->releaseValidationRepositoryPath, 'v9.9.9');
+
+    expect($process->isSuccessful())->toBeFalse()
+        ->and($process->getErrorOutput())->toContain('RELEASE_TAG must name an existing tag')
+        ->and($this->releaseValidationRepositoryPath.'/release-validation-succeeded')->not->toBeFile();
+});
+
+it('rejects a malformed release tag before validation succeeds', function (): void {
+    $this->releaseValidationRepositoryPath = temporaryReleaseRepository();
+
+    $process = releaseValidationProcess($this->releaseValidationRepositoryPath, '1.2.3');
+
+    expect($process->isSuccessful())->toBeFalse()
+        ->and($process->getErrorOutput())->toContain('RELEASE_TAG must match vMAJOR.MINOR.PATCH')
+        ->and($this->releaseValidationRepositoryPath.'/release-validation-succeeded')->not->toBeFile();
+});
+
 it('requires the release script to execute the complete validation gate', function (): void {
     expect(file_exists(releaseValidationScriptPath()))->toBeTrue();
 

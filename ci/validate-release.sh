@@ -6,6 +6,10 @@ set -euo pipefail
     printf '%s\n' 'RELEASE_TAG must match vMAJOR.MINOR.PATCH' >&2
     exit 1
 }
+git rev-parse --verify --quiet "$RELEASE_TAG" >/dev/null || {
+    printf '%s\n' 'RELEASE_TAG must name an existing tag' >&2
+    exit 1
+}
 [[ "$(git cat-file -t "$RELEASE_TAG")" == 'tag' ]] || {
     printf '%s\n' 'RELEASE_TAG must be an annotated tag' >&2
     exit 1

@@ -348,32 +348,64 @@ test.describe('Theme Color Scheme', () => {
     await expect(page.evaluate(() => localStorage.getItem('theme'))).resolves.toBe('dark');
   });
 
-  test('uses the operating system color scheme without an explicit choice', async ({ page }) => {
+  test('defaults to light mode without an explicit choice', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto(`${ACME_URL}/`);
-
-    await expect(page.locator('html')).not.toHaveAttribute('data-theme', 'light');
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(17, 24, 39)');
-  });
-
-  test('an explicit choice overrides the operating system color scheme', async ({ page }) => {
-    await page.emulateMedia({ colorScheme: 'dark' });
-    await page.goto(`${ACME_URL}/`);
-
-    await page.getByRole('button', { name: 'Switch to light mode' }).click();
 
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 248, 237)');
   });
 
-  test('explicit dark mode styles toasts with a light operating system preference', async ({ page }) => {
-    await page.emulateMedia({ colorScheme: 'light' });
-    await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+  test('supports keyboard access for the color scheme toggle', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto(`${ACME_URL}/`);
+
+    const themeToggle = page.getByRole('button', { name: 'Switch to dark mode' });
+    await themeToggle.focus();
+    await expect(themeToggle).toBeFocused();
+    await page.keyboard.press('Enter');
+
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.getByRole('button', { name: 'Switch to light mode' })).toBeFocused();
+  });
+
+  test('applies a saved dark mode across representative public pages', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/`);
 
     await page.getByRole('button', { name: 'Switch to dark mode' }).click();
-    await page.locator('input[type="email"]').fill(`playwright-dark-toast-${Date.now()}@example.com`);
-    await page.locator('button[type="submit"]').click();
 
-    await expect(page.getByRole('status')).toHaveCSS('background-color', 'rgb(6, 78, 59)');
+    for (const path of ['/', '/post/omnis-qui-assumenda-nisi-in', '/category/howard-walker', '/subscribe', '/contact']) {
+      await page.goto(`${LOCAL_PATH_TENANT_URL}${path}`);
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+      await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(16, 37, 66)');
+    }
+  });
+
+  test('uses the Blogravel brand colors for theme state and controls', async ({ page }) => {
+    await page.goto(`${ACME_URL}/`);
+
+    const lightColors = await page.locator('html').evaluate((html) => {
+      const styles = getComputedStyle(html);
+      return {
+        accent: styles.getPropertyValue('--accent').trim(),
+        foreground: styles.getPropertyValue('--fg').trim(),
+      };
+    });
+
+    expect(lightColors.accent).toBe('#102542');
+    expect(lightColors.foreground).toBe('#102542');
+
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+
+    const darkColors = await page.locator('html').evaluate((html) => {
+      const styles = getComputedStyle(html);
+      return {
+        background: styles.getPropertyValue('--bg').trim(),
+        foreground: styles.getPropertyValue('--fg').trim(),
+      };
+    });
+
+    expect(darkColors.background).toBe('#102542');
+    expect(darkColors.foreground).toBe('#fff8ed');
   });
 });

@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $tenant->name ?? config('app.name') }}</title>
     <meta name="description" content="{{ $tenant->name ?? config('app.name') }} — A Blogravel blog">
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
+    </script>
 
     @php
         $themeAssets = app()->getProvider(\App\Providers\ThemeServiceProvider::class)->getThemeAssets(
@@ -25,48 +29,39 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg: #fff;
-            --fg: #1a1a1a;
-            --accent: #1d4ed8;
-            --button-bg: #1d4ed8;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-            --surface: #f9fafb;
+            --bg: #fff8ed;
+            --fg: #102542;
+            --accent: #102542;
+            --button-bg: #102542;
+            --button-fg: #fff8ed;
+            --muted: #4b5563;
+            --border: #e5d7c3;
+            --surface: #ffffff;
             --radius: 8px;
             --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #111827;
-                --fg: #f9fafb;
-                --accent: #93c5fd;
-                --button-bg: #2563eb;
-                --muted: #9ca3af;
-                --border: #374151;
-                --surface: #1f2937;
-            }
-        }
-
         html[data-theme="light"] {
-            --bg: #fff;
-            --fg: #1a1a1a;
-            --accent: #1d4ed8;
-            --button-bg: #1d4ed8;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-            --surface: #f9fafb;
+            --bg: #fff8ed;
+            --fg: #102542;
+            --accent: #102542;
+            --button-bg: #102542;
+            --button-fg: #fff8ed;
+            --muted: #4b5563;
+            --border: #e5d7c3;
+            --surface: #ffffff;
         }
 
         html[data-theme="dark"] {
-            --bg: #111827;
-            --fg: #f9fafb;
-            --accent: #93c5fd;
-            --button-bg: #2563eb;
-            --muted: #9ca3af;
-            --border: #374151;
-            --surface: #1f2937;
+            --bg: #102542;
+            --fg: #fff8ed;
+            --accent: #eeaf62;
+            --button-bg: #e5a24d;
+            --button-fg: #102542;
+            --muted: #d6c8b4;
+            --border: #45617f;
+            --surface: #183657;
         }
 
         body {
@@ -282,7 +277,7 @@
         .btn {
             display: inline-block;
             background: var(--button-bg);
-            color: #fff;
+            color: var(--button-fg);
             padding: 0.625rem 1.25rem;
             border-radius: var(--radius);
             border: none;
@@ -337,10 +332,7 @@
             margin-top: 0.375rem;
         }
 
-        @media (prefers-color-scheme: dark) {
-            html:not([data-theme]) .form-error,
-            html[data-theme="dark"] .form-error { color: #fca5a5; }
-        }
+        html[data-theme="dark"] .form-error { color: #fca5a5; }
 
         /* Pagination */
         .pagination {
@@ -418,18 +410,9 @@
             .toast { transition: none; }
         }
 
-        @media (prefers-color-scheme: dark) {
-            html:not([data-theme]) .success,
-            html[data-theme="dark"] .success {
-                background: #064e3b;
-                color: #a7f3d0;
-            }
-
-            html:not([data-theme]) .toast {
-                background: #064e3b;
-                color: #a7f3d0;
-                border-color: #047857;
-            }
+        html[data-theme="dark"] .success {
+            background: #064e3b;
+            color: #a7f3d0;
         }
 
         html[data-theme="dark"] .toast {
@@ -525,15 +508,9 @@
     @vite('resources/js/app.js')
     <script>
         const themeToggle = document.querySelector('.theme-toggle');
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (savedTheme === 'light' || savedTheme === 'dark') {
-            document.documentElement.dataset.theme = savedTheme;
-        }
 
         const updateThemeToggle = () => {
-            const activeTheme = document.documentElement.dataset.theme || (systemPrefersDark ? 'dark' : 'light');
+            const activeTheme = document.documentElement.dataset.theme;
             const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
 
             themeToggle?.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
@@ -543,7 +520,7 @@
         };
 
         themeToggle?.addEventListener('click', () => {
-            const activeTheme = document.documentElement.dataset.theme || (systemPrefersDark ? 'dark' : 'light');
+            const activeTheme = document.documentElement.dataset.theme;
             const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
 
             document.documentElement.dataset.theme = nextTheme;

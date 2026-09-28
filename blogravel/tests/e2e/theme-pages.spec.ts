@@ -143,6 +143,32 @@ test.describe('Theme Subscribe Page', () => {
     await expect(page.locator('body')).toContainText(/thank|subscribed|success/i);
   });
 
+  test('shows and dismisses the subscribe success toast', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+    await page.locator('input[type="email"]').fill(`playwright-toast-${Date.now()}@example.com`);
+    await page.locator('button[type="submit"]').click();
+
+    const toast = page.getByRole('status');
+    await expect(toast).toContainText("You've been subscribed");
+    await expect(toast).toHaveAttribute('aria-live', 'polite');
+
+    const dismissButton = toast.getByRole('button', { name: 'Dismiss notification' });
+    await expect(dismissButton).toBeFocused();
+    await dismissButton.click();
+    await expect(toast).toBeHidden();
+    await expect(page.locator('.toast-fallback')).toHaveCount(1);
+  });
+
+  test('keeps subscribe validation feedback visible', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+    await page.locator('input[type="email"]').fill('not-an-email');
+    await page.locator('form').evaluate((form) => { form.noValidate = true; });
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page.locator('.form-error[role="alert"]')).toContainText('valid email');
+    await expect(page.locator('input[type="email"]')).toHaveAttribute('aria-invalid', 'true');
+  });
+
   test('keeps the local path subscribe success link under the tenant path', async ({ page }) => {
     await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
     await page.locator('input[type="email"]').fill(`playwright-${Date.now()}@example.com`);

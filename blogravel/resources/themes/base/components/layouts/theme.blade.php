@@ -378,11 +378,58 @@
             margin-bottom: 1rem;
         }
 
+        .toast-region {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 20;
+            width: min(26rem, calc(100% - 2rem));
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            background: #dcfce7;
+            color: #166534;
+            padding: 1rem;
+            border: 1px solid #86efac;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+        }
+
+        .toast-dismiss {
+            flex: 0 0 auto;
+            min-height: 44px;
+            padding: 0.5rem;
+            border: 1px solid currentColor;
+            border-radius: var(--radius);
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .has-js .toast-fallback { display: none; }
+
+        .toast[hidden] { display: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .toast { transition: none; }
+        }
+
         @media (prefers-color-scheme: dark) {
             html:not([data-theme]) .success,
             html[data-theme="dark"] .success {
                 background: #064e3b;
                 color: #a7f3d0;
+            }
+
+            html:not([data-theme]) .toast,
+            html[data-theme="dark"] .toast {
+                background: #064e3b;
+                color: #a7f3d0;
+                border-color: #047857;
             }
         }
 
@@ -463,11 +510,14 @@
         {{ $slot }}
     </main>
 
+    <div id="toast-region" class="toast-region" aria-label="Notifications"></div>
+
     <footer>
         <div class="container">
             Powered by <a href="https://blogravel.com">Blogravel</a>
         </div>
     </footer>
+    @vite('resources/js/app.js')
     <script>
         const themeToggle = document.querySelector('.theme-toggle');
         const savedTheme = localStorage.getItem('theme');

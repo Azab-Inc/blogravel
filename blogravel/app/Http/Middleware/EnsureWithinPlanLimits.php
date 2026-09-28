@@ -2,15 +2,16 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\Plan;
-use App\Models\Post;
-use App\Models\User;
+use App\Models\Tenant;
+use App\Services\TenantPlanLimitService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureWithinPlanLimits
 {
+    public function __construct(private readonly TenantPlanLimitService $limits) {}
+
     /**
      * Enforce plan limits for the current tenant.
      * Only active when BILLING_ENABLED=true.
@@ -34,10 +35,8 @@ class EnsureWithinPlanLimits
             return $next($request);
         }
 
-        $plan = $tenant->plan ?? Plan::Free;
-
         foreach ($checks as $check) {
-            $this->check($plan, $tenantId, $check);
+            $this->check($tenant, $check);
         }
 
         return $next($request);
@@ -60,28 +59,20 @@ class EnsureWithinPlanLimits
         return null;
     }
 
-    private function check(Plan $plan, string $tenantId, string $check): void
+    private function check(Tenant $tenant, string $check): void
     {
-        $limit = $plan->limit($check);
+        $limit = $this->limits->limit($tenant, $check);
 
-        if ($limit === null) {
+        if (! $this->limits->hasReached($tenant, $check)) {
             return; // Unlimited
         }
 
-        $current = match ($check) {
-            'posts' => Post::where('tenant_id', $tenantId)->count(),
-            'users' => User::where('tenant_id', $tenantId)->count(),
-            default => 0,
-        };
-
-        if ($current >= $limit) {
-            abort(403, json_encode([
-                'message' => "Plan limit reached for {$check}.",
-                'limit' => $limit,
-                'current' => $current,
-                'plan' => $plan->value,
-                'upgrade_url' => '/admin/billing',
-            ]));
-        }
+        abort(403, json_encode([
+            'message' => "Plan limit reached for {$check}.",
+            'limit' => $limit,
+            'current' => $this->limits->current($tenant, $check),
+            'plan' => $tenant->plan?->value,
+            'upgrade_url' => '/admin/billing',
+        ]));
     }
 }

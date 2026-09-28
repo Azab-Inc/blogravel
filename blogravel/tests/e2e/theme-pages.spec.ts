@@ -170,6 +170,41 @@ test.describe('Theme Subscribe Page', () => {
     await expect(page.locator('input[type="email"]')).toHaveAttribute('aria-invalid', 'true');
   });
 
+  test('shows and clears inline email validation on blur', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+    await page.locator('form').evaluate((form) => { form.noValidate = true; });
+
+    const email = page.locator('input[type="email"]');
+    await email.focus();
+    await email.blur();
+
+    const error = page.locator('[data-client-error="email"]');
+    await expect(error).toContainText('Email address is required.');
+    await expect(email).toHaveAttribute('aria-invalid', 'true');
+    await expect(email).toHaveAttribute('aria-describedby', 'email-error');
+
+    await email.fill('valid@example.com');
+    await email.blur();
+
+    await expect(error).toBeHidden();
+    await expect(email).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('prevents invalid public theme form submission and validates all fields', async ({ page }) => {
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/contact`);
+    await page.locator('form').evaluate((form) => { form.noValidate = true; });
+
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(`${LOCAL_PATH_TENANT_URL}/contact`);
+    await expect(page.locator('[data-client-error="name"]')).toContainText('Name is required.');
+    await expect(page.locator('[data-client-error="email"]')).toContainText('Email is required.');
+    await expect(page.locator('[data-client-error="message"]')).toContainText('Message is required.');
+    await expect(page.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('aria-describedby', 'email-error');
+    await expect(page.locator('textarea[name="message"]')).toHaveAttribute('aria-invalid', 'true');
+  });
+
   test('keeps the local path subscribe success link under the tenant path', async ({ page }) => {
     await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
     await page.locator('input[type="email"]').fill(`playwright-${Date.now()}@example.com`);

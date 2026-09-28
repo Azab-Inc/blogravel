@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PostResource\Pages;
 
+use App\Enums\PostStatus;
 use App\Filament\Resources\PostResource;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
@@ -18,5 +19,12 @@ class CreatePost extends CreateRecord
         $data['author_id'] = $user->id;
 
         return $data;
+    }
+
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        return ($this->data['status'] ?? null) === PostStatus::Published->value
+            ? 'Post published'
+            : 'Post created';
     }
 }

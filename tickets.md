@@ -2,7 +2,7 @@
 
 This file must always stay in sync with the [Blogravel GitHub project](https://github.com/orgs/Azab-Inc/projects/17) — every issue lives in both places. When adding or updating a ticket, update both the GitHub project and this file.
 
-Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. Issues listed as *(not in project)* exist in the GitHub repo but have not been added to the project board.
+Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, **To Verify**. **To Verify** means: Has to be tested manually. Issues listed as *(not in project)* exist in the GitHub repo but have not been added to the project board.
 
 | # | Title | Status |
 |---|-------|--------|
@@ -37,10 +37,10 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**. I
 | [#50](https://github.com/Azab-Inc/blogravel/issues/50) | Self-hosted environment configuration | Done |
 | [#51](https://github.com/Azab-Inc/blogravel/issues/51) | Self-hosted deployment and operations documentation | Done |
 | [#52](https://github.com/Azab-Inc/blogravel/issues/52) | Self-hosted release packaging and versioning process | Done |
-| [#53](https://github.com/Azab-Inc/blogravel/issues/53) | Multi-platform production deployment | Todo |
-| [#54](https://github.com/Azab-Inc/blogravel/issues/54) | Hostinger VPS tagged deployment | Todo |
-| [#55](https://github.com/Azab-Inc/blogravel/issues/55) | Laravel Cloud tagged deployment | Todo |
-| [#56](https://github.com/Azab-Inc/blogravel/issues/56) | GCP Cloud Run tagged deployment | Todo |
+| [#53](https://github.com/Azab-Inc/blogravel/issues/53) | Multi-platform production deployment | To Verify |
+| [#54](https://github.com/Azab-Inc/blogravel/issues/54) | Hostinger VPS tagged deployment | To Verify |
+| [#55](https://github.com/Azab-Inc/blogravel/issues/55) | Laravel Cloud tagged deployment | To Verify |
+| [#56](https://github.com/Azab-Inc/blogravel/issues/56) | GCP Cloud Run tagged deployment | To Verify |
 | [#28](https://github.com/Azab-Inc/blogravel/issues/28) | UI feedback & toast notifications | Todo |
 | [#29](https://github.com/Azab-Inc/blogravel/issues/29) | Blogravel Cloud hosted deployment (Future Phase) | Todo |
 | [#30](https://github.com/Azab-Inc/blogravel/issues/30) | Frontend template ecosystem (Future Phase) | Todo |

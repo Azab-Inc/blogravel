@@ -24,6 +24,10 @@ set -euo pipefail
 if [[ "$(basename "$0")" == 'docker' ]]; then
     touch "$RELEASE_VALIDATION_SUCCESS_MARKER"
 fi
+
+printf '%s' "$(basename "$0")" >> "$RELEASE_VALIDATION_COMMAND_LOG"
+printf ' %s' "$@" >> "$RELEASE_VALIDATION_COMMAND_LOG"
+printf '\n' >> "$RELEASE_VALIDATION_COMMAND_LOG"
 BASH);
         chmod($commandPath, 0o755);
     }
@@ -46,17 +50,24 @@ BASH);
     return $repositoryPath;
 }
 
-function releaseValidationProcess(string $repositoryPath, string $releaseTag): Process
+function releaseValidationProcess(string $repositoryPath, ?string $releaseTag): Process
 {
     $successMarker = $repositoryPath.'/release-validation-succeeded';
+    $commandLog = $repositoryPath.'/release-validation-commands';
+    $environment = [
+        'PATH' => $repositoryPath.'/bin:'.getenv('PATH'),
+        'RELEASE_VALIDATION_COMMAND_LOG' => $commandLog,
+        'RELEASE_VALIDATION_SUCCESS_MARKER' => $successMarker,
+    ];
+
+    if ($releaseTag !== null) {
+        $environment['RELEASE_TAG'] = $releaseTag;
+    }
+
     $process = new Process(
         [releaseValidationScriptPath()],
         cwd: $repositoryPath,
-        env: [
-            'PATH' => $repositoryPath.'/bin:'.getenv('PATH'),
-            'RELEASE_TAG' => $releaseTag,
-            'RELEASE_VALIDATION_SUCCESS_MARKER' => $successMarker,
-        ],
+        env: $environment,
     );
 
     $process->run();
@@ -117,15 +128,29 @@ it('rejects a malformed release tag before validation succeeds', function (): vo
         ->and($this->releaseValidationRepositoryPath.'/release-validation-succeeded')->not->toBeFile();
 });
 
-it('requires the release script to execute the complete validation gate', function (): void {
-    expect(file_exists(releaseValidationScriptPath()))->toBeTrue();
+it('rejects an absent release tag before validation succeeds', function (): void {
+    $this->releaseValidationRepositoryPath = temporaryReleaseRepository();
 
-    $script = file_get_contents(releaseValidationScriptPath());
+    $process = releaseValidationProcess($this->releaseValidationRepositoryPath, null);
 
-    expect($script)
-        ->toContain('git cat-file -t "$RELEASE_TAG"')
-        ->toContain('composer lint:check')
-        ->toContain('php artisan test --compact')
-        ->toContain('npm run build')
-        ->toContain('docker compose --env-file .env.example config --quiet');
+    expect($process->isSuccessful())->toBeFalse()
+        ->and($process->getErrorOutput())->toContain('RELEASE_TAG must name an annotated vMAJOR.MINOR.PATCH tag')
+        ->and($this->releaseValidationRepositoryPath.'/release-validation-succeeded')->not->toBeFile();
+});
+
+it('executes the complete validation gate in order', function (): void {
+    $this->releaseValidationRepositoryPath = temporaryReleaseRepository();
+
+    $process = releaseValidationProcess($this->releaseValidationRepositoryPath, 'v1.2.3');
+
+    expect($process->isSuccessful())->toBeTrue($process->getErrorOutput())
+        ->and(file_get_contents($this->releaseValidationRepositoryPath.'/release-validation-commands'))->toBe(implode("\n", [
+            'composer install --no-interaction --prefer-dist --no-progress',
+            'npm ci',
+            'composer lint:check',
+            'php artisan test --compact',
+            'npm run build',
+            'docker compose --env-file .env.example config --quiet',
+            '',
+        ]));
 });

@@ -3,12 +3,14 @@
 use App\Enums\AiProviderType;
 use App\Enums\Role;
 use App\Filament\Pages\Settings;
+use App\Mail\TestMail;
 use App\Models\AiProvider;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 
 it('settings page renders for admin', function () {
@@ -70,6 +72,40 @@ it('settings page is hidden from author', function () {
 
     $response = $this->get('/admin/settings');
     $response->assertStatus(403);
+});
+
+it('sends a test email to the authenticated admin', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+        'email' => 'admin@example.com',
+    ]);
+    Mail::fake();
+    $this->actingAs($user);
+
+    Livewire::test(Settings::class)
+        ->callAction(TestAction::make('sendTestEmail')->schemaComponent(true))
+        ->assertNotified('Test email sent');
+
+    Mail::assertSent(function (TestMail $mail) use ($user): bool {
+        return $mail->hasTo($user->email);
+    });
+});
+
+it('shows a safe error notification when the test email fails', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => Role::Admin,
+    ]);
+    $this->actingAs($user);
+
+    Mail::shouldReceive('to')->andThrow(new RuntimeException('SMTP password secret'));
+
+    Livewire::test(Settings::class)
+        ->callAction(TestAction::make('sendTestEmail')->schemaComponent(true))
+        ->assertNotified('Test email could not be sent');
 });
 
 it('shows permissions section with toggle', function () {

@@ -44,5 +44,6 @@ test.describe('Admin Pages Smoke Tests', () => {
 
     await expect(page.getByRole('button', { name: 'Save Site' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save Account' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Send Test Email' })).toBeVisible();
   });
 });

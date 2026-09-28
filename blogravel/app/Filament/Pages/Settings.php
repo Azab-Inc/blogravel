@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Enums\AiProviderType;
 use App\Enums\NavGroup;
 use App\Enums\Role;
+use App\Mail\TestMail;
 use App\Models\AiProvider;
 use App\Models\Setting;
 use App\Models\Tenant;
@@ -31,7 +32,9 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 use UnitEnum;
 
 class Settings extends Page
@@ -250,6 +253,11 @@ class Settings extends Page
                                     ->action(function (): void {
                                         $this->saveAccount();
                                     }),
+                                Action::make('sendTestEmail')
+                                    ->label('Send Test Email')
+                                    ->action(function (): void {
+                                        $this->sendTestEmail();
+                                    }),
                             ]),
                     ]),
                     Grid::make([
@@ -440,6 +448,26 @@ class Settings extends Page
 
         Notification::make()
             ->title('Account settings saved')
+            ->success()
+            ->send();
+    }
+
+    public function sendTestEmail(): void
+    {
+        try {
+            Mail::to(Auth::user()->email)->send(new TestMail);
+        } catch (Throwable) {
+            Notification::make()
+                ->title('Test email could not be sent')
+                ->body('Check your mail configuration and try again.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Test email sent')
             ->success()
             ->send();
     }

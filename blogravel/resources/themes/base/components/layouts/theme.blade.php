@@ -35,7 +35,7 @@
             --button-bg: #102542;
             --button-fg: #fff8ed;
             --muted: #4b5563;
-            --border: #e5d7c3;
+            --border: #9b856e;
             --surface: #ffffff;
             --radius: 8px;
             --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
@@ -49,7 +49,7 @@
             --button-bg: #102542;
             --button-fg: #fff8ed;
             --muted: #4b5563;
-            --border: #e5d7c3;
+            --border: #9b856e;
             --surface: #ffffff;
         }
 
@@ -60,7 +60,7 @@
             --button-bg: #e5a24d;
             --button-fg: #102542;
             --muted: #d6c8b4;
-            --border: #45617f;
+            --border: #7893af;
             --surface: #183657;
         }
 

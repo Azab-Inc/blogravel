@@ -33,6 +33,8 @@ it('initializes the public theme in light mode and uses semantic button colors',
         ->assertSee("document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';", escape: false)
         ->assertSee('.pagination .active {', escape: false)
         ->assertSee('color: var(--button-fg);', escape: false)
+        ->assertSee('--border: #9b856e;', escape: false)
+        ->assertSee('--border: #7893af;', escape: false)
         ->assertDontSee('color: #fff;', escape: false);
 });
 

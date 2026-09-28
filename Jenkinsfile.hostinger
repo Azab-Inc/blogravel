@@ -15,33 +15,32 @@ pipeline {
         string(name: 'HOSTINGER_SSH_CREDENTIALS_ID', trim: true)
     }
 
+    environment {
+        RELEASE_TAG = "${params.RELEASE_TAG}"
+    }
+
     stages {
         stage('Validate release') {
             steps {
-                sh """RELEASE_TAG="${params.RELEASE_TAG}" ./ci/validate-release.sh"""
+                sh './ci/validate-release.sh'
+                script {
+                    env.RELEASE_COMMIT = sh(
+                        script: 'git rev-parse "${RELEASE_TAG}^{commit}"',
+                        returnStdout: true,
+                    ).trim()
+                }
             }
         }
 
         stage('Deploy to Hostinger') {
             steps {
-                sh '''
-                    [[ "$HOSTINGER_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || {
-                        printf '%s\\n' 'HOSTINGER_HOST must be a hostname or IPv4 address' >&2
-                        exit 1
-                    }
-                    [[ "$HOSTINGER_DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]+$ ]] || {
-                        printf '%s\\n' 'HOSTINGER_DEPLOY_PATH must be an absolute path' >&2
-                        exit 1
-                    }
-                '''
-
                 withCredentials([usernamePassword(
                     credentialsId: params.HOSTINGER_SSH_CREDENTIALS_ID,
                     usernameVariable: 'HOSTINGER_SSH_USERNAME',
                     passwordVariable: 'HOSTINGER_SSH_PASSWORD',
                 )]) {
                     sh '''
-                        sshpass -p "$HOSTINGER_SSH_PASSWORD" ssh -o StrictHostKeyChecking=accept-new -- "$HOSTINGER_SSH_USERNAME@$HOSTINGER_HOST" 'cd "'"$HOSTINGER_DEPLOY_PATH"'" && git fetch --tags && git checkout --detach "'"$RELEASE_TAG"'^{commit}" && docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan optimize:clear && docker compose --env-file blogravel/.env -f blogravel/compose.yaml restart laravel.test queue scheduler && curl --fail --silent --show-error http://127.0.0.1:${APP_PORT:-8080}/up'
+                        sshpass -p "$HOSTINGER_SSH_PASSWORD" ssh -o StrictHostKeyChecking=accept-new -- "$HOSTINGER_SSH_USERNAME@$HOSTINGER_HOST" 'sh -c '"'"'cd "$1" && git fetch --tags && git checkout --detach "$2" && docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan optimize:clear && docker compose --env-file blogravel/.env -f blogravel/compose.yaml restart laravel.test queue scheduler && curl --fail --silent --show-error http://127.0.0.1:${APP_PORT:-8080}/up'"'"' -- "$HOSTINGER_DEPLOY_PATH" "$RELEASE_COMMIT"'
                     '''
                 }
             }

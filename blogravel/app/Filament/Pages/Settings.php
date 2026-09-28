@@ -456,7 +456,9 @@ class Settings extends Page
     {
         try {
             Mail::to(Auth::user()->email)->send(new TestMail);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            report($exception);
+
             Notification::make()
                 ->title('Test email could not be sent')
                 ->body('Check your mail configuration and try again.')

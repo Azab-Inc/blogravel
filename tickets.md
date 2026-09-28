@@ -51,7 +51,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, *
 | [#35](https://github.com/Azab-Inc/blogravel/issues/35) | Comments: moderation & display | Todo |
 | [#36](https://github.com/Azab-Inc/blogravel/issues/36) | User & role management (admin) | Done |
 | [#37](https://github.com/Azab-Inc/blogravel/issues/37) | API documentation | Todo |
-| [#38](https://github.com/Azab-Inc/blogravel/issues/38) | Admin test email & mail configuration | Todo |
+| [#38](https://github.com/Azab-Inc/blogravel/issues/38) | Admin test email & mail configuration | In Progress |
 | [#39](https://github.com/Azab-Inc/blogravel/issues/39) | Tenant management UI (Super Admin) | Todo |
 | [#40](https://github.com/Azab-Inc/blogravel/issues/40) | [DX] Add pgAdmin to compose.yaml for local Postgres inspection | Done |
 | [#41](https://github.com/Azab-Inc/blogravel/issues/41) | Database seeders: Dev + User seeder | Done *(not in project)* |

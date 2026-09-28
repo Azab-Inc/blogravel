@@ -425,12 +425,17 @@
                 color: #a7f3d0;
             }
 
-            html:not([data-theme]) .toast,
-            html[data-theme="dark"] .toast {
+            html:not([data-theme]) .toast {
                 background: #064e3b;
                 color: #a7f3d0;
                 border-color: #047857;
             }
+        }
+
+        html[data-theme="dark"] .toast {
+            background: #064e3b;
+            color: #a7f3d0;
+            border-color: #047857;
         }
 
         /* Sidebar */
@@ -510,7 +515,7 @@
         {{ $slot }}
     </main>
 
-    <div id="toast-region" class="toast-region" aria-label="Notifications"></div>
+    <div id="toast-region" class="toast-region" tabindex="-1" aria-label="Notifications"></div>
 
     <footer>
         <div class="container">

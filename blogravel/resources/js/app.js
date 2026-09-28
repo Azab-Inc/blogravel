@@ -1,6 +1,12 @@
-const dismissToast = (toast) => {
+const dismissToast = (toast, toastRegion) => {
+    const focusIsInsideToast = toast.contains(document.activeElement);
+
     toast.hidden = true;
     toast.setAttribute('aria-hidden', 'true');
+
+    if (focusIsInsideToast) {
+        toastRegion?.focus();
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dismissButton = toast.querySelector('[data-toast-dismiss]');
 
         dismissButton?.focus();
-        dismissButton?.addEventListener('click', () => dismissToast(toast));
-        window.setTimeout(() => dismissToast(toast), 6000);
+        dismissButton?.addEventListener('click', () => dismissToast(toast, toastRegion));
+        window.setTimeout(() => dismissToast(toast, toastRegion), 6000);
     });
 });

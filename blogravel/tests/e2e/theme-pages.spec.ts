@@ -156,6 +156,7 @@ test.describe('Theme Subscribe Page', () => {
     await expect(dismissButton).toBeFocused();
     await dismissButton.click();
     await expect(toast).toBeHidden();
+    await expect(page.locator('#toast-region')).toBeFocused();
     await expect(page.locator('.toast-fallback')).toHaveCount(1);
   });
 
@@ -328,5 +329,16 @@ test.describe('Theme Color Scheme', () => {
 
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  });
+
+  test('explicit dark mode styles toasts with a light operating system preference', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto(`${LOCAL_PATH_TENANT_URL}/subscribe`);
+
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+    await page.locator('input[type="email"]').fill(`playwright-dark-toast-${Date.now()}@example.com`);
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page.getByRole('status')).toHaveCSS('background-color', 'rgb(6, 78, 59)');
   });
 });

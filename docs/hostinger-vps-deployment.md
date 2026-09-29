@@ -17,7 +17,7 @@ configuration, use [Self-Hosted Deployment](self-hosted-deployment.md).
 - Allow SSH only for the Jenkins deployment account. Publish the application
   port only to the reverse proxy; do not expose PostgreSQL, Redis, the Octane
   admin port, pgAdmin, or Mailpit.
-- Create DNS records for both `example.com` and `*.example.com` that point to
+- Create DNS records for both `blogravel.com` and `*.blogravel.com` that point to
   the reverse proxy. Configure TLS for both names, preserve the `Host` header,
   and send forwarded-proto headers to the application.
 - Create the bind-mounted runtime directories before the first start and ensure
@@ -141,8 +141,8 @@ docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T larav
 curl --fail --silent --show-error http://127.0.0.1:${APP_PORT:-8080}/up
 ```
 
-Also check `https://example.com/up`, root-domain administrator authentication,
-and a real tenant URL such as `https://acme.example.com`. Investigate the cause
+Also check `https://blogravel.com/up`, root-domain administrator authentication,
+and a real tenant URL such as `https://acmeio.blogravel.com`. Investigate the cause
 of failed queue jobs before choosing to retry them.
 
 ## Backup and Restore Readiness

@@ -19,7 +19,7 @@ Replace `{resource}` with `posts`, `pages`, `categories`, or `tags`.
 ```php
 <?php
 
-$ch = curl_init('https://your-tenant.example/api/v1/posts');
+$ch = curl_init('https://acmeio.blogravel.com/api/v1/posts');
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [

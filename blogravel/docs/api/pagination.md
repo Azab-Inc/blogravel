@@ -4,7 +4,7 @@ Collection endpoints use cursor pagination. Pass `limit` from `1` to `100`; the 
 
 ```http
 GET /api/v1/public/posts?limit=25&cursor=eyJpZCI6MTV9 HTTP/1.1
-Host: your-tenant.example
+Host: acmeio.blogravel.com
 Accept: application/json
 ```
 
@@ -12,7 +12,7 @@ The `fields` parameter controls the cursor ordering. Supported fields depend on 
 
 ```javascript
 const firstPage = await fetch(
-  'https://your-tenant.example/api/v1/public/posts?limit=25',
+  'https://acmeio.blogravel.com/api/v1/public/posts?limit=25',
 ).then((response) => response.json());
 
 const nextPage = firstPage.next_page_url

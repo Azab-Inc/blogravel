@@ -124,6 +124,7 @@ it('documents local defaults and production overrides without requiring producti
         ->toContain("APP_DEBUG=true\n")
         ->toContain("DB_PASSWORD=password\n")
         ->toContain("MAIL_HOST=mailpit\nMAIL_PORT=1025\n")
+        ->toContain("TENANCY_PLATFORM_DOMAIN=blogravel.com\n")
         ->toContain("SESSION_DOMAIN=.blogravel.com\n")
         ->toContain("BACKUP_DISK=local\n")
         ->toContain("OCTANE_SERVER=frankenphp\n");

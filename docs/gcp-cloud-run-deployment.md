@@ -69,7 +69,7 @@ terraform -chdir=infrastructure/gcp/app plan \
   -var='environment=production' \
   -var='region=us-central1' \
   -var='image_digest=<artifact-registry-image-digest>' \
-  -var='domain=example.com' \
+  -var='domain=blogravel.com' \
   -var='storage_bucket_name=<globally-unique-media-bucket>' \
   -var='app_key_secret_id=<app-key-secret-id>' \
   -var='db_password_secret_id=<db-password-secret-id>'
@@ -105,8 +105,8 @@ the following application values through Terraform/Secret Manager:
 ```dotenv
 APP_ENV=production
 APP_DEBUG=false
-TENANCY_PLATFORM_DOMAIN=example.com
-SESSION_DOMAIN=.example.com
+TENANCY_PLATFORM_DOMAIN=blogravel.com
+SESSION_DOMAIN=.blogravel.com
 QUEUE_CONNECTION=database
 FILESYSTEM_DISK=s3
 BACKUP_DISK=s3
@@ -122,7 +122,7 @@ separately.
 After deployment, verify the Terraform outputs and then:
 
 ```bash
-curl --fail --silent --show-error https://example.com/up
+curl --fail --silent --show-error https://blogravel.com/up
 gcloud run services describe blogravel-production-web --region=us-central1
 gcloud run services describe blogravel-production-worker --region=us-central1
 gcloud run jobs executions list --job=blogravel-production-scheduler --region=us-central1

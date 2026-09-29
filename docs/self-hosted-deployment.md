@@ -46,7 +46,7 @@ Edit `blogravel/.env` before starting the stack. At minimum, set:
 ```dotenv
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://example.com
+APP_URL=https://blogravel.com
 APP_PORT=8080
 APP_KEY=<unique-secret>
 
@@ -54,8 +54,8 @@ DB_DATABASE=blogravel
 DB_USERNAME=blogravel
 DB_PASSWORD=<unique-strong-password>
 
-TENANCY_PLATFORM_DOMAIN=example.com
-SESSION_DOMAIN=.example.com
+TENANCY_PLATFORM_DOMAIN=blogravel.com
+SESSION_DOMAIN=.blogravel.com
 
 MAIL_MAILER=smtp
 MAIL_HOST=<smtp-host>
@@ -63,7 +63,7 @@ MAIL_PORT=587
 MAIL_USERNAME=<smtp-user>
 MAIL_PASSWORD=<smtp-password>
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@example.com
+MAIL_FROM_ADDRESS=noreply@blogravel.com
 
 BILLING_ENABLED=false
 BACKUP_DISK=<local-or-s3-disk>
@@ -110,16 +110,16 @@ documents that requirement.
 
 Point both the root domain and wildcard tenant domain at the host:
 
-- `example.com` -> the reverse proxy
-- `*.example.com` -> the reverse proxy
+- `blogravel.com` -> the reverse proxy
+- `*.blogravel.com` -> the reverse proxy
 
-Provision a certificate covering both `example.com` and `*.example.com`.
+Provision a certificate covering both `blogravel.com` and `*.blogravel.com`.
 Terminate HTTPS at the reverse proxy and forward HTTP traffic to the published
 Compose app port, normally `8080`. Preserve the original `Host` header and
 configure forwarded-proto headers so Laravel knows the request was HTTPS.
 
 The root domain is used for authentication and administration. A tenant with
-slug `acme` is served at `https://acme.example.com`. Keep the leading dot in
+slug `acmeio` is served at `https://acmeio.blogravel.com`. Keep the leading dot in
 `SESSION_DOMAIN` so authenticated sessions work across the root and tenant
 hosts.
 
@@ -129,7 +129,7 @@ the public network.
 ## Health and Logs
 
 Laravel exposes `/up` as its health endpoint. Configure external monitoring to
-request `https://example.com/up` and alert on non-2xx responses. Compose checks
+request `https://blogravel.com/up` and alert on non-2xx responses. Compose checks
 the app TCP listener, PostgreSQL readiness, and Redis ping. Inspect queue and
 scheduler logs separately.
 

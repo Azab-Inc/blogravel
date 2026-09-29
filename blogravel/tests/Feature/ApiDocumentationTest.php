@@ -12,6 +12,8 @@ it('renders the API documentation from Markdown source files', function () {
         ->assertSee('PHP')
         ->assertSee('.NET')
         ->assertSee('application/problem+json', escape: false)
+        ->assertSee('acmeio.blogravel.com')
+        ->assertDontSee('your-tenant.example')
         ->assertSee('<th>Authentication</th>', escape: false)
         ->assertSee('<td>Sanctum bearer token</td>', escape: false);
 

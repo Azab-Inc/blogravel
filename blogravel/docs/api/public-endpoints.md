@@ -15,7 +15,7 @@ Public content endpoints do not require an API key. The tenant is resolved from 
 
 ```javascript
 const response = await fetch(
-  'https://your-tenant.example/api/v1/subscribe',
+  'https://acmeio.blogravel.com/api/v1/subscribe',
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },

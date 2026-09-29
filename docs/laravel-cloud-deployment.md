@@ -26,8 +26,8 @@ secret-text credential.
 
 Configure the root host and wildcard tenant host:
 
-- `example.com`
-- `*.example.com`
+- `blogravel.com`
+- `*.blogravel.com`
 
 Point the required Cloudflare DNS records at the Laravel Cloud custom-hostname
 targets. Provision certificates for both host patterns. Tenant routes require
@@ -38,9 +38,9 @@ Set environment values in Laravel Cloud, not in the repository:
 ```dotenv
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://example.com
-TENANCY_PLATFORM_DOMAIN=example.com
-SESSION_DOMAIN=.example.com
+APP_URL=https://blogravel.com
+TENANCY_PLATFORM_DOMAIN=blogravel.com
+SESSION_DOMAIN=.blogravel.com
 QUEUE_CONNECTION=cloud
 FILESYSTEM_DISK=s3
 BACKUP_DISK=s3
@@ -96,11 +96,11 @@ that exact commit with its zero-downtime release process.
 After Laravel Cloud reports a successful deployment, verify:
 
 ```bash
-curl --fail --silent --show-error https://example.com/up
+curl --fail --silent --show-error https://blogravel.com/up
 ```
 
 Also verify the root-domain admin login, a tenant URL such as
-`https://acme.example.com`, deployment logs, Object Storage access, and the
+`https://acmeio.blogravel.com`, deployment logs, Object Storage access, and the
 managed-queue dashboard.
 
 ## Rollback

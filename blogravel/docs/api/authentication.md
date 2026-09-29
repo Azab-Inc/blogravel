@@ -6,7 +6,7 @@ Create an API key in the Blogravel admin panel. Send the plaintext key only in t
 
 ```http
 GET /api/v1/posts HTTP/1.1
-Host: your-tenant.example
+Host: acmeio.blogravel.com
 X-Api-Key: br_live_your_key
 Accept: application/json
 ```
@@ -27,7 +27,7 @@ The login endpoint returns a Laravel Sanctum token for clients that authenticate
 
 ```http
 POST /api/v1/login HTTP/1.1
-Host: your-tenant.example
+Host: acmeio.blogravel.com
 Content-Type: application/json
 Accept: application/json
 

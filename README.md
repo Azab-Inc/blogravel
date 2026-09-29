@@ -126,14 +126,14 @@ Access the application:
 
 ### Tenant Domains
 
-Set the platform domain in `blogravel/.env`; a tenant with slug `acme` is then served at `https://acme.example.com` and the root domain is reserved for authentication and administration:
+Set the platform domain in `blogravel/.env`; a tenant with slug `acmeio` is then served at `https://acmeio.blogravel.com` and the root domain is reserved for authentication and administration:
 
 ```dotenv
-TENANCY_PLATFORM_DOMAIN=example.com
-SESSION_DOMAIN=.example.com
+TENANCY_PLATFORM_DOMAIN=blogravel.com
+SESSION_DOMAIN=.blogravel.com
 ```
 
-For production, point both `example.com` and `*.example.com` to the application with DNS. Provision a TLS certificate covering the root and wildcard names (`example.com` and `*.example.com`), and terminate HTTPS before forwarding requests to Laravel. `SESSION_DOMAIN` must use the leading dot so the authenticated session is available on the platform and tenant subdomains.
+For production, point both `blogravel.com` and `*.blogravel.com` to the application with DNS. Provision a TLS certificate covering the root and wildcard names (`blogravel.com` and `*.blogravel.com`), and terminate HTTPS before forwarding requests to Laravel. `SESSION_DOMAIN` must use the leading dot so the authenticated session is available on the platform and tenant subdomains.
 
 Visit `http://acme.lvh.me:8000` for a tenant with slug `acme` and `http://lvh.me:8000/admin` for the platform admin. Although Docker Compose publishes the app on port 8000, use these hostnames rather than `localhost:8000` so the request matches the platform or tenant host middleware. The Playwright Chromium configuration separately maps `blogravel.com` and its wildcard subdomains to `127.0.0.1` when testing host-based routing.
 

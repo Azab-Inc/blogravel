@@ -29,7 +29,7 @@ test.describe('API documentation', () => {
     await page.goto('/docs/api');
 
     await expect(page.getByLabel('Tenant slug')).toBeVisible();
-    await expect(page.getByText('Enter your tenant slug to view generated documentation.')).toBeVisible();
+    await expect(page.getByText('Enter your tenant slug to view generated documentation and copy-ready examples.')).toBeVisible();
     await expect(page.locator('[data-copy-code]')).toHaveCount(0);
   });
 });

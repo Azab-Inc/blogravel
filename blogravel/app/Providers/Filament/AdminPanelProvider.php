@@ -59,8 +59,10 @@ class AdminPanelProvider extends PanelProvider
                 })->name('tenant-export.download');
             })
             ->colors([
-                'primary' => Color::Amber,
+                'gray' => Color::Slate,
+                'primary' => Color::Indigo,
             ])
+            ->viteTheme('resources/css/filament/admin/blogravel-theme.css')
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->multiFactorAuthentication(

@@ -10,6 +10,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/filament/admin/blogravel-theme.css',
                 'resources/js/app.js',
                 'resources/js/docs.js',
             ],

@@ -48,16 +48,16 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, *
 | [#32](https://github.com/Azab-Inc/blogravel/issues/32) | Advanced analytics dashboard (Future Phase) | Todo |
 | [#33](https://github.com/Azab-Inc/blogravel/issues/33) | Multi-language content support (Future Phase) | Todo |
 | [#34](https://github.com/Azab-Inc/blogravel/issues/34) | Collaborative real-time editing (Future Phase) | Todo |
-| [#35](https://github.com/Azab-Inc/blogravel/issues/35) | Comments: moderation & display | Todo |
+| [#35](https://github.com/Azab-Inc/blogravel/issues/35) | [Future phase] Comments: moderation & display | Todo |
 | [#36](https://github.com/Azab-Inc/blogravel/issues/36) | User & role management (admin) | Done |
 | [#37](https://github.com/Azab-Inc/blogravel/issues/37) | API documentation | Todo |
 | [#38](https://github.com/Azab-Inc/blogravel/issues/38) | Admin test email & mail configuration | To Verify |
-| [#39](https://github.com/Azab-Inc/blogravel/issues/39) | Tenant management UI (Super Admin) | Todo |
+| [#39](https://github.com/Azab-Inc/blogravel/issues/39) | [Future phase] Tenant management UI (Super Admin) | Todo |
 | [#40](https://github.com/Azab-Inc/blogravel/issues/40) | [DX] Add pgAdmin to compose.yaml for local Postgres inspection | Done |
 | [#41](https://github.com/Azab-Inc/blogravel/issues/41) | Database seeders: Dev + User seeder | Done *(not in project)* |
 | [#42](https://github.com/Azab-Inc/blogravel/issues/42) | Fix: Post create fails with author_id null | Done *(not in project)* |
 | [#43](https://github.com/Azab-Inc/blogravel/issues/43) | Feature: User Profile Settings Page in Filament | Done |
 | [#44](https://github.com/Azab-Inc/blogravel/issues/44) | Feature: Soft Delete Support for Users and Tenants | Done |
-| [#45](https://github.com/Azab-Inc/blogravel/issues/45) | Filament admin panel custom theme (Vite + Tailwind) | Todo |
+| [#45](https://github.com/Azab-Inc/blogravel/issues/45) | [Future phase] Filament admin panel custom theme (Vite + Tailwind) | Todo |
 | [#47](https://github.com/Azab-Inc/blogravel/issues/47) | Public base theme light mode and dark mode toggle | To Verify |
 | [#48](https://github.com/Azab-Inc/blogravel/issues/48) | CI/CD pipeline (Jenkins) | Done |

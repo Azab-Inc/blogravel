@@ -12,16 +12,26 @@ configuration, use [Self-Hosted Deployment](self-hosted-deployment.md).
 
 - Install Docker Engine with the Docker Compose v2 plugin, Git, and curl on the
   VPS. Confirm the deployment user can run Docker commands.
-- Provide persistent storage for the Compose `sail-pgsql` and `sail-redis`
-  volumes.
+- Provide persistent storage for the bind-mounted `blogravel/docker/volumes/pgsql`
+  and `blogravel/docker/volumes/redis` directories.
 - Allow SSH only for the Jenkins deployment account. Publish the application
   port only to the reverse proxy; do not expose PostgreSQL, Redis, the Octane
   admin port, pgAdmin, or Mailpit.
 - Create DNS records for both `example.com` and `*.example.com` that point to
   the reverse proxy. Configure TLS for both names, preserve the `Host` header,
   and send forwarded-proto headers to the application.
-- Do not enable the `development` Compose profile in production. It contains
-  pgAdmin, and Mailpit is also development-only.
+- Create the bind-mounted runtime directories before the first start and ensure
+  the application process can write them:
+
+  ```bash
+  mkdir -p blogravel/storage blogravel/bootstrap/cache blogravel/docker/volumes/{pgsql,redis}
+  sudo chown -R 1000:1000 blogravel/storage blogravel/bootstrap/cache
+  ```
+
+  PostgreSQL and Redis initialize their own data-directory permissions when
+  their bind mounts are first created.
+- Use `compose.yaml` in production. pgAdmin and Mailpit exist only in
+  `compose.dev.yaml` and are not part of the VPS service graph.
 
 Run the following from the VPS deployment directory after installation:
 
@@ -61,12 +71,13 @@ Validate the production-shaped Compose configuration before the initial start:
 
 ```bash
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml config
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test composer setup
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build --wait
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force
 ```
 
-Run `composer setup` only for the initial installation. Do not use it during an
-upgrade.
+The production Compose preparation services install PHP dependencies and build
+frontend assets into the bind-mounted checkout during startup. Keep `APP_KEY`
+and all other production secrets in the VPS `.env` file.
 
 ## Jenkins Job Setup
 
@@ -105,7 +116,7 @@ sequence from `HOSTINGER_DEPLOY_PATH`:
 ```bash
 git fetch --tags
 git checkout --detach <resolved-release-commit>
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build --wait
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan optimize:clear
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml restart laravel.test queue scheduler
@@ -165,5 +176,6 @@ curl --fail --silent --show-error http://127.0.0.1:${APP_PORT:-8080}/up
 Schema or data rollback is not automatic. Review the failed release's
 migrations and release notes first. Restore the verified pre-upgrade database
 and application-storage backup only after the procedure succeeds on a
-disposable instance. Never run `docker compose down -v` on the VPS: it removes
-the named PostgreSQL and Redis volumes.
+disposable instance. Never run `docker compose down -v` on the VPS, and never
+delete the bind-mounted `blogravel/docker/volumes/` directories: they contain
+the PostgreSQL and Redis data.

@@ -2,7 +2,7 @@
 
 use Symfony\Component\Process\Process;
 
-function composeConfiguration(?string $profile = null, array $environment = []): array
+function composeConfiguration(string $composeFile = 'compose.yaml', ?string $profile = null, array $environment = []): array
 {
     $basePath = dirname(__DIR__, 3);
     $arguments = [
@@ -10,6 +10,8 @@ function composeConfiguration(?string $profile = null, array $environment = []):
         'compose',
         '--env-file',
         '.env.example',
+        '--file',
+        $composeFile,
     ];
 
     if ($profile !== null) {
@@ -30,7 +32,7 @@ function composeConfiguration(?string $profile = null, array $environment = []):
     return json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
 }
 
-function composeConfigurationProcess(array $environment = []): Process
+function composeConfigurationProcess(string $composeFile = 'compose.yaml', array $environment = []): Process
 {
     $basePath = dirname(__DIR__, 3);
     $process = new Process([
@@ -38,6 +40,8 @@ function composeConfigurationProcess(array $environment = []): Process
         'compose',
         '--env-file',
         '.env.example',
+        '--file',
+        $composeFile,
         'config',
         '--format',
         'json',
@@ -65,9 +69,9 @@ function exampleEnvironment(): string
     return file_get_contents(dirname(__DIR__, 3).'/.env.example');
 }
 
-function composeFile(): string
+function composeFile(string $composeFile = 'compose.yaml'): string
 {
-    return file_get_contents(dirname(__DIR__, 3).'/compose.yaml');
+    return file_get_contents(dirname(__DIR__, 3).'/'.$composeFile);
 }
 
 it('documents the required self-hosted environment keys', function (): void {
@@ -136,6 +140,10 @@ it('documents local defaults and production overrides without requiring producti
 it('requires explicit database passwords in Compose while keeping local examples usable', function (): void {
     expect(composeFile())
         ->toContain('${DB_PASSWORD:?DB_PASSWORD must be set}')
+        ->not->toContain('PGADMIN_DEFAULT_PASSWORD');
+
+    expect(composeFile('compose.dev.yaml'))
+        ->toContain('${DB_PASSWORD:?DB_PASSWORD must be set}')
         ->toContain('${PGADMIN_DEFAULT_PASSWORD:-local-development-only-password}')
         ->not->toContain('${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD must be set}');
 
@@ -145,89 +153,129 @@ it('requires explicit database passwords in Compose while keeping local examples
 });
 
 it('documents pgAdmin as development-only with a local fallback password', function (): void {
-    expect(composeFile())
-        ->toContain('# Development-only database inspector; never enable this profile in production.')
+    expect(composeFile('compose.dev.yaml'))
+        ->toContain('# Development-only database inspector.')
         ->toContain('PGADMIN_DEFAULT_PASSWORD:')
         ->toContain('local-development-only-password');
 });
 
-it('validates the default Compose stack without unresolved variables', function (): void {
+it('validates both Compose stacks without unresolved variables', function (): void {
     $configuration = json_encode(composeConfiguration(), JSON_THROW_ON_ERROR);
+    $developmentConfiguration = json_encode(composeConfiguration('compose.dev.yaml'), JSON_THROW_ON_ERROR);
 
     expect($configuration)->not->toContain('${');
+    expect($developmentConfiguration)->not->toContain('${');
 });
 
 it('uses the shell environment override for the Octane server', function (): void {
-    $configuration = composeConfiguration(environment: ['OCTANE_SERVER' => 'roadrunner']);
+    $configuration = composeConfiguration('compose.dev.yaml', environment: ['OCTANE_SERVER' => 'roadrunner']);
 
     expect($configuration['services']['laravel.test']['environment']['SUPERVISOR_PHP_COMMAND'])
         ->toContain('--server=roadrunner');
 });
 
 it('fails Compose config when the database password is missing', function (): void {
-    $process = composeConfigurationProcess(['DB_PASSWORD' => null]);
+    $process = composeConfigurationProcess(environment: ['DB_PASSWORD' => null]);
 
     expect($process->isSuccessful())->toBeFalse()
         ->and($process->getErrorOutput())->toContain('DB_PASSWORD must be set');
 });
 
-it('keeps development services and internal services off host ports in the default stack', function (): void {
+it('keeps production services and internal services off host ports', function (): void {
     $services = composeConfiguration()['services'];
 
-    expect($services)->toHaveKeys(['laravel.test', 'pgsql', 'redis', 'queue', 'scheduler'])
+    expect($services)->toHaveKeys(['laravel.test', 'pgsql', 'redis', 'queue', 'scheduler', 'prepare-composer', 'prepare-frontend'])
         ->not->toHaveKeys(['pgadmin', 'mailpit']);
 
-    foreach (['pgsql', 'redis', 'queue', 'scheduler'] as $service) {
+    foreach (['pgsql', 'redis', 'queue', 'scheduler', 'prepare-composer', 'prepare-frontend'] as $service) {
+        if (! isset($services[$service])) {
+            continue;
+        }
+
         expect($services[$service]['ports'] ?? [])->toBe([]);
     }
 
     expect($services['laravel.test']['ports'])->toHaveCount(1)
-        ->and($services['laravel.test']['ports'][0]['target'])->toBe(80);
+        ->and($services['laravel.test']['ports'][0]['target'])->toBe(8080);
 });
 
-it('includes development services only when the development profile is enabled', function (): void {
-    $services = composeConfiguration('development')['services'];
+it('includes development services in the local Compose stack', function (): void {
+    $services = composeConfiguration('compose.dev.yaml')['services'];
 
-    expect($services)->toHaveKeys(['pgadmin', 'mailpit']);
+    expect($services)->toHaveKeys(['prepare-composer', 'laravel.test', 'pgsql', 'redis', 'queue', 'scheduler', 'pgadmin', 'mailpit']);
 });
 
-it('defines readiness and restart policies for every long-running default-stack service', function (): void {
+it('defines readiness and restart policies for every long-running production service', function (): void {
     $configuration = composeConfiguration();
     $services = $configuration['services'];
 
     foreach (['laravel.test', 'pgsql', 'redis', 'queue', 'scheduler'] as $service) {
         expect($services[$service]['restart'])->toBe('unless-stopped')
-            ->and($services[$service])->toHaveKey('healthcheck');
+            ->and($services[$service])->toBeArray();
+    }
+
+    foreach (['laravel.test', 'pgsql', 'redis'] as $service) {
+        expect($services[$service])->toHaveKey('healthcheck');
     }
 
     expect($services['laravel.test']['depends_on']['pgsql']['condition'])->toBe('service_healthy')
         ->and($services['laravel.test']['depends_on']['redis']['condition'])->toBe('service_healthy')
-        ->and($services['queue']['depends_on']['laravel.test']['condition'])->toBe('service_healthy')
-        ->and($services['scheduler']['depends_on']['laravel.test']['condition'])->toBe('service_healthy')
-        ->and($services['scheduler']['command'])->toContain('schedule:work')
-        ->and($services['scheduler']['healthcheck']['test'][1])->toContain("pgrep -f 'artisan schedule:work'");
+        ->and($services['queue']['depends_on']['prepare-composer']['condition'])->toBe('service_completed_successfully')
+        ->and($services['scheduler']['depends_on']['prepare-frontend']['condition'])->toBe('service_completed_successfully')
+        ->and($services['scheduler']['command'])->toContain('schedule:work');
 });
 
-it('persists database and redis data in named volumes', function (): void {
+it('persists database and redis data in bind-mounted directories', function (): void {
     $configuration = composeConfiguration();
 
-    expect($configuration['volumes'])->toHaveKeys(['sail-pgsql', 'sail-redis'])
-        ->and($configuration['services']['pgsql']['volumes'])->toContainEqual([
-            'type' => 'volume',
-            'source' => 'sail-pgsql',
-            'target' => '/var/lib/postgresql',
-            'volume' => [],
-        ])
-        ->and($configuration['services']['redis']['volumes'])->toContainEqual([
-            'type' => 'volume',
-            'source' => 'sail-redis',
-            'target' => '/data',
-            'volume' => [],
-        ]);
+    expect($configuration)->not->toHaveKey('volumes');
+    expect(collect($configuration['services']['pgsql']['volumes'])->contains(
+        fn (array $mount): bool => $mount['source'] === dirname(__DIR__, 3).'/docker/volumes/pgsql'
+            && $mount['target'] === '/var/lib/postgresql',
+    ))->toBeTrue();
+    expect(collect($configuration['services']['redis']['volumes'])->contains(
+        fn (array $mount): bool => $mount['source'] === dirname(__DIR__, 3).'/docker/volumes/redis'
+            && $mount['target'] === '/data',
+    ))->toBeTrue();
+});
+
+it('uses only bind mounts in both Compose stacks', function (): void {
+    foreach ([composeConfiguration(), composeConfiguration('compose.dev.yaml')] as $configuration) {
+        expect($configuration)->not->toHaveKey('volumes');
+
+        foreach ($configuration['services'] as $service) {
+            foreach ($service['volumes'] ?? [] as $mount) {
+                expect($mount['type'])->toBe('bind');
+            }
+        }
+    }
+
+    expect(composeConfiguration()['services']['laravel.test']['volumes'][0]['source'])
+        ->toBe(dirname(__DIR__, 3));
+    expect(composeConfiguration('compose.dev.yaml')['services']['laravel.test']['volumes'][0]['source'])
+        ->toBe(dirname(__DIR__, 3));
+});
+
+it('prepares ignored production dependencies through bind-mounted services', function (): void {
+    $services = composeConfiguration()['services'];
+
+    expect($services)->toHaveKeys(['prepare-composer', 'prepare-frontend'])
+        ->and($services['laravel.test']['build']['dockerfile'])->toBe('docker/production/Dockerfile')
+        ->and($services['laravel.test']['volumes'][0]['target'])->toBe('/app')
+        ->and($services['laravel.test']['environment']['CONTAINER_ROLE'])->toBe('web')
+        ->and($services['queue']['environment']['CONTAINER_ROLE'])->toBe('worker')
+        ->and($services['scheduler']['environment']['CONTAINER_ROLE'])->toBe('scheduler')
+        ->and($services['laravel.test']['depends_on']['prepare-composer']['condition'])->toBe('service_completed_successfully')
+        ->and($services['laravel.test']['depends_on']['prepare-frontend']['condition'])->toBe('service_completed_successfully');
+});
+
+it('keeps the production image free of Docker-managed volumes', function (): void {
+    expect(file_get_contents(dirname(__DIR__, 3).'/docker/production/Dockerfile'))
+        ->not->toContain("\nVOLUME ");
 });
 
 it('keeps the Compose and Octane runtimes on FrankenPHP', function (): void {
-    $compose = composeConfiguration();
+    $compose = composeConfiguration('compose.dev.yaml');
     $octane = file_get_contents(dirname(__DIR__, 3).'/config/octane.php');
 
     expect($compose['services']['laravel.test']['environment']['SUPERVISOR_PHP_COMMAND'])

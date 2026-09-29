@@ -40,7 +40,7 @@ pipeline {
                     passwordVariable: 'HOSTINGER_SSH_PASSWORD',
                 )]) {
                     sh '''
-                        sshpass -p "$HOSTINGER_SSH_PASSWORD" ssh -o StrictHostKeyChecking=accept-new -- "$HOSTINGER_SSH_USERNAME@$HOSTINGER_HOST" 'sh -c '"'"'cd "$1" && git fetch --tags && git checkout --detach "$2" && docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan optimize:clear && docker compose --env-file blogravel/.env -f blogravel/compose.yaml restart laravel.test queue scheduler && curl --fail --silent --show-error http://127.0.0.1:${APP_PORT:-8080}/up'"'"' -- "$HOSTINGER_DEPLOY_PATH" "$RELEASE_COMMIT"'
+                        sshpass -p "$HOSTINGER_SSH_PASSWORD" ssh -o StrictHostKeyChecking=accept-new -- "$HOSTINGER_SSH_USERNAME@$HOSTINGER_HOST" 'sh -c '"'"'cd "$1" && git fetch --tags && git checkout --detach "$2" && docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build --wait && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force && docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan optimize:clear && docker compose --env-file blogravel/.env -f blogravel/compose.yaml restart laravel.test queue scheduler && curl --fail --silent --show-error http://127.0.0.1:${APP_PORT:-8080}/up'"'"' -- "$HOSTINGER_DEPLOY_PATH" "$RELEASE_COMMIT"'
                     '''
                 }
             }

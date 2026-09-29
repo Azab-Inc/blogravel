@@ -38,6 +38,7 @@ A self-hosted release is the tagged repository checkout. It must include:
 - `blogravel/composer.json` and `blogravel/composer.lock`
 - `blogravel/package.json` and `blogravel/package-lock.json`
 - `blogravel/compose.yaml`
+- `blogravel/compose.dev.yaml` for local development only
 - `blogravel/.env.example`
 - Docker and application configuration required by the Compose stack
 - Database migrations and application assets
@@ -71,9 +72,9 @@ Run this checklist from the repository root before creating the tag.
 ### Compose and environment
 
 - [ ] `blogravel/.env.example` contains every required production variable and no real secret.
-- [ ] Development-only services remain behind Compose profiles.
+- [ ] Development-only services exist only in `compose.dev.yaml`.
 - [ ] Compose configuration validates with a production-shaped environment file.
-- [ ] Production services have health checks, restart policies, and persistent data volumes.
+- [ ] Production services have health checks, restart policies, and bind-mounted persistent data directories.
 - [ ] Database, Redis, Octane admin, pgAdmin, and Mailpit are not publicly exposed.
 
 Validate the Compose file with:
@@ -99,15 +100,15 @@ live installation:
 cp blogravel/.env.example blogravel/.env
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml config
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test composer setup
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force
 curl --fail http://localhost:${APP_PORT:-8080}/up
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml ps
 ```
 
 Confirm the smoke test can reach the health endpoint, the admin login, a tenant
-URL, the queue worker, and the scheduler. Confirm that development-only
-services are absent unless their profiles are explicitly enabled. Tear down the
-disposable environment without deleting any production volumes.
+URL, the queue worker, and the scheduler. Confirm that pgAdmin and Mailpit are
+absent from the production service graph. Tear down the disposable environment
+without deleting the bind-mounted `docker/volumes/` directories.
 
 ## Upgrade Procedure
 
@@ -154,7 +155,9 @@ docker compose --env-file blogravel/.env -f blogravel/compose.yaml restart larav
 If the failed release changed the database schema or data, restore the verified
 pre-upgrade database and application storage backup only after confirming the
 restore procedure on a disposable instance. Never run `docker compose down -v`
-on a production host because it removes named database and Redis volumes.
+on a production host, and never delete the bind-mounted
+`blogravel/docker/volumes/` directories because they contain database and Redis
+data.
 
 ## Release Candidate Record
 

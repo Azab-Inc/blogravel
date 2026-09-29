@@ -66,19 +66,25 @@ cd blogravel
 Copy environment file
 
 ```bash
-cp blogravel/.env.example blogravel/.env
+cp .env.example .env
 ```
 
-Start with Docker Compose (app + PostgreSQL + Redis + queue worker + Mailpit)
+Bootstrap Composer dependencies into the bind-mounted checkout:
 
 ```bash
-docker compose up -d
+docker compose --env-file .env -f compose.dev.yaml run --rm prepare-composer
+```
+
+Start the local Sail stack (app + PostgreSQL + Redis + queue worker + pgAdmin + Mailpit)
+
+```bash
+./vendor/bin/sail up -d
 ```
 
 Install dependencies and run migrations
 
 ```bash
-docker compose exec laravel.test composer setup
+./vendor/bin/sail composer setup
 ```
 
 Access the application
@@ -90,13 +96,13 @@ Access the application
 ## Running Tests
 
 ```bash
-docker compose exec laravel.test php artisan test
+./vendor/bin/sail artisan test
 ```
 
 Or with Pest directly:
 
 ```bash
-docker compose exec laravel.test ./vendor/bin/pest
+./vendor/bin/sail pest
 ```
 
 ## Project Structure
@@ -121,7 +127,8 @@ blogravel/
 │   │   └── views/          # Starter theme Blade components
 │   ├── routes/
 │   ├── tests/
-│   └── compose.yaml
+│   ├── compose.yaml          # VPS production stack
+│   └── compose.dev.yaml      # Local Sail stack
 ├── docs/
 │   ├── project.md
 │   ├── requirements.md

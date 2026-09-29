@@ -85,22 +85,22 @@ Run these commands from the repository root:
 
 ```bash
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml config
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build --wait
 ```
 
-The Compose file requires `DB_PASSWORD` and waits for healthy PostgreSQL and
-Redis services before starting the app, queue, and scheduler services.
+The Compose file requires `DB_PASSWORD` and runs the bind-mounted Composer and
+frontend preparation services before starting the app, queue, and scheduler
+services. It waits for healthy PostgreSQL and Redis services.
 
-Run the application setup once on a new installation:
+Run the database setup once on a new installation:
 
 ```bash
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test composer setup
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec -T laravel.test php artisan migrate --force
 ```
 
-`composer setup` installs PHP and frontend dependencies, generates an app key
-if needed, runs migrations, and builds assets. For an existing production
-installation, do not run it as an upgrade command; use the upgrade procedure
-below instead.
+The Compose preparation services install PHP dependencies and build frontend
+assets into the bind-mounted checkout. Set `APP_KEY` in `.env` before startup;
+the production stack does not generate secrets automatically.
 
 Create an administrator using the application's normal admin/user flow. Do
 not run development seeders against production unless the release explicitly
@@ -129,9 +129,9 @@ the public network.
 ## Health and Logs
 
 Laravel exposes `/up` as its health endpoint. Configure external monitoring to
-request `https://example.com/up` and alert on non-2xx responses. Compose also
-checks the app TCP listener, PostgreSQL readiness, Redis ping, queue process,
-and scheduler process.
+request `https://example.com/up` and alert on non-2xx responses. Compose checks
+the app TCP listener, PostgreSQL readiness, and Redis ping. Inspect queue and
+scheduler logs separately.
 
 Inspect service state and logs with:
 
@@ -177,7 +177,7 @@ Take a verified backup before upgrading, then deploy the next release:
 ```bash
 git fetch --tags
 git checkout <new-release-tag>
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build
+docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d --build --wait
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test php artisan migrate --force
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test php artisan optimize:clear
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml restart laravel.test queue scheduler
@@ -198,5 +198,6 @@ docker compose --env-file blogravel/.env -f blogravel/compose.yaml stop
 docker compose --env-file blogravel/.env -f blogravel/compose.yaml start
 ```
 
-Do not use `docker compose down -v` on a production host. The `-v` option
-removes named database and Redis volumes.
+Do not use `docker compose down -v` on a production host, and do not delete
+`blogravel/docker/volumes/pgsql` or `blogravel/docker/volumes/redis`; these bind
+mounted directories contain the database and Redis data.

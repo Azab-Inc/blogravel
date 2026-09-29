@@ -87,10 +87,16 @@ cd blogravel
 Copy the environment file:
 
 ```bash
-cp blogravel/.env.example blogravel/.env
+cp .env.example .env
 ```
 
-Before starting the stack, configure the local wildcard hosts in `blogravel/.env`. `lvh.me` resolves to `127.0.0.1` without a hosts-file entry, and the platform domain must match the host used for the root and admin URLs:
+Bootstrap Composer dependencies into the bind-mounted checkout:
+
+```bash
+docker compose --env-file .env -f compose.dev.yaml run --rm prepare-composer
+```
+
+Before starting the stack, configure the local wildcard hosts in `.env`. `lvh.me` resolves to `127.0.0.1` without a hosts-file entry, and the platform domain must match the host used for the root and admin URLs:
 
 ```dotenv
 APP_URL=http://lvh.me:8000
@@ -98,16 +104,16 @@ TENANCY_PLATFORM_DOMAIN=lvh.me
 SESSION_DOMAIN=.lvh.me
 ```
 
-Start the stack with Docker Compose from the repository root (app + PostgreSQL + Redis + queue worker + Mailpit):
+Start the local stack with Sail (app + PostgreSQL + Redis + queue worker + pgAdmin + Mailpit):
 
 ```bash
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml up -d
+./vendor/bin/sail up -d
 ```
 
 Install dependencies and run migrations:
 
 ```bash
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test composer setup
+./vendor/bin/sail composer setup
 ```
 
 Access the application:
@@ -142,13 +148,13 @@ See [Self-Hosted Deployment](docs/self-hosted-deployment.md) for production envi
 ## Running Tests
 
 ```bash
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test php artisan test
+./vendor/bin/sail artisan test
 ```
 
 Or with Pest directly:
 
 ```bash
-docker compose --env-file blogravel/.env -f blogravel/compose.yaml exec laravel.test ./vendor/bin/pest
+./vendor/bin/sail pest
 ```
 
 ---
@@ -175,7 +181,8 @@ blogravel/
 │   │   └── views/          # Starter theme Blade components
 │   ├── routes/
 │   ├── tests/
-│   └── compose.yaml
+│   ├── compose.yaml          # VPS production stack
+│   └── compose.dev.yaml      # Local Sail stack
 ├── docs/
 │   ├── project.md
 │   ├── requirements.md

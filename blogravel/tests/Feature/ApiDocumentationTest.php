@@ -43,11 +43,11 @@ it('renders tenant-specific API examples from the selected slug', function () {
         ->assertDontSee('acmeio.blogravel.com');
 });
 
-it('rejects unknown tenant slugs', function () {
+it('renders copy-ready examples for an unregistered tenant slug', function () {
     $this->get('/docs/api?tenant=unknown')
         ->assertOk()
-        ->assertSee('The tenant could not be found.')
-        ->assertDontSee('unknown.blogravel.com');
+        ->assertSee('unknown.blogravel.com')
+        ->assertDontSee('The tenant could not be found.');
 });
 
 it('prompts for a tenant before rendering tenant-specific examples', function () {

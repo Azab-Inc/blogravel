@@ -2,7 +2,6 @@
 
 namespace App\Services\ApiDocumentation;
 
-use App\Models\Tenant;
 use Illuminate\Support\Collection;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
@@ -51,16 +50,5 @@ final class ApiDocumentationRenderer
                 )->getContent(),
             ])
             ->values();
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function tenantOptions(): array
-    {
-        return Tenant::query()
-            ->orderBy('name')
-            ->pluck('name', 'slug')
-            ->all();
     }
 }

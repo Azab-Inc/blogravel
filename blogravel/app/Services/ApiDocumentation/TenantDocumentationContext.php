@@ -30,13 +30,7 @@ final readonly class TenantDocumentationContext
             throw new InvalidArgumentException('The tenant slug is reserved.');
         }
 
-        $tenant = Tenant::query()->where('slug', $normalizedSlug)->first();
-
-        if ($tenant === null) {
-            throw new InvalidArgumentException('The tenant could not be found.');
-        }
-
-        return self::fromTenant($tenant);
+        return self::fromTenant(new Tenant(['slug' => $normalizedSlug]));
     }
 
     public static function fromTenant(Tenant $tenant): self

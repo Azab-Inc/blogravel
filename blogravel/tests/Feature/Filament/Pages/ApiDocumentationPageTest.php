@@ -1,10 +1,8 @@
 <?php
 
 use App\Enums\Role;
-use App\Filament\Pages\ApiDocumentation;
 use App\Models\Tenant;
 use App\Models\User;
-use Livewire\Livewire;
 
 it('renders API documentation for the authenticated tenant', function () {
     $tenant = Tenant::factory()->create(['slug' => 'northstar', 'domain' => 'northstar.blogravel.com']);
@@ -19,23 +17,24 @@ it('renders API documentation for the authenticated tenant', function () {
         ->assertSee('northstar.blogravel.com');
 });
 
-it('allows superadmins to select a tenant for documentation examples', function () {
+it('uses only the authenticated superadmin tenant for documentation examples', function () {
     $tenant = Tenant::factory()->create(['slug' => 'northstar', 'domain' => 'northstar.blogravel.com']);
+    $otherTenant = Tenant::factory()->create(['slug' => 'southstar', 'domain' => 'southstar.blogravel.com']);
     $superadmin = User::factory()->create([
-        'tenant_id' => null,
+        'tenant_id' => $tenant->id,
         'role' => Role::SuperAdmin,
     ]);
 
-    $this->actingAs($superadmin);
-
-    Livewire::test(ApiDocumentation::class)
-        ->set('selectedTenantSlug', $tenant->slug)
-        ->assertSee('northstar.blogravel.com');
+    $this->actingAs($superadmin)
+        ->get('/admin/api-documentation')
+        ->assertSee('northstar.blogravel.com')
+        ->assertDontSee($otherTenant->domain)
+        ->assertDontSee('selectedTenantSlug');
 });
 
-it('does not allow a tenant user to select another tenant', function () {
-    $tenant = Tenant::factory()->create(['slug' => 'northstar']);
-    $otherTenant = Tenant::factory()->create(['slug' => 'southstar']);
+it('does not expose a tenant selector to tenant users', function () {
+    $tenant = Tenant::factory()->create(['slug' => 'northstar', 'domain' => 'northstar.blogravel.com']);
+    $otherTenant = Tenant::factory()->create(['slug' => 'southstar', 'domain' => 'southstar.blogravel.com']);
     $user = User::factory()->create([
         'tenant_id' => $tenant->id,
         'role' => Role::Admin,
@@ -43,8 +42,8 @@ it('does not allow a tenant user to select another tenant', function () {
 
     $this->actingAs($user);
 
-    Livewire::test(ApiDocumentation::class)
-        ->set('selectedTenantSlug', $otherTenant->slug)
-        ->assertDontSee('southstar.blogravel.com')
-        ->assertSee('Choose a tenant');
+    $this->get('/admin/api-documentation')
+        ->assertSee('northstar.blogravel.com')
+        ->assertDontSee($otherTenant->domain)
+        ->assertDontSee('selectedTenantSlug');
 });

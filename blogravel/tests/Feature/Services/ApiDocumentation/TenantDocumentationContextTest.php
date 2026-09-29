@@ -3,12 +3,7 @@
 use App\Models\Tenant;
 use App\Services\ApiDocumentation\TenantDocumentationContext;
 
-it('builds a tenant API host from a slug', function () {
-    Tenant::factory()->create([
-        'slug' => 'acmeio',
-        'domain' => 'acmeio.blogravel.com',
-    ]);
-
+it('builds a tenant API host from an unregistered slug', function () {
     $context = TenantDocumentationContext::fromSlug('AcmeIO');
 
     expect($context->slug)->toBe('acmeio')

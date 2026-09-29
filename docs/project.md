@@ -81,6 +81,10 @@ Start the local Sail stack (app + PostgreSQL + Redis + queue worker + pgAdmin + 
 ./vendor/bin/sail up -d
 ```
 
+pgAdmin is available at http://localhost:5051. The bind-mounted directory
+`docker/volumes/pgadmin` must be writable by UID 5050 if Docker creates
+it as root.
+
 Install dependencies and run migrations
 
 ```bash

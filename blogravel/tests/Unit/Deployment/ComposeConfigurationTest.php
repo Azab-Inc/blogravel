@@ -202,7 +202,8 @@ it('keeps production services and internal services off host ports', function ()
 it('includes development services in the local Compose stack', function (): void {
     $services = composeConfiguration('compose.dev.yaml')['services'];
 
-    expect($services)->toHaveKeys(['prepare-composer', 'laravel.test', 'pgsql', 'redis', 'queue', 'scheduler', 'pgadmin', 'mailpit']);
+    expect($services)->toHaveKeys(['prepare-composer', 'laravel.test', 'pgsql', 'redis', 'queue', 'scheduler', 'pgadmin', 'mailpit'])
+        ->and($services['pgadmin']['ports'][0]['published'])->toBe('5051');
 });
 
 it('defines readiness and restart policies for every long-running production service', function (): void {
@@ -260,6 +261,7 @@ it('prepares ignored production dependencies through bind-mounted services', fun
     $services = composeConfiguration()['services'];
 
     expect($services)->toHaveKeys(['prepare-composer', 'prepare-frontend'])
+        ->and($services['prepare-composer']['build']['target'])->toBe('runtime-base')
         ->and($services['laravel.test']['build']['dockerfile'])->toBe('docker/production/Dockerfile')
         ->and($services['laravel.test']['volumes'][0]['target'])->toBe('/app')
         ->and($services['laravel.test']['environment']['CONTAINER_ROLE'])->toBe('web')

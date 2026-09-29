@@ -5,6 +5,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && install-php-extensions intl pdo_pgsql redis zip
 
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 WORKDIR /app
 
 FROM runtime-base AS composer-dependencies

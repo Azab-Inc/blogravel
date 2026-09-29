@@ -1,6 +1,10 @@
 services:
     prepare-composer:
-        image: 'composer:2'
+        build:
+            context: '.'
+            dockerfile: docker/production/Dockerfile
+            target: runtime-base
+        image: 'blogravel-production-base'
         working_dir: /var/www/html
         volumes:
             - '.:/var/www/html'
@@ -75,7 +79,7 @@ services:
     pgadmin:
         image: 'dpage/pgadmin4'
         ports:
-            - '${FORWARD_PGADMIN_PORT:-5050}:80'
+            - '${FORWARD_PGADMIN_PORT:-5051}:80'
         environment:
             PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL:-admin@blogravel.dev}'
             PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD:-local-development-only-password}'

@@ -44,6 +44,6 @@ curl_close($ch);
 ## Login and logout
 
 | Method | Path | Authentication | Purpose |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `POST` | `/api/v1/login` | Credentials | Create a Sanctum token |
 | `POST` | `/api/v1/logout` | Sanctum bearer token | Revoke the current token |

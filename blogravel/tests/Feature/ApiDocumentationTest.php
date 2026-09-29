@@ -11,7 +11,9 @@ it('renders the API documentation from Markdown source files', function () {
         ->assertSee('JavaScript')
         ->assertSee('PHP')
         ->assertSee('.NET')
-        ->assertSee('application/problem+json', escape: false);
+        ->assertSee('application/problem+json', escape: false)
+        ->assertSee('<th>Authentication</th>', escape: false)
+        ->assertSee('<td>Sanctum bearer token</td>', escape: false);
 
     foreach ([
         'overview.md',

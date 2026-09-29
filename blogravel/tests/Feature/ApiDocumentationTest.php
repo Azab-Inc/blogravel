@@ -16,6 +16,7 @@ it('renders the API documentation from Markdown source files', function () {
         ->assertSee('.NET')
         ->assertSee('application/problem+json', escape: false)
         ->assertSee('acmeio.blogravel.com')
+        ->assertSeeInOrder(['Quick start', 'Tenant slug', 'Generate examples', 'TypeScript'])
         ->assertDontSee('your-tenant.example')
         ->assertSee('<th>Authentication</th>', escape: false)
         ->assertSee('<td>Sanctum bearer token</td>', escape: false);

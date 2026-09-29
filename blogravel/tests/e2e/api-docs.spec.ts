@@ -4,7 +4,8 @@ test.describe('API documentation', () => {
   test('renders Markdown usage examples for all supported client languages', async ({ page }) => {
     await page.goto('/docs/api?tenant=acmeio');
 
-    await expect(page.locator('#tenant-picker-heading')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Build with the Blogravel API.' })).toBeVisible();
+    await expect(page.locator('.docs-tenant-form')).toBeVisible();
     await expect(page.locator('code.language-typescript').first()).toBeVisible();
     await expect(page.locator('code.language-javascript').first()).toBeVisible();
     await expect(page.locator('code.language-php').first()).toBeVisible();
@@ -21,6 +22,7 @@ test.describe('API documentation', () => {
 
     await expect(page.locator('.docs-shell')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Public endpoints' })).toBeVisible();
+    await expect(page.locator('.docs-tenant-form')).toBeVisible();
   });
 
   test('prompts for a tenant before generating examples', async ({ page }) => {

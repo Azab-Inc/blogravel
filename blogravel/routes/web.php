@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApiDocumentationController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PlatformEntryController;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::domain((string) config('tenancy.platform_domain'))
     ->get('/', PlatformEntryController::class)
     ->name('home');
+
+Route::get('/docs/api', ApiDocumentationController::class)->name('docs.api');
 
 // Theme frontend routes
 Route::middleware('theme.resolve')->group(function () {

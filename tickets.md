@@ -50,7 +50,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, *
 | [#34](https://github.com/Azab-Inc/blogravel/issues/34) | Collaborative real-time editing (Future Phase) | Todo |
 | [#35](https://github.com/Azab-Inc/blogravel/issues/35) | [Future phase] Comments: moderation & display | Todo |
 | [#36](https://github.com/Azab-Inc/blogravel/issues/36) | User & role management (admin) | Done |
-| [#37](https://github.com/Azab-Inc/blogravel/issues/37) | API documentation | Todo |
+| [#37](https://github.com/Azab-Inc/blogravel/issues/37) | API documentation | To Verify |
 | [#38](https://github.com/Azab-Inc/blogravel/issues/38) | Admin test email & mail configuration | To Verify |
 | [#39](https://github.com/Azab-Inc/blogravel/issues/39) | [Future phase] Tenant management UI (Super Admin) | Todo |
 | [#40](https://github.com/Azab-Inc/blogravel/issues/40) | [DX] Add pgAdmin to compose.yaml for local Postgres inspection | Done |

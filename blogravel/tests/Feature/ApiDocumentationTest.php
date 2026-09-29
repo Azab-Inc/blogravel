@@ -1,9 +1,12 @@
 <?php
 
+use App\Models\Tenant;
 use Illuminate\Support\Facades\Route;
 
 it('renders the API documentation from Markdown source files', function () {
-    $response = $this->get('/docs/api');
+    Tenant::factory()->create(['slug' => 'acmeio', 'domain' => 'acmeio.blogravel.com']);
+
+    $response = $this->get('/docs/api?tenant=acmeio');
 
     $response->assertOk()
         ->assertSee('Blogravel API')
@@ -30,7 +33,32 @@ it('renders the API documentation from Markdown source files', function () {
     }
 });
 
+it('renders tenant-specific API examples from the selected slug', function () {
+    Tenant::factory()->create(['slug' => 'northstar', 'domain' => 'northstar.blogravel.com']);
+
+    $this->get('/docs/api?tenant=northstar')
+        ->assertOk()
+        ->assertSee('northstar.blogravel.com')
+        ->assertDontSee('acmeio.blogravel.com');
+});
+
+it('rejects unknown tenant slugs', function () {
+    $this->get('/docs/api?tenant=unknown')
+        ->assertOk()
+        ->assertSee('The tenant could not be found.')
+        ->assertDontSee('unknown.blogravel.com');
+});
+
+it('prompts for a tenant before rendering tenant-specific examples', function () {
+    $this->get('/docs/api')
+        ->assertOk()
+        ->assertSee('Enter your tenant slug')
+        ->assertDontSee('acmeio.blogravel.com');
+});
+
 it('documents routes that exist in the API route collection', function () {
+    Tenant::factory()->create(['slug' => 'acmeio', 'domain' => 'acmeio.blogravel.com']);
+
     $apiRouteNames = [
         'api.v1.public.index',
         'api.v1.public.show',
@@ -80,7 +108,7 @@ it('documents routes that exist in the API route collection', function () {
         'api.webhooks.soro' => '/api/v1/webhooks/soro',
     ];
 
-    $response = $this->get('/docs/api');
+    $response = $this->get('/docs/api?tenant=acmeio');
 
     foreach ($documentedRoutes as $routeName => $path) {
         $response->assertSee($path);

@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Blogravel API documentation</title>
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/docs.js'])
         <style>
             :root {
                 color-scheme: light;
@@ -18,11 +18,23 @@
             a { color: #102542; }
             code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
             pre {
+                position: relative;
                 overflow-x: auto;
-                padding: 1rem;
+                padding: 3rem 1rem 1rem;
                 border-radius: 0.5rem;
                 color: #fff8ed;
                 background: #102542;
+            }
+            .code-copy-button {
+                position: absolute;
+                top: 0.75rem;
+                right: 0.75rem;
+                padding: 0.25rem 0.6rem;
+                border: 1px solid #eadfce;
+                border-radius: 0.25rem;
+                color: #fff8ed;
+                background: transparent;
+                cursor: pointer;
             }
             :not(pre) > code {
                 padding: 0.1rem 0.3rem;
@@ -53,11 +65,24 @@
             </aside>
 
             <main>
-                @foreach ($documents as $document)
-                    <section id="{{ $document['slug'] }}" class="docs-section">
-                        {!! $document['html'] !!}
-                    </section>
-                @endforeach
+                <section class="docs-tenant-picker" aria-labelledby="tenant-picker-heading">
+                    <h1 id="tenant-picker-heading">Blogravel API</h1>
+                    <p>Enter your tenant slug to generate copy-ready API examples for that tenant.</p>
+                    <form method="GET" action="{{ route('docs.api') }}">
+                        <label for="tenant">Tenant slug</label>
+                        <div>
+                            <input id="tenant" name="tenant" value="{{ $tenantSlug }}" placeholder="acmeio" required pattern="[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?">
+                            <button type="submit">Generate examples</button>
+                        </div>
+                    </form>
+                    @if ($error)
+                        <p role="alert">{{ $error }}</p>
+                    @elseif ($documents->isEmpty())
+                        <p>Enter your tenant slug to view generated documentation.</p>
+                    @endif
+                </section>
+
+                @include('docs.partials.content', ['documents' => $documents])
             </main>
         </div>
     </body>

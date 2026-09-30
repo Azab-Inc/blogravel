@@ -43,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->login(Login::class)
             ->registration(Register::class)
             ->profile(EditProfile::class)
+            ->darkMode()
             ->routes(function (): void {
                 Route::get('/recover-account', RecoverAccount::class)
                     ->name('auth.recover-account');

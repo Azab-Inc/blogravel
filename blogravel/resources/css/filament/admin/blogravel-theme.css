@@ -45,6 +45,42 @@
     @apply border-b-[#e2e6ee] bg-white/85 backdrop-blur-[14px];
 }
 
+.dark .fi-body {
+    @apply bg-[#0f172a] text-[#e2e8f0];
+}
+
+.dark .fi-sidebar {
+    @apply border-r-[#334155] bg-[#111827] text-[#e2e8f0];
+}
+
+.dark .fi-sidebar-header {
+    @apply border-b-[#334155];
+}
+
+.dark .fi-sidebar-group-label {
+    @apply text-[#94a3b8];
+}
+
+.dark .fi-sidebar-item-btn {
+    @apply text-[#cbd5e1];
+}
+
+.dark .fi-sidebar-item-btn:hover {
+    @apply bg-[#1e293b] text-[#a5b4fc];
+}
+
+.dark .fi-sidebar-item-active > .fi-sidebar-item-btn {
+    @apply bg-[#312e81] text-[#c7d2fe];
+}
+
+.dark .fi-topbar {
+    @apply border-b-[#334155] bg-[#0f172a];
+}
+
+.dark .fi-page-header-heading {
+    @apply text-[#f8fafc];
+}
+
 .fi-page-header,
 .fi-page-content {
     @apply mx-auto max-w-[1180px];
@@ -58,6 +94,10 @@
     @apply relative overflow-hidden rounded-2xl border border-[#dfe4ed] bg-gradient-to-br from-white to-[#f2f5ff] p-8 shadow-[0_12px_32px_rgba(32,48,82,.06)];
 }
 
+.dark .blogravel-api-docs__hero {
+    @apply border-[#334155] from-[#1e293b] to-[#172554] shadow-[0_12px_32px_rgba(0,0,0,.2)];
+}
+
 .blogravel-api-docs__eyebrow {
     @apply relative z-[1] mb-3 font-mono text-[.68rem] font-semibold uppercase tracking-[.16em] text-[#3156db];
 }
@@ -66,12 +106,24 @@
     @apply relative z-[1] m-0 max-w-2xl text-[clamp(1.8rem,4vw,3rem)] font-semibold leading-[1.05] tracking-[-.06em] text-[#172033];
 }
 
+.dark .blogravel-api-docs__hero h2 {
+    @apply text-[#f8fafc];
+}
+
 .blogravel-api-docs__hero p {
     @apply relative z-[1] mt-3 max-w-xl leading-[1.65] text-[#657188];
 }
 
+.dark .blogravel-api-docs__hero p {
+    @apply text-[#cbd5e1];
+}
+
 .blogravel-api-docs__tenant {
     @apply grid gap-4 rounded-[.9rem] border border-[#dfe4ed] bg-white p-5;
+}
+
+.dark .blogravel-api-docs__tenant {
+    @apply border-[#334155] bg-[#111827];
 }
 
 .blogravel-api-docs__tenant-heading {
@@ -82,12 +134,24 @@
     @apply m-0 text-[.95rem] font-bold text-[#253452];
 }
 
+.dark .blogravel-api-docs__tenant-heading h3 {
+    @apply text-[#f8fafc];
+}
+
 .blogravel-api-docs__tenant-heading span {
     @apply font-mono text-[.68rem] text-[#8a94a6];
 }
 
+.dark .blogravel-api-docs__tenant-heading span {
+    @apply text-[#94a3b8];
+}
+
 .blogravel-api-docs__host {
     @apply m-0 text-[.85rem] text-[#657188];
+}
+
+.dark .blogravel-api-docs__host {
+    @apply text-[#cbd5e1];
 }
 
 .blogravel-api-docs__host code {
@@ -102,6 +166,10 @@
     @apply rounded-2xl border border-[#e0e5ed] bg-white px-[clamp(1rem,3vw,2.5rem)] py-8 shadow-[0_8px_24px_rgba(32,48,82,.04)];
 }
 
+.dark .blogravel-api-docs .docs-section {
+    @apply border-[#334155] bg-[#111827] shadow-[0_8px_24px_rgba(0,0,0,.2)];
+}
+
 .blogravel-api-docs .docs-section + .docs-section {
     @apply mt-4;
 }
@@ -112,9 +180,20 @@
     @apply tracking-[-.035em] text-[#172033];
 }
 
+.dark .blogravel-api-docs .docs-section h1,
+.dark .blogravel-api-docs .docs-section h2,
+.dark .blogravel-api-docs .docs-section h3 {
+    @apply text-[#f8fafc];
+}
+
 .blogravel-api-docs .docs-section p,
 .blogravel-api-docs .docs-section li {
     @apply leading-[1.7] text-[#657188];
+}
+
+.dark .blogravel-api-docs .docs-section p,
+.dark .blogravel-api-docs .docs-section li {
+    @apply text-[#cbd5e1];
 }
 
 .blogravel-api-docs .docs-section a {
@@ -129,13 +208,26 @@
     @apply bg-[#f7f8fb] text-[.68rem] tracking-[.1em] text-[#59667d];
 }
 
+.dark .blogravel-api-docs .docs-section th {
+    @apply bg-[#1e293b] text-[#cbd5e1];
+}
+
 .blogravel-api-docs .docs-section td,
 .blogravel-api-docs .docs-section th {
     @apply border-[#e5e9f0];
 }
 
+.dark .blogravel-api-docs .docs-section td,
+.dark .blogravel-api-docs .docs-section th {
+    @apply border-[#334155];
+}
+
 .blogravel-api-docs .docs-section :not(pre) > code {
     @apply rounded-[.35rem] border border-[#dce3ee] bg-[#eef2ff] text-[#3156db];
+}
+
+.dark .blogravel-api-docs .docs-section :not(pre) > code {
+    @apply border-[#4338ca] bg-[#312e81] text-[#c7d2fe];
 }
 
 .blogravel-api-docs .docs-section pre {

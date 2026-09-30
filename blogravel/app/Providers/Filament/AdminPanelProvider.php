@@ -61,7 +61,7 @@ class AdminPanelProvider extends PanelProvider
             })
             ->colors([
                 'gray' => Color::Slate,
-                'primary' => Color::Indigo,
+                'primary' => Color::hex('#eeaf62'),
             ])
             ->viteTheme('resources/css/filament/admin/blogravel-theme.css')
             ->databaseNotifications()

@@ -21,6 +21,8 @@ test.describe('Admin API documentation', () => {
     await expect(page.locator('.fi-sidebar')).toHaveCSS('background-color', 'rgb(17, 24, 39)');
     await expect(page.locator('.fi-topbar')).toHaveCSS('background-color', 'rgb(15, 23, 42)');
     await expect(page.locator('.blogravel-api-docs__hero h2')).toHaveCSS('color', 'rgb(248, 250, 252)');
+    await expect(page.locator('.blogravel-api-docs__eyebrow')).toHaveCSS('color', 'rgb(238, 175, 98)');
+    await expect(page.locator('.blogravel-api-docs .docs-section a').first()).toHaveCSS('color', 'rgb(238, 175, 98)');
     await expect(page.locator('.blogravel-api-docs .docs-section').first()).toHaveCSS('background-color', 'rgb(17, 24, 39)');
   });
 });

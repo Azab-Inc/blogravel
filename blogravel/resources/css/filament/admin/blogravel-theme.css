@@ -99,7 +99,11 @@
 }
 
 .blogravel-api-docs__eyebrow {
-    @apply relative z-[1] mb-3 font-mono text-[.68rem] font-semibold uppercase tracking-[.16em] text-[#3156db];
+    @apply relative z-[1] mb-3 font-mono text-[.68rem] font-semibold uppercase tracking-[.16em] text-[#9a6700];
+}
+
+.dark .blogravel-api-docs__eyebrow {
+    @apply text-[#eeaf62];
 }
 
 .blogravel-api-docs__hero h2 {
@@ -155,7 +159,11 @@
 }
 
 .blogravel-api-docs__host code {
-    @apply rounded-[.35rem] border border-[#dce3ee] bg-[#eef2ff] px-1.5 py-0.5 font-mono text-[.78rem] text-[#3156db];
+    @apply rounded-[.35rem] border border-[#e8c98c] bg-[#fff8ed] px-1.5 py-0.5 font-mono text-[.78rem] text-[#9a6700];
+}
+
+.dark .blogravel-api-docs__host code {
+    @apply border-[#8a5a10] bg-[#3b2a10] text-[#f6c76f];
 }
 
 .blogravel-api-docs__empty {
@@ -197,7 +205,11 @@
 }
 
 .blogravel-api-docs .docs-section a {
-    @apply text-[#3156db];
+    @apply text-[#9a6700];
+}
+
+.dark .blogravel-api-docs .docs-section a {
+    @apply text-[#eeaf62];
 }
 
 .blogravel-api-docs .docs-section table {
@@ -223,11 +235,11 @@
 }
 
 .blogravel-api-docs .docs-section :not(pre) > code {
-    @apply rounded-[.35rem] border border-[#dce3ee] bg-[#eef2ff] text-[#3156db];
+    @apply rounded-[.35rem] border border-[#e8c98c] bg-[#fff8ed] text-[#9a6700];
 }
 
 .dark .blogravel-api-docs .docs-section :not(pre) > code {
-    @apply border-[#4338ca] bg-[#312e81] text-[#c7d2fe];
+    @apply border-[#8a5a10] bg-[#3b2a10] text-[#f6c76f];
 }
 
 .blogravel-api-docs .docs-section pre {

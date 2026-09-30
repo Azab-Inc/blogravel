@@ -7,8 +7,7 @@ const copyText = async (text) => {
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.setAttribute('readonly', '');
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
+    textarea.className = 'docs-copy-textarea';
     document.body.append(textarea);
     textarea.select();
 

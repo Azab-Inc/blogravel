@@ -4,275 +4,159 @@
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../resources/views/components/**/*';
 
-:root {
-    --font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-    --mono-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .fi-body {
-    background: #f6f7f9;
+    @apply bg-[#f6f7f9];
 }
 
 .fi-sidebar {
-    border-right-color: #e2e6ee;
-    background: #fbfcfe;
+    @apply border-r-[#e2e6ee] bg-[#fbfcfe];
 }
 
 .fi-sidebar-header {
-    border-bottom-color: #e2e6ee;
+    @apply border-b-[#e2e6ee];
 }
 
 .fi-sidebar-nav-groups {
-    gap: 1.75rem;
+    @apply gap-7;
 }
 
 .fi-sidebar-group-label {
-    color: #8a94a6;
-    font-size: .66rem;
-    font-weight: 700;
-    letter-spacing: .14em;
-    text-transform: uppercase;
+    @apply text-[.66rem] font-bold uppercase tracking-[.14em] text-[#8a94a6];
 }
 
-.fi-sidebar-item-button {
-    border-radius: .65rem;
-    color: #5f6b80;
+.fi-sidebar-item-btn {
+    @apply rounded-[.65rem] text-[#5f6b80];
 }
 
-.fi-sidebar-item-button:hover {
-    background: #eef2ff;
-    color: #3156db;
+.fi-sidebar-item-btn:hover {
+    @apply bg-[#eef2ff] text-[#3156db];
 }
 
-.fi-sidebar-item-active > .fi-sidebar-item-button {
-    background: #e9edff;
-    color: #3156db;
+.fi-sidebar-item-active > .fi-sidebar-item-btn {
+    @apply bg-[#e9edff] text-[#3156db];
 }
 
 .fi-topbar {
-    border-bottom-color: #e2e6ee;
-    background: rgba(255, 255, 255, .86);
-    backdrop-filter: blur(14px);
+    @apply border-b-[#e2e6ee] bg-white/85 backdrop-blur-[14px];
 }
 
-.fi-page-header {
-    max-width: 1180px;
-    margin-inline: auto;
-}
-
-.fi-page-header-heading {
-    color: #172033;
-    letter-spacing: -.045em;
-}
-
+.fi-page-header,
 .fi-page-content {
-    max-width: 1180px;
-    margin-inline: auto;
+    @apply mx-auto max-w-[1180px];
 }
 
 .blogravel-api-docs {
-    display: grid;
-    gap: 1.5rem;
+    @apply grid gap-6;
 }
 
 .blogravel-api-docs__hero {
-    position: relative;
-    overflow: hidden;
-    padding: 2rem;
-    border: 1px solid #dfe4ed;
-    border-radius: 1rem;
-    background: linear-gradient(135deg, #ffffff 0%, #f2f5ff 100%);
-    box-shadow: 0 12px 32px rgba(32, 48, 82, .06);
-}
-
-.blogravel-api-docs__hero::after {
-    position: absolute;
-    right: -4rem;
-    bottom: -5rem;
-    width: 15rem;
-    height: 15rem;
-    border: 1px solid rgba(49, 86, 219, .14);
-    border-radius: 999px;
-    content: '';
-    box-shadow: 0 0 0 2rem rgba(49, 86, 219, .04), 0 0 0 4rem rgba(49, 86, 219, .025);
+    @apply relative overflow-hidden rounded-2xl border border-[#dfe4ed] bg-gradient-to-br from-white to-[#f2f5ff] p-8 shadow-[0_12px_32px_rgba(32,48,82,.06)];
 }
 
 .blogravel-api-docs__eyebrow {
-    position: relative;
-    z-index: 1;
-    margin-bottom: .65rem;
-    color: #3156db;
-    font-family: var(--mono-font-family);
-    font-size: .68rem;
-    font-weight: 600;
-    letter-spacing: .16em;
-    text-transform: uppercase;
+    @apply relative z-[1] mb-3 font-mono text-[.68rem] font-semibold uppercase tracking-[.16em] text-[#3156db];
 }
 
 .blogravel-api-docs__hero h2 {
-    position: relative;
-    z-index: 1;
-    max-width: 44rem;
-    margin: 0;
-    color: #172033;
-    font-size: clamp(1.8rem, 4vw, 3rem);
-    letter-spacing: -.06em;
-    line-height: 1.05;
+    @apply relative z-[1] m-0 max-w-2xl text-[clamp(1.8rem,4vw,3rem)] font-semibold leading-[1.05] tracking-[-.06em] text-[#172033];
 }
 
 .blogravel-api-docs__hero p {
-    position: relative;
-    z-index: 1;
-    max-width: 40rem;
-    margin: .85rem 0 0;
-    color: #657188;
-    line-height: 1.65;
+    @apply relative z-[1] mt-3 max-w-xl leading-[1.65] text-[#657188];
 }
 
 .blogravel-api-docs__tenant {
-    display: grid;
-    gap: 1rem;
-    padding: 1.25rem;
-    border: 1px solid #dfe4ed;
-    border-radius: .9rem;
-    background: #fff;
+    @apply grid gap-4 rounded-[.9rem] border border-[#dfe4ed] bg-white p-5;
 }
 
 .blogravel-api-docs__tenant-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    @apply flex items-center justify-between gap-4;
 }
 
 .blogravel-api-docs__tenant-heading h3 {
-    margin: 0;
-    color: #253452;
-    font-size: .95rem;
-    font-weight: 700;
+    @apply m-0 text-[.95rem] font-bold text-[#253452];
 }
 
 .blogravel-api-docs__tenant-heading span {
-    color: #8a94a6;
-    font-family: var(--mono-font-family);
-    font-size: .68rem;
-}
-
-.blogravel-api-docs__select {
-    width: 100%;
-    border-color: #d4dbe7;
-    border-radius: .65rem;
-    background: #fbfcfe;
-    color: #253452;
+    @apply font-mono text-[.68rem] text-[#8a94a6];
 }
 
 .blogravel-api-docs__host {
-    margin: 0;
-    color: #657188;
-    font-size: .85rem;
+    @apply m-0 text-[.85rem] text-[#657188];
 }
 
 .blogravel-api-docs__host code {
-    padding: .15rem .4rem;
-    border: 1px solid #dce3ee;
-    border-radius: .35rem;
-    color: #3156db;
-    background: #eef2ff;
-    font-family: var(--mono-font-family);
-    font-size: .78rem;
+    @apply rounded-[.35rem] border border-[#dce3ee] bg-[#eef2ff] px-1.5 py-0.5 font-mono text-[.78rem] text-[#3156db];
 }
 
 .blogravel-api-docs__empty {
-    display: grid;
-    place-items: center;
-    min-height: 14rem;
-    padding: 2rem;
-    border: 1px dashed #cbd4e2;
-    border-radius: 1rem;
-    color: #78849a;
-    text-align: center;
+    @apply grid min-h-56 place-items-center rounded-2xl border border-dashed border-[#cbd4e2] p-8 text-center text-[#78849a];
 }
 
 .blogravel-api-docs .docs-section {
-    padding: 2rem clamp(1rem, 3vw, 2.5rem);
-    border: 1px solid #e0e5ed;
-    border-radius: 1rem;
-    background: #fff;
-    box-shadow: 0 8px 24px rgba(32, 48, 82, .04);
+    @apply rounded-2xl border border-[#e0e5ed] bg-white px-[clamp(1rem,3vw,2.5rem)] py-8 shadow-[0_8px_24px_rgba(32,48,82,.04)];
 }
 
 .blogravel-api-docs .docs-section + .docs-section {
-    margin-top: 1rem;
+    @apply mt-4;
 }
 
 .blogravel-api-docs .docs-section h1,
 .blogravel-api-docs .docs-section h2,
 .blogravel-api-docs .docs-section h3 {
-    color: #172033;
-    letter-spacing: -.035em;
+    @apply tracking-[-.035em] text-[#172033];
 }
 
 .blogravel-api-docs .docs-section p,
 .blogravel-api-docs .docs-section li {
-    color: #657188;
-    line-height: 1.7;
+    @apply leading-[1.7] text-[#657188];
 }
 
 .blogravel-api-docs .docs-section a {
-    color: #3156db;
+    @apply text-[#3156db];
 }
 
 .blogravel-api-docs .docs-section table {
-    overflow: hidden;
-    border: 1px solid #e0e5ed;
-    border-radius: .75rem;
+    @apply w-full overflow-hidden rounded-xl border border-[#e0e5ed];
 }
 
 .blogravel-api-docs .docs-section th {
-    color: #59667d;
-    background: #f7f8fb;
-    font-size: .68rem;
-    letter-spacing: .1em;
+    @apply bg-[#f7f8fb] text-[.68rem] tracking-[.1em] text-[#59667d];
 }
 
 .blogravel-api-docs .docs-section td,
 .blogravel-api-docs .docs-section th {
-    border-color: #e5e9f0;
+    @apply border-[#e5e9f0];
 }
 
 .blogravel-api-docs .docs-section :not(pre) > code {
-    border-color: #dce3ee;
-    border-radius: .35rem;
-    color: #3156db;
-    background: #eef2ff;
+    @apply rounded-[.35rem] border border-[#dce3ee] bg-[#eef2ff] text-[#3156db];
 }
 
 .blogravel-api-docs .docs-section pre {
-    border: 1px solid #273149;
-    border-radius: .85rem;
-    background: #111827;
-    box-shadow: 0 14px 30px rgba(21, 31, 51, .12);
+    @apply rounded-[.85rem] border border-[#273149] bg-[#111827] shadow-[0_14px_30px_rgba(21,31,51,.12)];
 }
 
 .blogravel-api-docs .docs-code-block .code-copy-button {
-    border-color: #46536d;
-    border-radius: .45rem;
-    color: #c8d4e6;
-    background: #1c2638;
+    @apply rounded-[.45rem] border-[#46536d] bg-[#1c2638] text-[#c8d4e6];
 }
 
 .blogravel-api-docs .docs-code-block .code-copy-button:hover {
-    background: #2b3850;
+    @apply bg-[#2b3850];
 }
 
 @media (max-width: 768px) {
     .blogravel-api-docs__hero,
     .blogravel-api-docs__tenant {
-        padding: 1.25rem;
+        @apply p-5;
     }
 
     .blogravel-api-docs__tenant-heading {
-        align-items: flex-start;
-        flex-direction: column;
+        @apply items-start flex-col;
     }
 }

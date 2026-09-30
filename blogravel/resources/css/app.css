@@ -6,11 +6,211 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --primary: '#eeaf62';
-    --secondary: '#102542';
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-p {
-    color: var(--primary);
+@layer components {
+    .docs-page {
+        @apply min-h-screen bg-[#f7f8fa] text-[#172033];
+    }
+
+    .docs-page code,
+    .docs-page .docs-mono {
+        @apply font-mono;
+    }
+
+    .docs-topbar {
+        @apply sticky top-0 z-10 flex min-h-[68px] items-center justify-between border-b border-[#e4e8ef] bg-white/85 px-4 backdrop-blur-[14px] sm:px-8;
+    }
+
+    .docs-brand {
+        @apply inline-flex items-center gap-3 font-extrabold tracking-[-.04em] text-[#172033] no-underline;
+    }
+
+    .docs-brand-suffix {
+        @apply font-medium text-[#8b96a8];
+    }
+
+    .docs-mark {
+        @apply grid size-[27px] place-items-center rounded-lg bg-[#3156db] text-[.8rem] text-white;
+    }
+
+    .docs-tenant {
+        @apply hidden items-center gap-2 text-[.7rem] text-[#8b96a8] sm:inline-flex;
+    }
+
+    .docs-tenant strong {
+        @apply font-medium text-[#253452];
+    }
+
+    .docs-shell {
+        @apply mx-auto grid max-w-[1120px] gap-20 px-4 py-12 sm:px-8 lg:grid-cols-[220px_minmax(0,770px)] lg:py-[5.5rem];
+    }
+
+    .docs-nav {
+        @apply static self-start lg:sticky lg:top-[100px];
+    }
+
+    .docs-nav small {
+        @apply mb-4 block font-mono text-[.66rem] uppercase tracking-[.13em] text-[#98a3b4];
+    }
+
+    .docs-nav a {
+        @apply block border-l border-transparent px-3 py-2 text-[.82rem] text-[#7a869a] no-underline;
+    }
+
+    .docs-nav a:hover,
+    .docs-nav a:first-of-type {
+        @apply border-[#3156db] bg-[#edf1ff] text-[#3156db];
+    }
+
+    .docs-main {
+        @apply min-w-0;
+    }
+
+    .docs-intro {
+        @apply mb-16;
+    }
+
+    .docs-eyebrow {
+        @apply mb-4 font-mono text-[.7rem] uppercase tracking-[.16em] text-[#3156db];
+    }
+
+    .docs-intro h1 {
+        @apply m-0 text-[clamp(2.8rem,6vw,5.2rem)] font-semibold leading-[.98] tracking-[-.08em] text-[#13203a];
+    }
+
+    .docs-intro p {
+        @apply mt-6 max-w-[580px] text-[1.08rem] text-[#778399];
+    }
+
+    .docs-section {
+        @apply mb-20 border-b border-[#e1e6ee] pb-20;
+    }
+
+    .docs-section:last-child {
+        @apply border-b-0;
+    }
+
+    .docs-section h1 {
+        @apply mb-6 max-w-[760px] text-[2.3rem] font-semibold leading-[1.02] tracking-[-.065em] text-[#13203a];
+    }
+
+    .docs-section h2 {
+        @apply mb-4 mt-14 text-[1.45rem] font-semibold tracking-[-.03em] text-[#1d2b45];
+    }
+
+    .docs-section h3 {
+        @apply mb-3 mt-8 font-semibold text-[#283754];
+    }
+
+    .docs-section p,
+    .docs-section li {
+        @apply leading-[1.7] text-[#637089];
+    }
+
+    .docs-section a {
+        @apply text-[#3156db] underline decoration-[#aebcf4] underline-offset-4;
+    }
+
+    .docs-section table {
+        @apply my-6 w-full text-[.92rem];
+    }
+
+    .docs-section th,
+    .docs-section td {
+        @apply border-b border-[#e2e7ef] px-3 py-3 text-left;
+    }
+
+    .docs-section th {
+        @apply text-[.76rem] uppercase tracking-[.08em] text-[#35425b];
+    }
+
+    .docs-section :not(pre) > code {
+        @apply rounded-[5px] border border-[#dce3ee] bg-[#eef2ff] px-1 py-0.5 text-[#3156db];
+    }
+
+    .docs-page pre {
+        @apply relative my-6 overflow-x-auto rounded-[14px] border border-[#273149] bg-[#111827] p-5 pt-14 text-[#dbe7f4] shadow-[0_16px_40px_rgba(21,31,51,.12)];
+    }
+
+    .docs-page pre code {
+        @apply text-inherit;
+    }
+
+    .docs-code-block .code-copy-button {
+        @apply absolute right-3 top-3 z-[1] cursor-pointer rounded-[7px] border border-[#46536d] bg-[#1c2638] px-2.5 py-1 text-[#c8d4e6];
+    }
+
+    .docs-code-block .code-copy-button:hover {
+        @apply bg-[#2b3850];
+    }
+
+    .docs-tenant-form {
+        @apply my-6 max-w-[560px] rounded-[14px] border border-[#dce3ee] bg-white p-5 shadow-[0_10px_30px_rgba(30,43,70,.06)];
+    }
+
+    .docs-tenant-form label {
+        @apply mb-2 block text-[.78rem] font-bold text-[#35425b];
+    }
+
+    .docs-tenant-form-row {
+        @apply flex gap-2;
+    }
+
+    .docs-tenant-form input {
+        @apply min-w-0 flex-1 rounded-lg border border-[#dce3ee] bg-[#fbfcfe] px-3 py-3 font-mono text-[.76rem] text-[#253452] outline-none;
+    }
+
+    .docs-tenant-form input:focus {
+        @apply border-[#3156db] ring-4 ring-[#3156db]/15;
+    }
+
+    .docs-tenant-form button {
+        @apply cursor-pointer rounded-lg border-0 bg-[#3156db] px-4 py-3 font-bold text-white;
+    }
+
+    .docs-tenant-form button:hover {
+        @apply bg-[#2748bd];
+    }
+
+    .docs-tenant-form button:active {
+        @apply translate-y-px;
+    }
+
+    .docs-error {
+        @apply !mt-3 !text-[.85rem] !text-[#b42318];
+    }
+
+    .docs-empty {
+        @apply pb-16;
+    }
+
+    .docs-copy-textarea {
+        @apply fixed left-[-9999px] top-0 opacity-0;
+    }
+}
+
+@media (max-width: 640px) {
+    .docs-shell {
+        @apply block pb-28;
+    }
+
+    .docs-nav {
+        @apply mb-12;
+    }
+
+    .docs-tenant-form-row {
+        @apply block;
+    }
+
+    .docs-tenant-form input,
+    .docs-tenant-form button {
+        @apply w-full;
+    }
+
+    .docs-tenant-form button {
+        @apply mt-2;
+    }
 }

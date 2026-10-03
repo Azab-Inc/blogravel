@@ -1,0 +1,360 @@
+:root {
+    --bg: var(--color-base-light-bg);
+    --fg: var(--color-base-light-fg);
+    --accent: var(--color-base-light-accent);
+    --button-bg: var(--color-base-light-button-bg);
+    --button-fg: var(--color-base-light-button-fg);
+    --muted: var(--color-base-light-muted);
+    --border: var(--color-base-light-border);
+    --surface: var(--color-base-light-surface);
+    --radius: var(--radius-base);
+    --shadow-sm: var(--shadow-base-sm);
+    --shadow-md: var(--shadow-base-md);
+}
+
+html[data-theme='dark'] {
+    --bg: var(--color-base-dark-bg);
+    --fg: var(--color-base-dark-fg);
+    --accent: var(--color-base-dark-accent);
+    --button-bg: var(--color-base-dark-button-bg);
+    --button-fg: var(--color-base-dark-button-fg);
+    --muted: var(--color-base-dark-muted);
+    --border: var(--color-base-dark-border);
+    --surface: var(--color-base-dark-surface);
+}
+
+@layer components {
+    .base-theme {
+        @apply min-h-screen bg-base-light-bg text-base-light-fg text-base-body leading-[1.6];
+    }
+
+    .base-theme a {
+        @apply text-base-light-accent underline decoration-current underline-offset-[.15em];
+    }
+
+    .base-theme :focus-visible {
+        @apply outline-3 outline-base-light-accent outline-offset-3;
+    }
+
+    .base-theme .skip-link {
+        @apply absolute left-4 top-0 z-10 -translate-y-[150%] rounded-base border-2 border-base-light-accent bg-base-light-bg px-4 py-3 text-base-light-fg;
+    }
+
+    .base-theme .skip-link:focus {
+        @apply translate-y-4;
+    }
+
+    .base-theme .container {
+        @apply mx-auto w-full max-w-[800px] px-4;
+    }
+
+    .base-theme header {
+        @apply mb-8 border-b border-base-light-border py-4;
+    }
+
+    .base-theme header .container {
+        @apply flex flex-wrap items-center justify-between gap-2;
+    }
+
+    .base-theme header h1 {
+        @apply text-xl;
+    }
+
+    .base-theme .nav-toggle {
+        @apply hidden min-h-11 min-w-11 items-center justify-center rounded-base border border-base-light-border bg-transparent p-2 text-xl leading-none text-base-light-fg;
+    }
+
+    .base-theme .nav-toggle[aria-expanded='true'],
+    .base-theme .theme-toggle:hover {
+        @apply bg-base-light-surface;
+    }
+
+    .base-theme .theme-toggle {
+        @apply min-h-11 cursor-pointer rounded-base border border-base-light-border bg-transparent px-3 text-sm text-base-light-fg;
+    }
+
+    .base-theme header nav {
+        @apply flex gap-4 text-sm;
+    }
+
+    .base-theme footer {
+        @apply mt-12 border-t border-base-light-border py-6 text-center text-sm text-base-light-muted;
+    }
+
+    .base-theme .post-list {
+        @apply grid gap-6;
+    }
+
+    .base-theme .post-card {
+        @apply rounded-base border border-base-light-border p-5 shadow-base-sm transition-shadow duration-150;
+    }
+
+    .base-theme .post-card:hover {
+        @apply shadow-base-md;
+    }
+
+    .base-theme .post-card h2 {
+        @apply mb-1 text-base-card-title leading-[1.3];
+    }
+
+    .base-theme .post-meta {
+        @apply mb-2 text-sm text-base-light-muted;
+    }
+
+    .base-theme .post-excerpt {
+        @apply mb-2 text-base-light-fg;
+    }
+
+    .base-theme .post-content {
+        @apply my-6 leading-[1.8];
+    }
+
+    .base-theme .post-content img {
+        @apply h-auto max-w-full rounded-base;
+    }
+
+    .base-theme .post-content h2,
+    .base-theme .post-content h3 {
+        @apply mb-2 mt-6;
+    }
+
+    .base-theme .post-content p {
+        @apply mb-4;
+    }
+
+    .base-theme .post-tags {
+        @apply mt-6 flex flex-wrap gap-2;
+    }
+
+    .base-theme .tag {
+        @apply inline-block rounded border border-base-light-border bg-base-light-surface px-2.5 py-1 text-xs;
+    }
+
+    .base-theme .btn {
+        @apply inline-block min-h-11 cursor-pointer rounded-base border-0 bg-base-light-button-bg px-5 py-2.5 text-sm font-medium text-base-light-button-fg transition-opacity duration-150;
+    }
+
+    .base-theme .btn:hover {
+        @apply opacity-90 no-underline;
+    }
+
+    .base-theme .form-group {
+        @apply mb-4;
+    }
+
+    .base-theme .form-group label {
+        @apply mb-1.5 block text-sm font-medium;
+    }
+
+    .base-theme .form-group input,
+    .base-theme .form-group textarea {
+        @apply min-h-11 w-full rounded-base border border-base-light-border bg-base-light-bg px-2.5 py-2.5 text-base-light-fg;
+    }
+
+    .base-theme .form-group textarea {
+        @apply min-h-[150px] resize-y;
+    }
+
+    .base-theme .form-group input:focus,
+    .base-theme .form-group textarea:focus {
+        @apply border-base-light-accent outline-2 outline-base-light-accent outline-offset-2;
+    }
+
+    .base-theme .form-error {
+        @apply mt-1.5 text-sm text-base-error;
+    }
+
+    .base-theme .pagination {
+        @apply mt-8 flex flex-wrap justify-center gap-2;
+    }
+
+    .base-theme .pagination a,
+    .base-theme .pagination span {
+        @apply flex min-h-11 min-w-11 items-center justify-center rounded-base border border-base-light-border px-4 py-2;
+    }
+
+    .base-theme .pagination .active {
+        @apply border-base-light-button-bg bg-base-light-button-bg text-base-light-button-fg;
+    }
+
+    .base-theme .success,
+    .base-theme .toast {
+        @apply rounded-base bg-base-success-bg p-4 text-base-success-fg;
+    }
+
+    .base-theme .success {
+        @apply mb-4;
+    }
+
+    .base-theme .toast-region {
+        @apply fixed right-4 top-4 z-20 w-base-toast;
+    }
+
+    .base-theme .toast {
+        @apply flex items-start justify-between gap-4 border border-base-success-border shadow-base-md;
+    }
+
+    .base-theme .toast-dismiss {
+        @apply min-h-11 shrink-0 cursor-pointer rounded-base border border-current bg-transparent p-2 text-inherit;
+    }
+
+    .base-theme .has-js .toast-fallback,
+    .base-theme .toast[hidden] {
+        @apply hidden;
+    }
+
+    .base-theme .sidebar {
+        @apply mt-8 border-t border-base-light-border pt-6;
+    }
+
+    .base-theme .sidebar h3 {
+        @apply mb-2 text-base;
+    }
+
+    .base-theme .sidebar ul {
+        @apply list-none;
+    }
+
+    .base-theme .sidebar li {
+        @apply py-1.5;
+    }
+
+    .base-theme .sidebar a {
+        @apply flex min-h-11 items-center justify-between py-1;
+    }
+
+    .base-theme .back-link {
+        @apply mt-8 border-t border-base-light-border pt-4;
+    }
+
+    .base-theme .muted {
+        @apply mb-6 text-base-light-muted;
+    }
+}
+
+html[data-theme='dark'] .base-theme {
+    @apply bg-base-dark-bg text-base-dark-fg;
+}
+
+html[data-theme='dark'] .base-theme a {
+    @apply text-base-dark-accent;
+}
+
+html[data-theme='dark'] .base-theme :focus-visible {
+    @apply outline-base-dark-accent;
+}
+
+html[data-theme='dark'] .base-theme .skip-link {
+    @apply border-base-dark-accent bg-base-dark-bg text-base-dark-fg;
+}
+
+html[data-theme='dark'] .base-theme .nav-toggle,
+html[data-theme='dark'] .base-theme .theme-toggle {
+    @apply border-base-dark-border text-base-dark-fg;
+}
+
+html[data-theme='dark'] .base-theme .nav-toggle[aria-expanded='true'],
+html[data-theme='dark'] .base-theme .theme-toggle:hover {
+    @apply bg-base-dark-surface;
+}
+
+html[data-theme='dark'] .base-theme header,
+html[data-theme='dark'] .base-theme footer,
+html[data-theme='dark'] .base-theme .sidebar,
+html[data-theme='dark'] .base-theme .back-link {
+    @apply border-base-dark-border;
+}
+
+html[data-theme='dark'] .base-theme footer,
+html[data-theme='dark'] .base-theme .post-meta,
+html[data-theme='dark'] .base-theme .muted {
+    @apply text-base-dark-muted;
+}
+
+html[data-theme='dark'] .base-theme .post-card,
+html[data-theme='dark'] .base-theme .tag {
+    @apply border-base-dark-border bg-base-dark-surface;
+}
+
+html[data-theme='dark'] .base-theme .post-excerpt {
+    @apply text-base-dark-fg;
+}
+
+html[data-theme='dark'] .base-theme .form-group input,
+html[data-theme='dark'] .base-theme .form-group textarea {
+    @apply border-base-dark-border bg-base-dark-bg text-base-dark-fg;
+}
+
+html[data-theme='dark'] .base-theme .form-group input:focus,
+html[data-theme='dark'] .base-theme .form-group textarea:focus {
+    @apply border-base-dark-accent outline-base-dark-accent;
+}
+
+html[data-theme='dark'] .base-theme .form-error {
+    @apply text-base-dark-error;
+}
+
+html[data-theme='dark'] .base-theme .pagination a,
+html[data-theme='dark'] .base-theme .pagination span {
+    @apply border-base-dark-border;
+}
+
+html[data-theme='dark'] .base-theme .pagination .active {
+    @apply border-base-dark-button-bg bg-base-dark-button-bg text-base-dark-button-fg;
+}
+
+html[data-theme='dark'] .base-theme .success,
+html[data-theme='dark'] .base-theme .toast {
+    @apply bg-base-dark-success-bg text-base-dark-success-fg;
+}
+
+html[data-theme='dark'] .base-theme .toast {
+    @apply border-base-dark-success-border;
+}
+
+@media (min-width: 640px) {
+    .base-theme .container {
+        @apply px-6;
+    }
+
+    .base-theme .home-layout {
+        @apply grid grid-cols-[1fr_200px] items-start gap-8;
+    }
+
+    .base-theme .home-layout .sidebar {
+        @apply sticky top-4 mt-0 border-t-0 pt-0;
+    }
+}
+
+@media (max-width: 639px) {
+    .base-theme .nav-toggle {
+        @apply flex;
+    }
+
+    .base-theme header nav {
+        @apply mt-2 hidden w-full flex-col gap-0 border-t border-base-light-border pt-2;
+    }
+
+    .base-theme header nav.open {
+        @apply flex;
+    }
+
+    .base-theme header nav a {
+        @apply flex min-h-11 items-center border-b border-base-light-border py-3;
+    }
+
+    .base-theme header nav a:last-child {
+        @apply border-b-0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .base-theme .toast {
+        @apply transition-none;
+    }
+}
+
+html[data-theme='dark'] .base-theme header nav,
+html[data-theme='dark'] .base-theme header nav a {
+    @apply border-base-dark-border;
+}

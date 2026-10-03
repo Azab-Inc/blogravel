@@ -1,7 +1,9 @@
 @import 'tailwindcss';
 @import './tokens.css';
+@import './themes/base.css';
 
 @source '../views';
+@source '../themes';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @custom-variant dark (&:where(.dark, .dark *));

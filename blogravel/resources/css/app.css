@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './tokens.css';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -12,7 +13,7 @@
 
 @layer components {
     .docs-page {
-        @apply min-h-screen bg-[#f7f8fa] text-[#172033];
+        @apply min-h-screen bg-[#f7f8fa] text-content-heading;
     }
 
     .docs-page code,
@@ -25,23 +26,23 @@
     }
 
     .docs-brand {
-        @apply inline-flex items-center gap-3 font-extrabold tracking-[-.04em] text-[#172033] no-underline;
+        @apply inline-flex items-center gap-3 font-extrabold tracking-[-.04em] text-content-heading no-underline;
     }
 
     .docs-brand-suffix {
-        @apply font-medium text-[#8b96a8];
+        @apply font-medium text-docs-muted;
     }
 
     .docs-mark {
-        @apply grid size-[27px] place-items-center rounded-lg bg-[#3156db] text-[.8rem] text-white;
+        @apply grid size-[27px] place-items-center rounded-lg bg-brand-blue text-[.8rem] text-white;
     }
 
     .docs-tenant {
-        @apply hidden items-center gap-2 text-[.7rem] text-[#8b96a8] sm:inline-flex;
+        @apply hidden items-center gap-2 text-[.7rem] text-docs-muted sm:inline-flex;
     }
 
     .docs-tenant strong {
-        @apply font-medium text-[#253452];
+        @apply font-medium text-docs-subheading;
     }
 
     .docs-shell {
@@ -53,7 +54,7 @@
     }
 
     .docs-nav small {
-        @apply mb-4 block font-mono text-[.66rem] uppercase tracking-[.13em] text-[#98a3b4];
+        @apply mb-4 block font-mono text-docs-nav uppercase tracking-[.13em] text-[#98a3b4];
     }
 
     .docs-nav a {
@@ -62,7 +63,7 @@
 
     .docs-nav a:hover,
     .docs-nav a:first-of-type {
-        @apply border-[#3156db] bg-[#edf1ff] text-[#3156db];
+        @apply border-brand-blue bg-brand-blue-pale text-brand-blue;
     }
 
     .docs-main {
@@ -74,7 +75,7 @@
     }
 
     .docs-eyebrow {
-        @apply mb-4 font-mono text-[.7rem] uppercase tracking-[.16em] text-[#3156db];
+        @apply mb-4 font-mono text-[.7rem] uppercase tracking-[.16em] text-brand-blue;
     }
 
     .docs-intro h1 {
@@ -107,15 +108,15 @@
 
     .docs-section p,
     .docs-section li {
-        @apply leading-[1.7] text-[#637089];
+        @apply leading-[1.7] text-docs-text;
     }
 
     .docs-section a {
-        @apply text-[#3156db] underline decoration-[#aebcf4] underline-offset-4;
+        @apply text-brand-blue underline decoration-[#aebcf4] underline-offset-4;
     }
 
     .docs-section table {
-        @apply my-6 w-full text-[.92rem];
+        @apply my-6 w-full text-docs-body;
     }
 
     .docs-section th,
@@ -124,15 +125,15 @@
     }
 
     .docs-section th {
-        @apply text-[.76rem] uppercase tracking-[.08em] text-[#35425b];
+        @apply text-docs-input uppercase tracking-[.08em] text-form-label;
     }
 
     .docs-section :not(pre) > code {
-        @apply rounded-[5px] border border-[#dce3ee] bg-[#eef2ff] px-1 py-0.5 text-[#3156db];
+        @apply rounded-[5px] border border-docs-border bg-brand-blue-soft px-1 py-0.5 text-brand-blue;
     }
 
     .docs-page pre {
-        @apply relative my-6 overflow-x-auto rounded-[14px] border border-[#273149] bg-[#111827] p-5 pt-14 text-[#dbe7f4] shadow-[0_16px_40px_rgba(21,31,51,.12)];
+        @apply relative my-6 overflow-x-auto rounded-docs border border-docs-code-border bg-surface-dark p-5 pt-14 text-docs-code-text shadow-[0_16px_40px_rgba(21,31,51,.12)];
     }
 
     .docs-page pre code {
@@ -140,19 +141,19 @@
     }
 
     .docs-code-block .code-copy-button {
-        @apply absolute right-3 top-3 z-[1] cursor-pointer rounded-[7px] border border-[#46536d] bg-[#1c2638] px-2.5 py-1 text-[#c8d4e6];
+        @apply absolute right-3 top-3 z-[1] cursor-pointer rounded-[7px] border border-[#46536d] bg-docs-code-button px-2.5 py-1 text-[#c8d4e6];
     }
 
     .docs-code-block .code-copy-button:hover {
-        @apply bg-[#2b3850];
+        @apply bg-docs-code-button-hover;
     }
 
     .docs-tenant-form {
-        @apply my-6 max-w-[560px] rounded-[14px] border border-[#dce3ee] bg-white p-5 shadow-[0_10px_30px_rgba(30,43,70,.06)];
+        @apply my-6 max-w-[560px] rounded-docs border border-docs-border bg-white p-5 shadow-[0_10px_30px_rgba(30,43,70,.06)];
     }
 
     .docs-tenant-form label {
-        @apply mb-2 block text-[.78rem] font-bold text-[#35425b];
+        @apply mb-2 block text-docs-code font-bold text-form-label;
     }
 
     .docs-tenant-form-row {
@@ -160,19 +161,19 @@
     }
 
     .docs-tenant-form input {
-        @apply min-w-0 flex-1 rounded-lg border border-[#dce3ee] bg-[#fbfcfe] px-3 py-3 font-mono text-[.76rem] text-[#253452] outline-none;
+        @apply min-w-0 flex-1 rounded-lg border border-docs-border bg-[#fbfcfe] px-3 py-3 font-mono text-docs-input text-docs-subheading outline-none;
     }
 
     .docs-tenant-form input:focus {
-        @apply border-[#3156db] ring-4 ring-[#3156db]/15;
+        @apply border-brand-blue ring-4 ring-brand-blue/15;
     }
 
     .docs-tenant-form button {
-        @apply cursor-pointer rounded-lg border-0 bg-[#3156db] px-4 py-3 font-bold text-white;
+        @apply cursor-pointer rounded-lg border-0 bg-brand-blue px-4 py-3 font-bold text-white;
     }
 
     .docs-tenant-form button:hover {
-        @apply bg-[#2748bd];
+        @apply bg-brand-blue-hover;
     }
 
     .docs-tenant-form button:active {

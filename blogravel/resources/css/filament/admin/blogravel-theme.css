@@ -1,4 +1,5 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../../tokens.css';
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
@@ -10,15 +11,15 @@
 }
 
 .fi-body {
-    @apply bg-[#f6f7f9];
+    @apply bg-admin-page;
 }
 
 .fi-sidebar {
-    @apply border-r-[#e2e6ee] bg-[#fbfcfe];
+    @apply border-r-admin-border bg-admin-sidebar;
 }
 
 .fi-sidebar-header {
-    @apply border-b-[#e2e6ee];
+    @apply border-b-admin-border;
 }
 
 .fi-sidebar-nav-groups {
@@ -26,59 +27,59 @@
 }
 
 .fi-sidebar-group-label {
-    @apply text-[.66rem] font-bold uppercase tracking-[.14em] text-[#8a94a6];
+    @apply text-admin-label font-bold uppercase tracking-[.14em] text-docs-label;
 }
 
 .fi-sidebar-item-btn {
-    @apply rounded-[.65rem] text-[#5f6b80];
+    @apply rounded-[.65rem] text-admin-sidebar-text;
 }
 
 .fi-sidebar-item-btn:hover {
-    @apply bg-[#eef2ff] text-[#3156db];
+    @apply bg-brand-blue-soft text-brand-blue;
 }
 
 .fi-sidebar-item-active > .fi-sidebar-item-btn {
-    @apply bg-[#e9edff] text-[#3156db];
+    @apply bg-brand-blue-active text-brand-blue;
 }
 
 .fi-topbar {
-    @apply border-b-[#e2e6ee] bg-white/85 backdrop-blur-[14px];
+    @apply border-b-admin-border bg-white/85 backdrop-blur-[14px];
 }
 
 .dark .fi-body {
-    @apply bg-[#0f172a] text-[#e2e8f0];
+    @apply bg-admin-dark-page text-dark-text;
 }
 
 .dark .fi-sidebar {
-    @apply border-r-[#334155] bg-[#111827] text-[#e2e8f0];
+    @apply border-r-dark-border bg-surface-dark text-dark-text;
 }
 
 .dark .fi-sidebar-header {
-    @apply border-b-[#334155];
+    @apply border-b-dark-border;
 }
 
 .dark .fi-sidebar-group-label {
-    @apply text-[#94a3b8];
+    @apply text-admin-sidebar-muted;
 }
 
 .dark .fi-sidebar-item-btn {
-    @apply text-[#cbd5e1];
+    @apply text-dark-muted;
 }
 
 .dark .fi-sidebar-item-btn:hover {
-    @apply bg-[#1e293b] text-[#a5b4fc];
+    @apply bg-admin-dark-sidebar-hover text-[#a5b4fc];
 }
 
 .dark .fi-sidebar-item-active > .fi-sidebar-item-btn {
-    @apply bg-[#312e81] text-[#c7d2fe];
+    @apply bg-admin-dark-sidebar-active text-admin-dark-sidebar-active-text;
 }
 
 .dark .fi-topbar {
-    @apply border-b-[#334155] bg-[#0f172a];
+    @apply border-b-dark-border bg-admin-dark-page;
 }
 
 .dark .fi-page-header-heading {
-    @apply text-[#f8fafc];
+    @apply text-dark-heading;
 }
 
 .fi-page-header,
@@ -91,43 +92,43 @@
 }
 
 .blogravel-api-docs__hero {
-    @apply relative overflow-hidden rounded-2xl border border-[#dfe4ed] bg-gradient-to-br from-white to-[#f2f5ff] p-8 shadow-[0_12px_32px_rgba(32,48,82,.06)];
+    @apply relative overflow-hidden rounded-2xl border border-docs-card-border bg-gradient-to-br from-white to-[#f2f5ff] p-8 shadow-[0_12px_32px_rgba(32,48,82,.06)];
 }
 
 .dark .blogravel-api-docs__hero {
-    @apply border-[#334155] from-[#1e293b] to-[#172554] shadow-[0_12px_32px_rgba(0,0,0,.2)];
+    @apply border-dark-border from-[#1e293b] to-[#172554] shadow-[0_12px_32px_rgba(0,0,0,.2)];
 }
 
 .blogravel-api-docs__eyebrow {
-    @apply relative z-[1] mb-3 font-mono text-[.68rem] font-semibold uppercase tracking-[.16em] text-[#9a6700];
+    @apply relative z-[1] mb-3 font-mono text-admin-label font-semibold uppercase tracking-[.16em] text-brand-gold-readable;
 }
 
 .dark .blogravel-api-docs__eyebrow {
-    @apply text-[#eeaf62];
+    @apply text-brand-gold;
 }
 
 .blogravel-api-docs__hero h2 {
-    @apply relative z-[1] m-0 max-w-2xl text-[clamp(1.8rem,4vw,3rem)] font-semibold leading-[1.05] tracking-[-.06em] text-[#172033];
+    @apply relative z-[1] m-0 max-w-2xl text-[clamp(1.8rem,4vw,3rem)] font-semibold leading-[1.05] tracking-[-.06em] text-content-heading;
 }
 
 .dark .blogravel-api-docs__hero h2 {
-    @apply text-[#f8fafc];
+    @apply text-dark-heading;
 }
 
 .blogravel-api-docs__hero p {
-    @apply relative z-[1] mt-3 max-w-xl leading-[1.65] text-[#657188];
+    @apply relative z-[1] mt-3 max-w-xl leading-[1.65] text-admin-muted;
 }
 
 .dark .blogravel-api-docs__hero p {
-    @apply text-[#cbd5e1];
+    @apply text-dark-muted;
 }
 
 .blogravel-api-docs__tenant {
-    @apply grid gap-4 rounded-[.9rem] border border-[#dfe4ed] bg-white p-5;
+    @apply grid gap-4 rounded-[.9rem] border border-docs-card-border bg-white p-5;
 }
 
 .dark .blogravel-api-docs__tenant {
-    @apply border-[#334155] bg-[#111827];
+    @apply border-dark-border bg-surface-dark;
 }
 
 .blogravel-api-docs__tenant-heading {
@@ -135,47 +136,47 @@
 }
 
 .blogravel-api-docs__tenant-heading h3 {
-    @apply m-0 text-[.95rem] font-bold text-[#253452];
+    @apply m-0 text-[.95rem] font-bold text-docs-subheading;
 }
 
 .dark .blogravel-api-docs__tenant-heading h3 {
-    @apply text-[#f8fafc];
+    @apply text-dark-heading;
 }
 
 .blogravel-api-docs__tenant-heading span {
-    @apply font-mono text-[.68rem] text-[#8a94a6];
+    @apply font-mono text-admin-label text-docs-label;
 }
 
 .dark .blogravel-api-docs__tenant-heading span {
-    @apply text-[#94a3b8];
+    @apply text-admin-sidebar-muted;
 }
 
 .blogravel-api-docs__host {
-    @apply m-0 text-[.85rem] text-[#657188];
+    @apply m-0 text-[.85rem] text-admin-muted;
 }
 
 .dark .blogravel-api-docs__host {
-    @apply text-[#cbd5e1];
+    @apply text-dark-muted;
 }
 
 .blogravel-api-docs__host code {
-    @apply rounded-[.35rem] border border-[#e8c98c] bg-[#fff8ed] px-1.5 py-0.5 font-mono text-[.78rem] text-[#9a6700];
+    @apply rounded-docs-small border border-brand-gold-border bg-brand-gold-soft px-1.5 py-0.5 font-mono text-docs-code text-brand-gold-readable;
 }
 
 .dark .blogravel-api-docs__host code {
-    @apply border-[#8a5a10] bg-[#3b2a10] text-[#f6c76f];
+    @apply border-admin-dark-gold-border bg-admin-dark-gold-soft text-admin-dark-gold-text;
 }
 
 .blogravel-api-docs__empty {
-    @apply grid min-h-56 place-items-center rounded-2xl border border-dashed border-[#cbd4e2] p-8 text-center text-[#78849a];
+    @apply grid min-h-56 place-items-center rounded-2xl border border-dashed border-[#cbd4e2] p-8 text-center text-admin-empty;
 }
 
 .blogravel-api-docs .docs-section {
-    @apply rounded-2xl border border-[#e0e5ed] bg-white px-[clamp(1rem,3vw,2.5rem)] py-8 shadow-[0_8px_24px_rgba(32,48,82,.04)];
+    @apply rounded-2xl border border-docs-section-border bg-white px-[clamp(1rem,3vw,2.5rem)] py-8 shadow-[0_8px_24px_rgba(32,48,82,.04)];
 }
 
 .dark .blogravel-api-docs .docs-section {
-    @apply border-[#334155] bg-[#111827] shadow-[0_8px_24px_rgba(0,0,0,.2)];
+    @apply border-dark-border bg-surface-dark shadow-[0_8px_24px_rgba(0,0,0,.2)];
 }
 
 .blogravel-api-docs .docs-section + .docs-section {
@@ -185,73 +186,73 @@
 .blogravel-api-docs .docs-section h1,
 .blogravel-api-docs .docs-section h2,
 .blogravel-api-docs .docs-section h3 {
-    @apply tracking-[-.035em] text-[#172033];
+    @apply tracking-[-.035em] text-content-heading;
 }
 
 .dark .blogravel-api-docs .docs-section h1,
 .dark .blogravel-api-docs .docs-section h2,
 .dark .blogravel-api-docs .docs-section h3 {
-    @apply text-[#f8fafc];
+    @apply text-dark-heading;
 }
 
 .blogravel-api-docs .docs-section p,
 .blogravel-api-docs .docs-section li {
-    @apply leading-[1.7] text-[#657188];
+    @apply leading-[1.7] text-admin-muted;
 }
 
 .dark .blogravel-api-docs .docs-section p,
 .dark .blogravel-api-docs .docs-section li {
-    @apply text-[#cbd5e1];
+    @apply text-dark-muted;
 }
 
 .blogravel-api-docs .docs-section a {
-    @apply text-[#9a6700];
+    @apply text-brand-gold-readable;
 }
 
 .dark .blogravel-api-docs .docs-section a {
-    @apply text-[#eeaf62];
+    @apply text-brand-gold;
 }
 
 .blogravel-api-docs .docs-section table {
-    @apply w-full overflow-hidden rounded-xl border border-[#e0e5ed];
+    @apply w-full overflow-hidden rounded-xl border border-docs-section-border;
 }
 
 .blogravel-api-docs .docs-section th {
-    @apply bg-[#f7f8fb] text-[.68rem] tracking-[.1em] text-[#59667d];
+    @apply bg-[#f7f8fb] text-admin-label tracking-[.1em] text-admin-table-label;
 }
 
 .dark .blogravel-api-docs .docs-section th {
-    @apply bg-[#1e293b] text-[#cbd5e1];
+    @apply bg-admin-dark-sidebar-hover text-dark-muted;
 }
 
 .blogravel-api-docs .docs-section td,
 .blogravel-api-docs .docs-section th {
-    @apply border-[#e5e9f0];
+    @apply border-docs-table-border;
 }
 
 .dark .blogravel-api-docs .docs-section td,
 .dark .blogravel-api-docs .docs-section th {
-    @apply border-[#334155];
+    @apply border-dark-border;
 }
 
 .blogravel-api-docs .docs-section :not(pre) > code {
-    @apply rounded-[.35rem] border border-[#e8c98c] bg-[#fff8ed] text-[#9a6700];
+    @apply rounded-docs-small border border-brand-gold-border bg-brand-gold-soft text-brand-gold-readable;
 }
 
 .dark .blogravel-api-docs .docs-section :not(pre) > code {
-    @apply border-[#8a5a10] bg-[#3b2a10] text-[#f6c76f];
+    @apply border-admin-dark-gold-border bg-admin-dark-gold-soft text-admin-dark-gold-text;
 }
 
 .blogravel-api-docs .docs-section pre {
-    @apply rounded-[.85rem] border border-[#273149] bg-[#111827] shadow-[0_14px_30px_rgba(21,31,51,.12)];
+    @apply rounded-[.85rem] border border-docs-code-border bg-surface-dark shadow-[0_14px_30px_rgba(21,31,51,.12)];
 }
 
 .blogravel-api-docs .docs-code-block .code-copy-button {
-    @apply rounded-[.45rem] border-[#46536d] bg-[#1c2638] text-[#c8d4e6];
+    @apply rounded-[.45rem] border-docs-code-button-border bg-docs-code-button text-docs-code-button-text;
 }
 
 .blogravel-api-docs .docs-code-block .code-copy-button:hover {
-    @apply bg-[#2b3850];
+    @apply bg-docs-code-button-hover;
 }
 
 @media (max-width: 768px) {

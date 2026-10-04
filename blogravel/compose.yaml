@@ -124,6 +124,14 @@ services:
             redis:
                 condition: service_healthy
         restart: unless-stopped
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - php artisan about >/dev/null 2>&1
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
 
     scheduler:
         image: 'blogravel-production'
@@ -149,6 +157,14 @@ services:
             redis:
                 condition: service_healthy
         restart: unless-stopped
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - php artisan about >/dev/null 2>&1
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
 
 networks:
     sail:

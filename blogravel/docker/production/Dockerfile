@@ -21,6 +21,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+COPY --from=composer-dependencies /app/vendor ./vendor
 RUN npm run build
 
 FROM runtime-base AS production

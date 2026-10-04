@@ -8,8 +8,10 @@ storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
+storage/framework/testing/*
 tests
 test-results
 core.*
 docker/production/Dockerfile
 docker/production/Dockerfile.dockerignore
+docker/volumes

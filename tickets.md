@@ -1,6 +1,6 @@
 # Tickets
 
-This file must always stay in sync with the [Blogravel GitHub project](https://github.com/orgs/Azab-Inc/projects/17) — every issue lives in both places. When adding or updating a ticket, update both the GitHub project and this file.
+This file is the local Blogravel status snapshot and is intended to stay in sync with the [Blogravel GitHub project](https://github.com/orgs/Azab-Inc/projects/17). When adding or updating a ticket, update both the GitHub project and this file. Project 17 is confirmed as the organization-owned **Blogravel** board with 53 items.
 
 Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, **To Verify**. **To Verify** means: Has to be tested manually. Issues listed as *(not in project)* exist in the GitHub repo but have not been added to the project board.
 
@@ -28,6 +28,7 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, *
 | [#20](https://github.com/Azab-Inc/blogravel/issues/20) | WordPress import | Done |
 | [#21](https://github.com/Azab-Inc/blogravel/issues/21) | Settings infrastructure | Done |
 | [#22](https://github.com/Azab-Inc/blogravel/issues/22) | Media storage & uploads | Done |
+| [#23](https://github.com/Azab-Inc/blogravel/issues/23) | CI/CD pipeline (GitHub Actions) | Done *(not in project)* |
 | [#46](https://github.com/Azab-Inc/blogravel/issues/46) | Tenant subdomain routing & root-domain entrypoint | Done |
 | [#24](https://github.com/Azab-Inc/blogravel/issues/24) | GDPR subscriber data deletion & privacy controls | Done |
 | [#25](https://github.com/Azab-Inc/blogravel/issues/25) | Automated database backups | Done |
@@ -61,3 +62,11 @@ Statuses mirror the GitHub project board: **Done**, **In Progress**, **Todo**, *
 | [#45](https://github.com/Azab-Inc/blogravel/issues/45) | [Future phase] Filament admin panel custom theme (Vite + Tailwind) | Todo |
 | [#47](https://github.com/Azab-Inc/blogravel/issues/47) | Public base theme light mode and dark mode toggle | To Verify |
 | [#48](https://github.com/Azab-Inc/blogravel/issues/48) | CI/CD pipeline (Jenkins) | Done |
+
+## Current status notes
+
+The following tickets have implementation and automated evidence, but remain **To Verify** until the explicit manual checks are completed: **#28, #37, #38, #47, #53, #54, #55, and #56**. See [specs.md](specs.md) for commit, test, and documentation evidence and [implementation-order.md](implementation-order.md) for the queue.
+
+Tickets marked **Todo** with “Future phase” in the title are deferred work, not implemented work. In particular, the current Filament CSS/API documentation styling does not satisfy the complete #45 admin-theme acceptance criteria, so #45 remains future scope.
+
+GitHub issue and project statuses were checked against this table. No issue was closed because each To Verify ticket still has an explicit manual/provider/production gate.
